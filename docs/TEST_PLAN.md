@@ -85,3 +85,8 @@ rectangle/duration, playback FPS/loop and full duration. This check is additiona
 to the60 Rust tests. Unity Editor and external Codex/Claude UI sessions were not
 available. Wall-time performance measurements describe the tested scene/build
 and are not universal speed guarantees.
+
+Source installation also ran from an unrelated folder with a deliberately
+unavailable local Rust toolchain selection. The script honored the source pin
+and preserved a relative installation prefix containing spaces/Thai characters.
+That scenario is included in the GitHub Actions installation step.

@@ -16,7 +16,13 @@ jobs:
       - name: Test offline rendering, CLI, and MCP
         run: cargo test --locked --workspace
       - name: Install standalone tools
-        run: bash scripts/install.sh "$RUNNER_TEMP/vfx-tools"
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir "$RUNNER_TEMP/build-caller"
+          cd "$RUNNER_TEMP/build-caller"
+          printf '[toolchain]\nchannel = "vfx-intentionally-missing"\n' > rust-toolchain.toml
+          CARGO_NET_OFFLINE=true bash "$GITHUB_WORKSPACE/scripts/install.sh" "$RUNNER_TEMP/vfx-tools"
       - name: Use installed CLI outside the checkout
         shell: bash
         run: |

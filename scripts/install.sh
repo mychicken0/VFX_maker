@@ -12,7 +12,13 @@ if ! command -v cargo >/dev/null 2>&1; then
   echo "Rust/Cargo is required to build. Install Rust, then run this script again." >&2
   exit 127
 fi
-export CARGO_TARGET_DIR="${CARGO_TARGET_DIR:-$vfx_source_root/target}"
+vfx_build_root="${CARGO_TARGET_DIR:-$vfx_source_root/target}"
+# Preserve caller-relative destinations before changing directories. Rustup
+# selects its toolchain from cwd, so build inside the source to honor its pin.
+mkdir -p -- "$vfx_install_root" "$vfx_build_root"
+vfx_install_root="$(CDPATH= cd -- "$vfx_install_root" && pwd)"
+export CARGO_TARGET_DIR="$(CDPATH= cd -- "$vfx_build_root" && pwd)"
+cd "$vfx_source_root"
 cargo install --locked --path "$vfx_source_root/crates/vfx-cli" --root "$vfx_install_root" --force
 cargo install --locked --path "$vfx_source_root/crates/vfx-mcp" --root "$vfx_install_root" --force
 printf '\nInstalled: %s/bin/vfx and %s/bin/vfx-mcp\n' "$vfx_install_root" "$vfx_install_root"
