@@ -26,6 +26,8 @@ pub fn scene(emitter: NodeKind, modifiers: Vec<NodeKind>) -> Scene {
         })
         .collect();
     Scene {
+        assets: Default::default(),
+        post_process: vec![],
         name: "Feature fixture".into(),
         canvas: Canvas {
             width: 64,

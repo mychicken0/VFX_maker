@@ -1,3 +1,4 @@
+use crate::control::RenderControl;
 use crate::{
     Error, Result,
     graph::{self, Compiled},
@@ -6,6 +7,12 @@ use crate::{
     storage::Workspace,
 };
 use serde_json::{Value, json};
+fn is_atlas(format: ExportFormat) -> bool {
+    matches!(
+        format,
+        ExportFormat::Spritesheet | ExportFormat::Godot | ExportFormat::Unity
+    )
+}
 use sha2::{Digest, Sha256};
 use std::{fs, path::Path};
 
@@ -57,6 +64,10 @@ pub fn check_budget(scene: &Scene, graph: &Compiled, frames: usize) -> Result<()
             work += births * points.len() as f64 * 2.0;
         }
     }
+    work += crate::post::work(
+        &scene.post_process,
+        u64::from(scene.canvas.width) * u64::from(scene.canvas.height),
+    ) as f64;
     if graph.glow.is_some() {
         work += f64::from(scene.canvas.width) * f64::from(scene.canvas.height) * 16.0;
     }
@@ -94,8 +105,9 @@ pub fn preview(project: &Project, times: &[f64]) -> Result<Preview> {
     let mut pixels = vec![0; (width * height * 4) as usize];
     let mut stats = vec![];
     let mut work = 0;
+    let mut session = render::Session::new(scene, &graph);
     for (index, time) in times.iter().enumerate() {
-        let frame = render::frame(scene, &graph, *time)?;
+        let frame = session.frame(*time, &RenderControl::default())?;
         actual_budget(&mut work, frame.stats.raster_work_units)?;
         blit(
             &mut pixels,
@@ -125,6 +137,15 @@ fn blit(dest: &mut [u8], width: u32, source: &[u8], sw: u32, sh: u32, x: u32, y:
 }
 
 pub fn export(workspace: &Workspace, project: &Project, request: &ExportRequest) -> Result<Value> {
+    export_controlled(workspace, project, request, &RenderControl::default())
+}
+pub fn export_controlled(
+    workspace: &Workspace,
+    project: &Project,
+    request: &ExportRequest,
+    control: &RenderControl,
+) -> Result<Value> {
+    control.check()?;
     if request.gif.is_some() && !matches!(request.format, ExportFormat::Gif) {
         return Err(Error::new(
             "INVALID_ARGUMENT",
@@ -146,7 +167,7 @@ pub fn export(workspace: &Workspace, project: &Project, request: &ExportRequest)
     let graph = graph::compile(scene)?;
     check_budget(scene, &graph, count as usize)?;
     if matches!(request.format, ExportFormat::Gif) {
-        return export_gif(workspace, project, request, &graph, count);
+        return export_gif(workspace, project, request, &graph, count, control);
     }
     let target = workspace.resolve(&request.out)?;
     let _lock = workspace.lock(&target)?;
@@ -162,15 +183,21 @@ pub fn export(workspace: &Workspace, project: &Project, request: &ExportRequest)
     let cols = (f64::from(count).sqrt().ceil() as u32).max(1);
     let rows = count.div_ceil(cols);
     let (atlas_w, atlas_h) = ((w + 2) * cols, (h + 2) * rows);
-    if matches!(request.format, ExportFormat::Spritesheet)
-        && u64::from(atlas_w) * u64::from(atlas_h) > 32 * 1024 * 1024
-    {
+    if is_atlas(request.format) && u64::from(atlas_w) * u64::from(atlas_h) > 32 * 1024 * 1024 {
         return Err(Error::new(
             "LIMIT_EXCEEDED",
             "Padded atlas exceeds 32 Mi pixels",
         ));
     }
-    let mut atlas = if matches!(request.format, ExportFormat::Spritesheet) {
+    if matches!(request.format, ExportFormat::Godot | ExportFormat::Unity)
+        && (atlas_w > 8192 || atlas_h > 8192)
+    {
+        return Err(Error::new(
+            "LIMIT_EXCEEDED",
+            "Engine atlas side exceeds 8192 pixels",
+        ));
+    }
+    let mut atlas = if is_atlas(request.format) {
         vec![0; (atlas_w * atlas_h * 4) as usize]
     } else {
         vec![]
@@ -178,9 +205,12 @@ pub fn export(workspace: &Workspace, project: &Project, request: &ExportRequest)
     let mut frames = vec![];
     let mut files = vec![];
     let mut work = 0;
+    let mut session = render::Session::new(scene, &graph);
+    control.progress("rendering", 0, count);
     for index in 0..count {
+        control.check()?;
         let t = f64::from(index) / f64::from(request.fps);
-        let frame = render::frame(scene, &graph, t)?;
+        let frame = session.frame(t, control)?;
         actual_budget(&mut work, frame.stats.raster_work_units)?;
         let (file, rect) = match request.format {
             ExportFormat::Sequence => {
@@ -190,7 +220,7 @@ pub fn export(workspace: &Workspace, project: &Project, request: &ExportRequest)
                 files.push(json!({"path":file,"bytes":bytes.len(),"sha256":hash(&bytes)}));
                 (file, [0, 0, w, h])
             }
-            ExportFormat::Spritesheet => {
+            ExportFormat::Spritesheet | ExportFormat::Godot | ExportFormat::Unity => {
                 let (x, y) = ((index % cols) * (w + 2) + 1, (index / cols) * (h + 2) + 1);
                 blit(&mut atlas, atlas_w, &frame.rgba, w, h, x, y);
                 ("atlas.png".into(), [x, y, w, h])
@@ -199,18 +229,38 @@ pub fn export(workspace: &Workspace, project: &Project, request: &ExportRequest)
         };
         let duration = (scene.simulation.duration_seconds - t).min(1.0 / f64::from(request.fps));
         frames.push(json!({"index":index,"file":file,"rect":{"x":rect[0],"y":rect[1],"width":rect[2],"height":rect[3]},"time_seconds":t,"duration_ms":duration*1000.0,"pixel_sha256":hash(&frame.rgba),"stats":frame.stats}));
+        control.progress("rendering", index + 1, count);
     }
-    if matches!(request.format, ExportFormat::Spritesheet) {
+    control.progress("encoding", count, count);
+    if is_atlas(request.format) {
         let bytes = render::png_bytes(atlas_w, atlas_h, &atlas)?;
         write(&staging.path().join("atlas.png"), &bytes)?;
         files.push(json!({"path":"atlas.png","bytes":bytes.len(),"sha256":hash(&bytes)}));
     }
-    let metadata = manifest(project, request, &graph, &frames, &files)?;
+    for (name, bytes) in crate::integration::files(
+        request.format,
+        &frames,
+        request.fps,
+        crate::integration::periodic(scene, &graph),
+    ) {
+        let path = staging.path().join(name);
+        if let Some(parent) = path.parent() {
+            fs::create_dir_all(parent)?;
+        }
+        write(&path, &bytes)?;
+        files.push(json!({"path":name,"bytes":bytes.len(),"sha256":hash(&bytes)}));
+    }
+    let mut metadata = manifest(project, request, &graph, &frames, &files)?;
+    if is_atlas(request.format) {
+        metadata["atlas_size"] = json!({"width":atlas_w,"height":atlas_h});
+    }
     write(
         &staging.path().join("metadata.json"),
         &serde_json::to_vec_pretty(&metadata)?,
     )?;
+    control.check()?;
     fs::rename(staging.path(), &target)?;
+    control.progress("complete", count, count);
     Ok(
         json!({"out":target,"frame_count":count,"metadata":"metadata.json","files":files,"backend":BACKEND,"project_revision":project.revision}),
     )
@@ -230,6 +280,7 @@ fn export_gif(
     request: &ExportRequest,
     graph: &Compiled,
     count: u32,
+    control: &RenderControl,
 ) -> Result<Value> {
     let settings = request.gif.clone().unwrap_or_default();
     if !(1..=8).contains(&settings.scale) || !(1..=30).contains(&settings.quantizer_speed) {
@@ -266,9 +317,12 @@ fn export_gif(
     let mut frames = vec![];
     let mut end_cs = 0_u16;
     let mut work = 0;
+    let mut session = render::Session::new(scene, graph);
+    control.progress("rendering", 0, count);
     for index in 0..count {
         let t = f64::from(index) / f64::from(request.fps);
-        let frame = render::frame(scene, graph, t)?;
+        control.check()?;
+        let frame = session.frame(t, control)?;
         actual_budget(&mut work, frame.stats.raster_work_units)?;
         let opaque = render::matte(&frame.rgba, settings.background);
         let mut scaled = vec![0; (w * h * 4) as usize];
@@ -296,6 +350,7 @@ fn export_gif(
         encoded.dispose = gif::DisposalMethod::Keep;
         encoder.write_frame(&encoded)?;
         frames.push(json!({"index":index,"file":"animation.gif","rect":{"x":0,"y":0,"width":w,"height":h},"time_seconds":t,"duration_ms":u32::from(delay)*10,"pixel_sha256":hash(&frame.rgba),"stats":frame.stats}));
+        control.progress("rendering", index + 1, count);
     }
     encoder.into_inner()?.sync_all()?;
     let bytes = fs::read(staging.path().join("animation.gif"))?;
@@ -311,7 +366,9 @@ fn export_gif(
         &staging.path().join("metadata.json"),
         &serde_json::to_vec_pretty(&metadata)?,
     )?;
+    control.check()?;
     fs::rename(staging.path(), &target)?;
+    control.progress("complete", count, count);
     Ok(
         json!({"out":target,"frame_count":count,"metadata":"metadata.json","files":files,"backend":BACKEND,"project_revision":project.revision}),
     )
@@ -327,6 +384,6 @@ fn manifest(
     let scene = &project.scene;
     let (w, h) = (scene.canvas.width, scene.canvas.height);
     Ok(
-        json!({"format":"vfxmaker.export","schema_version":1,"engine_version":ENGINE_VERSION,"backend":BACKEND,"project_revision":project.revision,"scene_sha256":hash(&serde_json::to_vec(scene)?),"seed":scene.simulation.seed,"tick_hz":scene.simulation.tick_hz,"fps":request.fps,"duration_seconds":scene.simulation.duration_seconds,"sampling":"t=i/fps, i=0..ceil(duration*fps)-1; simulation samples floor(t*tick_hz)","canvas_size":{"width":w,"height":h},"pivot":{"x":0.5,"y":0.5},"origin":"top_left","trim":false,"loop":false,"premultiplied_alpha":false,"color_space":"sRGB","blend_mode":graph.blend,"texture_filter":if scene.canvas.pixel_mode {"nearest"} else {"linear"},"padding":if matches!(request.format,ExportFormat::Spritesheet) {1} else {0},"export_format":request.format,"frames":frames,"files":files}),
+        json!({"format":"vfxmaker.export","schema_version":1,"engine_version":ENGINE_VERSION,"backend":BACKEND,"project_revision":project.revision,"scene_sha256":hash(&serde_json::to_vec(scene)?),"seed":scene.simulation.seed,"tick_hz":scene.simulation.tick_hz,"fps":request.fps,"duration_seconds":scene.simulation.duration_seconds,"sampling":"t=i/fps, i=0..ceil(duration*fps)-1; simulation samples floor(t*tick_hz)","canvas_size":{"width":w,"height":h},"pivot":{"x":0.5,"y":0.5},"origin":"top_left","trim":false,"loop":crate::integration::periodic(scene,graph),"premultiplied_alpha":false,"color_space":"sRGB","blend_mode":graph.blend,"texture_filter":if scene.canvas.pixel_mode {"nearest"} else {"linear"},"padding":if is_atlas(request.format) {1} else {0},"export_format":request.format,"frames":frames,"files":files}),
     )
 }

@@ -245,3 +245,146 @@ fn unsupported_recipe_parameters_and_malformed_gif_flags_return_json_errors() {
     );
     assert!(!dir.path().join("bad").exists());
 }
+
+#[test]
+fn asset_recipe_engine_exports_analysis_and_stderr_progress_form_a_standalone_workflow() {
+    let dir = tempfile::tempdir().unwrap();
+    std::fs::write(
+        dir.path().join("sprite.png"),
+        vfx_core::render::png_bytes(2, 1, &[255, 0, 0, 255, 0, 255, 0, 255]).unwrap(),
+    )
+    .unwrap();
+    cli(dir.path(), &["new", "effect.vfxproj"], 0);
+    assert_eq!(
+        cli(
+            dir.path(),
+            &[
+                "asset",
+                "import",
+                "effect.vfxproj",
+                "--file",
+                "sprite.png",
+                "--id",
+                "flip",
+                "--columns",
+                "2",
+                "--expected-revision",
+                "0"
+            ],
+            0
+        )["data"]["revision"],
+        1
+    );
+    assert_eq!(
+        cli(dir.path(), &["asset", "list", "effect.vfxproj"], 0)["data"][0]["frames"],
+        2
+    );
+    assert_eq!(
+        cli(
+            dir.path(),
+            &[
+                "material",
+                "effect.vfxproj",
+                "--emitter",
+                "emitter",
+                "--settings",
+                r#"{"sprite":{"asset":"flip"},"scale":[2,1]}"#,
+                "--expected-revision",
+                "1"
+            ],
+            0
+        )["data"]["revision"],
+        2
+    );
+    assert_eq!(
+        cli(
+            dir.path(),
+            &[
+                "timeline",
+                "effect.vfxproj",
+                "--emitter",
+                "emitter",
+                "--settings",
+                r#"{"delay_seconds":0.1,"duration_seconds":0.7}"#,
+                "--expected-revision",
+                "2"
+            ],
+            0
+        )["data"]["revision"],
+        3
+    );
+    cli(
+        dir.path(),
+        &[
+            "recipe",
+            "save",
+            "effect.vfxproj",
+            "--id",
+            "portable",
+            "--description",
+            "Portable sprite example",
+            "--out",
+            "recipe.json",
+        ],
+        0,
+    );
+    cli(
+        dir.path(),
+        &["new", "copy.vfxproj", "--preset-file", "recipe.json"],
+        0,
+    );
+    let analysis = cli(
+        dir.path(),
+        &[
+            "analyze",
+            "copy.vfxproj",
+            "--samples",
+            "4",
+            "--compare-fresh",
+        ],
+        0,
+    );
+    assert_eq!(analysis["data"]["baseline"]["pixel_parity"], true);
+    let output = Command::new(env!("CARGO_BIN_EXE_vfx"))
+        .args([
+            "export",
+            "copy.vfxproj",
+            "--format",
+            "godot",
+            "--out",
+            "engine",
+            "--progress",
+            "--json",
+        ])
+        .current_dir(dir.path())
+        .output()
+        .unwrap();
+    assert!(
+        output.status.success(),
+        "{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    assert_eq!(
+        serde_json::from_slice::<Value>(&output.stdout).unwrap()["ok"],
+        true
+    );
+    let events: Vec<Value> = String::from_utf8_lossy(&output.stderr)
+        .lines()
+        .map(|l| serde_json::from_str(l).unwrap())
+        .collect();
+    assert_eq!(events.last().unwrap()["phase"], "complete");
+    assert!(dir.path().join("engine/effect.tres").is_file());
+    cli(
+        dir.path(),
+        &[
+            "export",
+            "copy.vfxproj",
+            "--format",
+            "unity",
+            "--out",
+            "unity",
+        ],
+        0,
+    );
+    assert!(dir.path().join("unity/Editor/VfxMakerImport.cs").is_file());
+}

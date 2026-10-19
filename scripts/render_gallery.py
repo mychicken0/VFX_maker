@@ -5,6 +5,7 @@ import html
 import json
 from pathlib import Path
 import subprocess
+import zipfile
 
 
 def main():
@@ -15,14 +16,19 @@ def main():
     parser.add_argument("--scale", type=int, default=3)
     parser.add_argument("--background", default="#100811")
     parser.add_argument("--preset", action="append", help="Optional subset; may be repeated")
+    parser.add_argument("--engine",action="append",choices=["godot","unity"],default=[],help="Also generate a downloadable engine asset folder")
     args = parser.parse_args()
     root = args.out.absolute()
     root.mkdir(parents=True, exist_ok=False)
 
     def cli(*command):
         process = subprocess.run([args.vfx, "--root", str(root), "--json", *command],
-                                 check=True, capture_output=True, text=True)
-        return json.loads(process.stdout)["data"]
+                                 capture_output=True, text=True)
+        result = json.loads(process.stdout)
+        if process.returncode != 0:
+            error = result.get("error", {})
+            raise RuntimeError(f"vfx {command[0]}: {error.get('code', 'FAILED')}: {error.get('message', process.stderr)}")
+        return result["data"]
 
     catalog = cli("preset", "list")
     if args.preset:
@@ -50,7 +56,15 @@ def main():
                   "--background", args.background, "--out", f"{ident}/gif")
         atlas = cli("export", f"{ident}/effect.vfxproj", "--format", "spritesheet",
                     "--fps", str(args.fps), "--out", f"{ident}/atlas")
-        rendered.append({"preset": preset, "gif": gif, "atlas": atlas, "preview": preview})
+        engines = {}
+        for engine in dict.fromkeys(args.engine):
+            engines[engine] = cli("export", f"{ident}/effect.vfxproj", "--format", engine,
+                                  "--fps", str(args.fps), "--out", f"{ident}/{engine}")
+            with zipfile.ZipFile(folder / f"{engine}.zip", "x", compression=zipfile.ZIP_DEFLATED) as archive:
+                for file in sorted((folder / engine).rglob("*")):
+                    if file.is_file():
+                        archive.write(file, arcname=str(Path(ident) / file.relative_to(folder / engine)))
+        rendered.append({"preset": preset, "gif": gif, "atlas": atlas, "preview": preview, "engines": engines})
         print(f"Rendered {ident}: {gif['frame_count']} frames", flush=True)
 
     (root / "gallery.json").write_text(json.dumps(rendered, indent=2) + "\n")
@@ -59,10 +73,11 @@ def main():
         p = item["preset"]
         ident = html.escape(p["id"], quote=True)
         description = html.escape(p["description"])
+        engine_links = "".join(f'<a href="{ident}/{engine}.zip" download>{engine.title()} assets</a>' for engine in item["engines"])
         cards.append(f'''<article><img src="{ident}/gif/animation.gif" alt="{description}">
 <div class="body"><h2>{ident.replace('_', ' ')}</h2><p>{description}</p>
 <span>{item['gif']['frame_count']} frames · {args.fps} FPS · {p['canvas']['width']}×{p['canvas']['height']}</span>
-<nav><a href="{ident}/gif/animation.gif" download>GIF</a><a href="{ident}/atlas/atlas.png" download>Transparent atlas</a><a href="{ident}/effect.vfxproj" download>Editable project</a></nav></div></article>''')
+<nav><a href="{ident}/gif/animation.gif" download>GIF</a><a href="{ident}/atlas/atlas.png" download>Transparent atlas</a><a href="{ident}/effect.vfxproj" download>Editable project</a>{engine_links}</nav></div></article>''')
     page = '''<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>VFX Maker — rendered gallery</title><style>
 *{box-sizing:border-box}body{margin:0;background:#0b0c12;color:#e9e8ee;font:15px system-ui,sans-serif}

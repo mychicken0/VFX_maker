@@ -35,7 +35,7 @@ async fn sdk_client_can_author_preview_export_and_share_projects_with_the_core()
         let mut command=tokio::process::Command::new(env!("CARGO_BIN_EXE_vfx-mcp"));
         command.arg("--root").arg(dir.path()).arg("--stdio").current_dir(dir.path()).env_remove("DISPLAY").env_remove("WAYLAND_DISPLAY");
         let client=().serve(TokioChildProcess::new(command).unwrap()).await.unwrap();
-        let tools=client.list_all_tools().await.unwrap();assert_eq!(tools.len(),13);
+        let tools=client.list_all_tools().await.unwrap();assert_eq!(tools.len(),22);
         assert!(tools.iter().all(|tool|tool.input_schema.get("type").is_some()));
         assert_eq!(data(call(&client,"vfx_get_capabilities",json!({})).await)["headless"],true);
         assert!(data(call(&client,"vfx_list_presets",json!({})).await).as_array().unwrap().len()>=12);
@@ -89,7 +89,7 @@ async fn stdout_is_json_rpc_only_and_oversized_frames_are_rejected() {
         input.write_all(b"{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\",\"params\":{\"protocolVersion\":\"2025-06-18\",\"capabilities\":{},\"clientInfo\":{\"name\":\"wire-test\",\"version\":\"1\"}}}\n").await.unwrap();
         let mut line=String::new();output.read_line(&mut line).await.unwrap();let message:Value=serde_json::from_str(&line).expect("stdout must contain only JSON-RPC");assert_eq!(message["id"],1);assert!(message["result"]["capabilities"]["tools"].is_object());
         input.write_all(b"{\"jsonrpc\":\"2.0\",\"method\":\"notifications/initialized\"}\n{\"jsonrpc\":\"2.0\",\"id\":2,\"method\":\"tools/list\",\"params\":{}}\n").await.unwrap();
-        line.clear();output.read_line(&mut line).await.unwrap();let message:Value=serde_json::from_str(&line).unwrap();assert_eq!(message["id"],2);assert_eq!(message["result"]["tools"].as_array().unwrap().len(),13);
+        line.clear();output.read_line(&mut line).await.unwrap();let message:Value=serde_json::from_str(&line).unwrap();assert_eq!(message["id"],2);assert_eq!(message["result"]["tools"].as_array().unwrap().len(),22);
         // A single over-limit line must close transport without being parsed or logged to stdout.
         let large=vec![b' ';4*1024*1024+32];
         let _=input.write_all(&large).await;
@@ -97,4 +97,37 @@ async fn stdout_is_json_rpc_only_and_oversized_frames_are_rejected() {
         line.clear();assert_eq!(output.read_line(&mut line).await.unwrap(),0);
         child.wait().await.unwrap();
     }).await.expect("MCP wire check timed out");
+}
+
+#[tokio::test]
+async fn sdk_assets_recipes_analysis_and_async_jobs_have_real_results_and_cancellation() {
+    tokio::time::timeout(std::time::Duration::from_secs(40),async{
+        let dir=tempfile::tempdir().unwrap();
+        let mut command=tokio::process::Command::new(env!("CARGO_BIN_EXE_vfx-mcp"));command.arg("--root").arg(dir.path()).current_dir(dir.path());
+        let client=().serve(TokioChildProcess::new(command).unwrap()).await.unwrap();
+        std::fs::write(dir.path().join("sprite.png"),vfx_core::render::png_bytes(2,1,&[255,0,0,255,0,255,0,255]).unwrap()).unwrap();
+        data(call(&client,"vfx_new_project",json!({"path":"p.vfxproj"})).await);
+        let imported=data(call(&client,"vfx_import_asset",json!({"project":"p.vfxproj","file":"sprite.png","id":"flip","columns":2,"expected_revision":0})).await);assert_eq!(imported["revision"],1);
+        assert_eq!(data(call(&client,"vfx_list_assets",json!({"project":"p.vfxproj"})).await)[0]["frames"],2);
+        assert_eq!(data(call(&client,"vfx_set_material",json!({"project":"p.vfxproj","emitter":"emitter","settings":{"sprite":{"asset":"flip"},"layer":2},"expected_revision":1})).await)["revision"],2);
+        assert_eq!(data(call(&client,"vfx_set_timeline",json!({"project":"p.vfxproj","emitter":"emitter","settings":{"delay_seconds":0.1,"duration_seconds":0.7,"repeat":false},"expected_revision":2})).await)["revision"],3);
+        data(call(&client,"vfx_save_recipe",json!({"project":"p.vfxproj","out":"custom.json","id":"copied","description":"Reusable asset-bearing recipe"})).await);
+        let analysis=data(call(&client,"vfx_analyze",json!({"project":"p.vfxproj","samples":4,"compare_fresh":true})).await);assert_eq!(analysis["baseline"]["pixel_parity"],true);
+        let job=data(call(&client,"vfx_start_export",json!({"export":{"project":"p.vfxproj","out":"job-godot","format":"godot","fps":25},"expected_revision":3})).await);
+        let id=job["job_id"].as_str().unwrap();
+        let done=loop{let state=data(call(&client,"vfx_get_export_job",json!({"job_id":id})).await);if ["succeeded","failed","cancelled"].contains(&state["state"].as_str().unwrap()){break state;}tokio::time::sleep(std::time::Duration::from_millis(10)).await;};
+        assert_eq!(done["state"],"succeeded","{done}");assert_eq!(done["progress"]["phase"],"complete");assert!(dir.path().join("job-godot/effect.tres").is_file());
+        let stale=data(call(&client,"vfx_start_export",json!({"export":{"project":"p.vfxproj","out":"stale","format":"gif","fps":20},"expected_revision":0})).await);
+        loop{let state=data(call(&client,"vfx_get_export_job",json!({"job_id":stale["job_id"]})).await);if state["state"]=="failed"{assert_eq!(state["error"]["code"],"REVISION_CONFLICT");break;}tokio::time::sleep(std::time::Duration::from_millis(10)).await;}
+        assert!(!dir.path().join("stale").exists());
+        data(call(&client,"vfx_new_project",json!({"path":"heavy.vfxproj","preset":"fire","width":256,"height":256})).await);
+        let heavy=data(call(&client,"vfx_start_export",json!({"export":{"project":"heavy.vfxproj","out":"cancelled","format":"gif","fps":25},"expected_revision":0})).await);
+        let id=heavy["job_id"].as_str().unwrap();
+        loop{let state=data(call(&client,"vfx_get_export_job",json!({"job_id":id})).await);assert_ne!(state["state"],"failed","{state}");assert_ne!(state["state"],"succeeded","job completed before running-cancellation check");if state["state"]=="running"&&state["progress"]["completed"].as_u64().unwrap_or(0)>=1{break;}tokio::time::sleep(std::time::Duration::from_millis(5)).await;}
+        data(call(&client,"vfx_cancel_export_job",json!({"job_id":id})).await);
+        loop{let state=data(call(&client,"vfx_get_export_job",json!({"job_id":id})).await);if state["state"]=="cancelled"{assert_eq!(state["error"]["code"],"CANCELLED");break;}assert_ne!(state["state"],"failed","{state}");tokio::time::sleep(std::time::Duration::from_millis(10)).await;}
+        assert!(!dir.path().join("cancelled").exists());assert!(!std::fs::read_dir(dir.path()).unwrap().any(|e|e.unwrap().file_name().to_string_lossy().starts_with(".tmp")));
+        let unknown=call(&client,"vfx_get_export_job",json!({"job_id":"missing"})).await;assert_eq!(unknown.is_error,Some(true));
+        client.cancel().await.unwrap();
+    }).await.expect("MCP asset/job workflow timed out");
 }

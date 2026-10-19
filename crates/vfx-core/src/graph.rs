@@ -13,6 +13,7 @@ pub struct Compiled {
     pub blend: Blend,
     pub shape: Shape,
     pub glow: Option<Glow>,
+    pub assets: BTreeMap<String, crate::assets::DecodedAsset>,
 }
 
 fn bounded(value: f64, min: f64, max: f64, label: &str) -> Result<()> {
@@ -31,11 +32,11 @@ fn range(value: [f64; 2], min: f64, max: f64, label: &str) -> Result<()> {
 pub fn validate_project(project: &Project) -> Result<()> {
     if project.format != "vfxmaker.project"
         || project.schema_version != 1
-        || !["0.1.0", ENGINE_VERSION].contains(&project.engine_version.as_str())
+        || !["0.1.0", "0.2.0", ENGINE_VERSION].contains(&project.engine_version.as_str())
     {
         return Err(Error::new(
             "UNSUPPORTED_VERSION",
-            "Expected vfxmaker.project schema 1 from engine 0.1.0 or the current engine",
+            "Expected vfxmaker.project schema 1 from engine 0.1.0, 0.2.0 or the current engine",
         ));
     }
     if project.undo.len() > MAX_HISTORY || project.redo.len() > MAX_HISTORY {
@@ -49,6 +50,33 @@ pub fn validate_project(project: &Project) -> Result<()> {
 }
 
 pub fn compile(scene: &Scene) -> Result<Compiled> {
+    if scene.assets.len() > 16 {
+        return Err(Error::new("LIMIT_EXCEEDED", "At most 16 embedded assets"));
+    }
+    let mut assets = BTreeMap::new();
+    let mut asset_pixels = 0;
+    for (id, asset) in &scene.assets {
+        if id.is_empty()
+            || id.len() > 64
+            || !id
+                .bytes()
+                .all(|c| c.is_ascii_alphanumeric() || c == b'_' || c == b'-')
+        {
+            return Err(Error::invalid(
+                "Asset IDs require 1..64 ASCII letters/digits/underscores/hyphens",
+            ));
+        }
+        let decoded = asset.decode()?;
+        asset_pixels += u64::from(decoded.width) * u64::from(decoded.height);
+        if asset_pixels > crate::assets::MAX_TOTAL_ASSET_PIXELS {
+            return Err(Error::new(
+                "LIMIT_EXCEEDED",
+                "Total embedded assets exceed 1 Mi pixels",
+            ));
+        }
+        assets.insert(id.clone(), decoded);
+    }
+    crate::post::validate(&scene.post_process, &assets)?;
     if scene.name.trim().is_empty() || scene.name.len() > 256 {
         return Err(Error::invalid("Name must contain 1..=256 bytes"));
     }
@@ -217,6 +245,69 @@ pub fn compile(scene: &Scene) -> Result<Compiled> {
                 };
                 spawns += u64::from(*count);
                 (lifetime, speed, angle_degrees, origin)
+            }
+            NodeKind::Material { settings } => {
+                if !(-1024..=1024).contains(&settings.layer) {
+                    return Err(Error::invalid("Layer must be -1024..1024"));
+                }
+                range(
+                    settings.rotation_degrees,
+                    -36000.0,
+                    36000.0,
+                    "rotation_degrees",
+                )?;
+                range(
+                    settings.angular_velocity,
+                    -36000.0,
+                    36000.0,
+                    "angular_velocity",
+                )?;
+                for scale in settings.scale {
+                    bounded(scale, 0.05, 16.0, "material scale")?;
+                }
+                bounded(settings.velocity_stretch, 0.0, 1.0, "velocity_stretch")?;
+                if let Some(sprite) = &settings.sprite {
+                    let image = assets
+                        .get(&sprite.asset)
+                        .ok_or_else(|| Error::invalid("Sprite refers to a missing asset"))?;
+                    if sprite.start_frame >= image.frames {
+                        return Err(Error::invalid("Sprite start_frame is outside asset frames"));
+                    }
+                    bounded(sprite.fps, 0.1, 120.0, "sprite fps")?;
+                }
+                continue;
+            }
+            NodeKind::Timeline { settings } => {
+                bounded(
+                    settings.delay_seconds,
+                    0.0,
+                    scene.simulation.duration_seconds,
+                    "timeline delay",
+                )?;
+                bounded(
+                    settings.duration_seconds,
+                    1.0 / f64::from(scene.simulation.tick_hz),
+                    scene.simulation.duration_seconds,
+                    "timeline duration",
+                )?;
+                let ticks = settings.duration_seconds * f64::from(scene.simulation.tick_hz);
+                if (ticks - ticks.round()).abs() > 1e-6 {
+                    return Err(Error::invalid(
+                        "Timeline duration must be a whole number of simulation ticks",
+                    ));
+                }
+                if settings.delay_seconds >= scene.simulation.duration_seconds
+                    || (!settings.repeat
+                        && settings.delay_seconds + settings.duration_seconds
+                            > scene.simulation.duration_seconds + 1e-9)
+                {
+                    return Err(Error::invalid("Timeline active window must fit the scene"));
+                }
+                continue;
+            }
+            NodeKind::RotationCurve { curve } => {
+                curve.validate(-36000.0, 36000.0)?;
+                continue;
             }
             NodeKind::SizeCurve { curve } => {
                 curve.validate(0.0, 32.0)?;
@@ -429,10 +520,66 @@ pub fn compile(scene: &Scene) -> Result<Compiled> {
             "A particle pipeline may contain only one trail modifier",
         ));
     }
+    for pipeline in &pipelines {
+        for duplicate in ["material", "timeline"] {
+            let count = pipeline
+                .modifiers
+                .iter()
+                .filter(|m| {
+                    matches!(
+                        (duplicate, m),
+                        ("material", NodeKind::Material { .. })
+                            | ("timeline", NodeKind::Timeline { .. })
+                    )
+                })
+                .count();
+            if count > 1 {
+                return Err(Error::invalid(
+                    "Only one material and one timeline are allowed per pipeline",
+                ));
+            }
+        }
+        if let Some(t) = pipeline.modifiers.iter().find_map(|m| {
+            if let NodeKind::Timeline { settings } = m {
+                Some(settings)
+            } else {
+                None
+            }
+        }) {
+            let (lifetime, finish) = match &pipeline.emitter.kind {
+                NodeKind::EmitterBurst { lifetime, .. }
+                | NodeKind::EmitterStream { lifetime, .. } => (*lifetime, 0.0),
+                NodeKind::EmitterPath {
+                    lifetime,
+                    start_seconds,
+                    travel_seconds,
+                    ..
+                }
+                | NodeKind::EmitterShape {
+                    lifetime,
+                    start_seconds,
+                    travel_seconds,
+                    ..
+                } => (*lifetime, start_seconds + travel_seconds),
+                _ => unreachable!("validated emitter"),
+            };
+            if finish > t.duration_seconds + 1e-9 {
+                return Err(Error::invalid(
+                    "Emitter schedule exceeds its timeline duration",
+                ));
+            }
+            if t.repeat && lifetime[1] > t.duration_seconds + 1e-9 {
+                return Err(Error::invalid(
+                    "Repeating timelines require particle lifetimes no longer than the cycle",
+                ));
+            }
+        }
+    }
     Ok(Compiled {
         pipelines,
         blend,
         shape,
         glow,
+        assets,
     })
 }

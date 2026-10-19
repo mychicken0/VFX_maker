@@ -84,10 +84,11 @@ def main():
             shutil.copy2(binary, folder / "bin" / tool)
         for item in ("README.md", "THIRD_PARTY_NOTICES.md", "Cargo.lock"):
             shutil.copy2(ROOT / item, folder / item)
-        for item in ("docs", "presets", "examples"):
+        for item in ("docs", "presets", "examples", "integrations"):
             shutil.copytree(ROOT / item, folder / item)
         (folder / "scripts").mkdir()
-        shutil.copy2(ROOT / "scripts/render_gallery.py", folder / "scripts/render_gallery.py")
+        for script in ("render_gallery.py", "verify_godot.py"):
+            shutil.copy2(ROOT / "scripts" / script, folder / "scripts" / script)
         reachable = {node["id"] for node in metadata["resolve"]["nodes"]}
         inventory = []
         for p in sorted(metadata["packages"], key=lambda p: (p["name"], p["version"])):

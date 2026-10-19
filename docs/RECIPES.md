@@ -139,3 +139,54 @@ Exports enforce 300-frame, 32-Mi-pixel and work budgets, including scaled GIF
 pixels and actual cumulative trail raster work. Reduce canvas, FPS, radius,
 particles or history when a budget error is returned; no incomplete export is
 published.
+
+## Sprites, materials and timelines (0.3)
+
+See [production workflow](PRODUCTION_WORKFLOW.md) for complete commands. A scene
+may embed up to 16 PNG assets as `{png:base64,columns,rows,frames}`. Maximum PNG
+size is512KiB, decoded asset size256Ki pixels/1024per side, and combined decoded
+assets1Mi pixels. Frames are row-major and the image must divide evenly by the
+grid. Static grayscale/RGB/RGBA/palette PNGs are expanded to RGBA8; APNG is rejected.
+Source images are treated as sRGB; ICC workflows are not implemented.
+
+`material.settings` defaults to layer0, inherited blend/shape, no sprite, zero
+rotation/spin, scale[1,1], no velocity alignment/stretch. Rotation and angular
+velocity are sampled ranges, in degrees and degrees/second. Velocity alignment
+adds the direction of current velocity; stretch multiplies local X by
+`min(16,1+speed*velocity_stretch)`. Scale components are0.05–16. Sprite aspect
+ratio is preserved before these scale factors; size controls half-height.
+Smooth sampling interpolates premultiplied linear texels to avoid dark fringes.
+
+A sprite references an asset and has playback lifetime/once/loop/ping_pong, FPS,
+start_frame and random_start. Lifetime playback spans remaining frames over
+particle age/lifetime; once clamps at the final frame, loop wraps, ping-pong
+reflects. Random starts use the particle's seeded RNG. `rotation_curve` adds a
+normalized-age angle curve, including when no explicit material is present.
+
+Layers sort stably before compositing; equal layers retain emitter-ID order.
+Normal/additive/screen/multiply modes composite internally in linear light. The
+output renderer still defines the default mode/shape for particles without an
+override. Trails inherit blend/layer and current particle color; sprite images
+apply to heads, not trail segments.
+
+`timeline.settings` defines delay_seconds, duration_seconds and repeat. Delay
+rounds up to a simulation tick; duration must be a whole number of ticks.
+Non-repeating windows clip particles when they end. Repeat evaluates previous
+cycle particles at wrapped ages, so a stream begins in its periodic steady
+state; lifetimes cannot exceed the cycle. Emitter schedules must fit their local
+window. This is deterministic repetition; artistic seam quality still depends
+on authored curves and birth/death behavior. Export loop metadata is true only
+when all pipelines repeat from zero and their periods, including distortion,
+divide the full scene duration.
+
+A scene's `post_process` array executes up to8 ordered operations after glow:
+
+- palette:2–64 distinct RGB colors, dither0–1, alpha_levels2–256. Uses a4×4 Bayer
+  pattern and nearest linear-RGB palette distance. Output transparent RGB is zero.
+- mask:embedded asset, frame, alpha/luminance channel, optional inversion. The
+  selected texture frame stretches over the canvas and multiplies alpha.
+- wave_distortion:XY pixel displacement amplitudes up to32, spatial frequencies
+  in cycles/pixel, and explicit period_seconds. Sampling follows pixel/smooth mode.
+
+Use `set_post_process` to replace the operation list atomically. None of these
+operations accepts scripts, shaders or expressions.

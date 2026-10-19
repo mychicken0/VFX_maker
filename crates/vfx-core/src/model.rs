@@ -1,6 +1,8 @@
 use crate::animation::{Curve, Gradient};
+use crate::assets::ImageAsset;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
+use std::collections::BTreeMap;
 
 pub const ENGINE_VERSION: &str = env!("CARGO_PKG_VERSION");
 pub const BACKEND: &str = "cpu-reference-v1";
@@ -30,6 +32,8 @@ pub struct Simulation {
 pub enum Blend {
     Normal,
     Additive,
+    Screen,
+    Multiply,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, JsonSchema)]
@@ -37,6 +41,111 @@ pub enum Blend {
 pub enum Shape {
     Circle,
     Quad,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum FlipbookPlayback {
+    Lifetime,
+    Once,
+    Loop,
+    PingPong,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(default, deny_unknown_fields)]
+pub struct Sprite {
+    pub asset: String,
+    pub playback: FlipbookPlayback,
+    pub fps: f64,
+    pub start_frame: u32,
+    pub random_start: bool,
+}
+impl Default for Sprite {
+    fn default() -> Self {
+        Self {
+            asset: String::new(),
+            playback: FlipbookPlayback::Lifetime,
+            fps: 12.0,
+            start_frame: 0,
+            random_start: false,
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(default, deny_unknown_fields)]
+pub struct Material {
+    pub layer: i32,
+    pub blend: Option<Blend>,
+    pub shape: Option<Shape>,
+    pub sprite: Option<Sprite>,
+    pub rotation_degrees: [f64; 2],
+    pub angular_velocity: [f64; 2],
+    pub align_velocity: bool,
+    pub scale: [f64; 2],
+    /// Extra horizontal scale per pixel/second of speed, capped at 16x.
+    pub velocity_stretch: f64,
+}
+impl Default for Material {
+    fn default() -> Self {
+        Self {
+            layer: 0,
+            blend: None,
+            shape: None,
+            sprite: None,
+            rotation_degrees: [0.0; 2],
+            angular_velocity: [0.0; 2],
+            align_velocity: false,
+            scale: [1.0; 2],
+            velocity_stretch: 0.0,
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(default, deny_unknown_fields)]
+pub struct Timeline {
+    pub delay_seconds: f64,
+    pub duration_seconds: f64,
+    pub repeat: bool,
+}
+impl Default for Timeline {
+    fn default() -> Self {
+        Self {
+            delay_seconds: 0.0,
+            duration_seconds: 1.0,
+            repeat: false,
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum MaskChannel {
+    Alpha,
+    Luminance,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(tag = "type", rename_all = "snake_case", deny_unknown_fields)]
+pub enum PostProcess {
+    Palette {
+        colors: Vec<[u8; 3]>,
+        dither: f64,
+        alpha_levels: u32,
+    },
+    Mask {
+        asset: String,
+        frame: u32,
+        channel: MaskChannel,
+        invert: bool,
+    },
+    WaveDistortion {
+        amount: [f64; 2],
+        frequency: [f64; 2],
+        period_seconds: f64,
+    },
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, JsonSchema)]
@@ -106,6 +215,15 @@ pub enum NodeKind {
         lifetime: [f64; 2],
         speed: [f64; 2],
         angle_degrees: [f64; 2],
+    },
+    Material {
+        settings: Material,
+    },
+    Timeline {
+        settings: Timeline,
+    },
+    RotationCurve {
+        curve: Curve,
     },
     Gravity {
         acceleration: [f64; 2],
@@ -200,6 +318,10 @@ pub struct Scene {
     pub nodes: Vec<Node>,
     pub edges: Vec<Edge>,
     pub output_node: String,
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub assets: BTreeMap<String, ImageAsset>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub post_process: Vec<PostProcess>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, JsonSchema)]
@@ -232,6 +354,9 @@ impl Project {
 #[serde(tag = "op", rename_all = "snake_case", deny_unknown_fields)]
 pub enum Operation {
     SetName { name: String },
+    UpsertAsset { id: String, asset: ImageAsset },
+    RemoveAsset { id: String },
+    SetPostProcess { effects: Vec<PostProcess> },
     SetCanvas { canvas: Canvas },
     SetSimulation { simulation: Simulation },
     AddNode { node: Node },
@@ -248,6 +373,8 @@ pub enum ExportFormat {
     Sequence,
     Spritesheet,
     Gif,
+    Godot,
+    Unity,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, JsonSchema)]

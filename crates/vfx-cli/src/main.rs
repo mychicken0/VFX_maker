@@ -24,6 +24,48 @@ struct Cli {
 enum Command {
     /// Report the engine's actual supported features and limits.
     Doctor,
+    /// Insert or update an emitter's material without manually rewiring nodes.
+    Material {
+        project: String,
+        #[arg(long)]
+        emitter: String,
+        #[arg(long)]
+        settings: String,
+        #[arg(long)]
+        expected_revision: u64,
+        #[arg(long)]
+        dry_run: bool,
+    },
+    /// Insert or update an emitter's local timeline without manual graph edits.
+    Timeline {
+        project: String,
+        #[arg(long)]
+        emitter: String,
+        #[arg(long)]
+        settings: String,
+        #[arg(long)]
+        expected_revision: u64,
+        #[arg(long)]
+        dry_run: bool,
+    },
+    /// Import or inspect embedded PNG sprites and flipbooks.
+    Asset {
+        #[command(subcommand)]
+        command: AssetCommand,
+    },
+    /// Save an existing project as a portable reusable recipe.
+    Recipe {
+        #[command(subcommand)]
+        command: RecipeCommand,
+    },
+    /// Measure rendering, clipping, empty samples and incremental simulation work.
+    Analyze {
+        project: String,
+        #[arg(long, default_value_t = 12)]
+        samples: u32,
+        #[arg(long)]
+        compare_fresh: bool,
+    },
     /// List bundled editable effect recipes.
     Preset {
         #[command(subcommand)]
@@ -34,7 +76,7 @@ enum Command {
         #[command(subcommand)]
         command: ListCommand,
     },
-    /// Print the JSON Schema for project, patch, node or recipe.
+    /// Print a JSON Schema: project, patch, node, recipe, asset, post_process or export.
     Schema { kind: String },
     /// Create a project without overwriting an existing file.
     New {
@@ -123,6 +165,44 @@ enum Command {
         /// GIF only: palette quantizer speed (1 highest quality, 30 fastest).
         #[arg(long)]
         quantizer_speed: Option<u8>,
+        /// Emit progress events on stderr while keeping stdout JSON clean.
+        #[arg(long)]
+        progress: bool,
+    },
+}
+#[derive(Subcommand)]
+enum AssetCommand {
+    List {
+        project: String,
+    },
+    Import {
+        project: String,
+        #[arg(long)]
+        file: String,
+        #[arg(long)]
+        id: String,
+        #[arg(long)]
+        expected_revision: u64,
+        #[arg(long, default_value_t = 1)]
+        columns: u32,
+        #[arg(long, default_value_t = 1)]
+        rows: u32,
+        #[arg(long)]
+        frames: Option<u32>,
+        #[arg(long)]
+        dry_run: bool,
+    },
+}
+#[derive(Subcommand)]
+enum RecipeCommand {
+    Save {
+        project: String,
+        #[arg(long)]
+        out: String,
+        #[arg(long)]
+        id: String,
+        #[arg(long)]
+        description: String,
     },
 }
 #[derive(Subcommand)]
@@ -144,6 +224,8 @@ enum Format {
     Sequence,
     Spritesheet,
     Gif,
+    Godot,
+    Unity,
 }
 
 fn default_preset() -> String {
@@ -173,6 +255,80 @@ fn run(cli: &Cli) -> Result<Value> {
             info["root"] = json!(workspace.root());
             Ok(info)
         }
+        Command::Material {
+            project,
+            emitter,
+            settings,
+            expected_revision,
+            dry_run,
+        } => workspace.set_material(api::MaterialRequest {
+            project: project.clone(),
+            emitter: emitter.clone(),
+            settings: serde_json::from_str(settings)?,
+            expected_revision: *expected_revision,
+            dry_run: *dry_run,
+        }),
+        Command::Timeline {
+            project,
+            emitter,
+            settings,
+            expected_revision,
+            dry_run,
+        } => workspace.set_timeline(api::TimelineRequest {
+            project: project.clone(),
+            emitter: emitter.clone(),
+            settings: serde_json::from_str(settings)?,
+            expected_revision: *expected_revision,
+            dry_run: *dry_run,
+        }),
+        Command::Asset {
+            command: AssetCommand::List { project },
+        } => workspace.list_assets(project),
+        Command::Asset {
+            command:
+                AssetCommand::Import {
+                    project,
+                    file,
+                    id,
+                    expected_revision,
+                    columns,
+                    rows,
+                    frames,
+                    dry_run,
+                },
+        } => workspace.import_asset(api::ImportAsset {
+            project: project.clone(),
+            file: file.clone(),
+            id: id.clone(),
+            expected_revision: *expected_revision,
+            columns: *columns,
+            rows: *rows,
+            frames: *frames,
+            dry_run: *dry_run,
+        }),
+        Command::Recipe {
+            command:
+                RecipeCommand::Save {
+                    project,
+                    out,
+                    id,
+                    description,
+                },
+        } => workspace.save_recipe(api::SaveRecipe {
+            project: project.clone(),
+            out: out.clone(),
+            id: id.clone(),
+            description: description.clone(),
+        }),
+        Command::Analyze {
+            project,
+            samples,
+            compare_fresh,
+        } => workspace.analyze(analysis::AnalyzeRequest {
+            project: project.clone(),
+            samples: *samples,
+            compare_fresh: *compare_fresh,
+        }),
         Command::Preset {
             command: PresetCommand::List,
         } => Ok(presets()),
@@ -278,12 +434,23 @@ fn run(cli: &Cli) -> Result<Value> {
             background,
             no_loop,
             quantizer_speed,
-        } => workspace.export(ExportRequest {
+            progress,
+        } => {
+            let control = if *progress {
+                control::RenderControl::with_observer(|event| {
+                    eprintln!("{}", serde_json::to_string(&event).expect("progress JSON"))
+                })
+            } else {
+                control::RenderControl::default()
+            };
+            workspace.export_controlled(ExportRequest {
             project: project.clone(),
             format: match format {
                 Format::Sequence => ExportFormat::Sequence,
                 Format::Spritesheet => ExportFormat::Spritesheet,
                 Format::Gif => ExportFormat::Gif,
+                Format::Godot => ExportFormat::Godot,
+                Format::Unity => ExportFormat::Unity,
             },
             fps: *fps,
             out: out.clone(),
@@ -308,7 +475,8 @@ fn run(cli: &Cli) -> Result<Value> {
                 }
                 None
             },
-        }),
+        },&control)
+        }
     }
 }
 

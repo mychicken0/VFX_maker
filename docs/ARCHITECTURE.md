@@ -41,7 +41,7 @@ directories are protected. Lock files are inert and can remain between runs.
 
 All clients must use the API to participate in revision/lock protection. Manual
 JSON edits are possible, but an unrelated editor does not honor advisory locks.
-Schema1 engine0.1 projects remain readable without rewrite. Successful committed
+Schema1 engine0.1/0.2 projects remain readable without rewrite. Successful committed
 mutations upgrade their engine header; previews, exports and dry-runs preserve
 source bytes. Unknown future engine versions are rejected. There is no
 idempotency-token cache or full audit log.
@@ -60,7 +60,11 @@ age. Bounded recent history is recomputed for trails while integrating.
 Randomness uses explicitly implemented FNV-1a node IDs and SplitMix64, keyed by
 project seed, emitter ID and particle index. Adding another emitter does not
 change an existing emitter's random sequence. Emitter IDs define compositing
-order. Scrubbing recomputes from tick 0; checkpoint acceleration is future work.
+order. A render Session caches per-particle position/velocity and bounded dense trail
+history. Monotonic samples integrate only newly elapsed ticks. Backward scrubs
+or wrapped ages restart that particle from its seeded birth state. The immutable
+scene/compiled graph borrows prevent reuse across edited scenes. Cached/fresh
+pixels are tested equal, including all recipes and timeline boundaries.
 
 Particle sizes are radii in pixels. Colors interpolate as sRGB RGBA bytes; the
 renderer converts RGB to linear light for premultiplied compositing, then writes
@@ -101,8 +105,11 @@ when that is required. Resource limits cap file size (4 MiB), graph size, canvas
 particle births, duration, frame count, export pixels and estimated render work
 (including modifier applications). Per-frame and cumulative actual raster work
 are also bounded, including trails/glow. GIF scaling counts toward output pixels.
-Incoming MCP frames are bounded to 4 MiB. Long exports are finite and staged;
-cooperative cancellation and configurable budgets are future work.
+Incoming MCP frames are bounded to4MiB. Exports are finite/staged and support
+cooperative cancellation/progress. MCP retains up to32 session-scoped jobs,
+with2 shared render workers, revision-pinned execution and terminal-job eviction.
+Source snapshots are immutable after worker reads. No persistent job daemon or
+resumable server-restart queue is included; resource budgets remain fixed.
 
 
 ## Data and dependency boundaries
@@ -118,3 +125,22 @@ licenses and actual fetched files. General designs informed independent code;
 no engine/editor source or third-party assets were imported. Direct reuse is
 through locked Rust dependencies, including `gif` and `noise`. See
 [research](OPEN_SOURCE_RESEARCH.md) and [ADR-002](adr/002-data-recipes-and-native-gif.md).
+
+## Asset, image and engine adapters
+
+Embedded PNGs live in Scene.assets, so history snapshots and saved recipes retain
+exact texture/grid state. `assets.rs` validates byte/decoded pixel budgets and
+expands static PNG into RGBA8. Compiled graphs own bounded decoded assets. No
+runtime texture paths or network fetches are allowed. Asset data contributes to
+the4MiB project/history file budget; large assets reduce retained edit capacity.
+
+Material modifiers compute texture frame, rotation, scale and layer for each
+particle. Stable layer sorting precedes rasterization. Sprite sampling uses
+premultiplied linear interpolation; ordered post operations act on straight-alpha
+RGBA output, with masks and distortion preserving transparent RGB conventions.
+
+`integration.rs` adapts the baked padded atlas and exact frame durations to
+Godot4 SpriteFrames and a Unity2022.3+ Editor importer. These are asset adapters,
+not runtime particle-system ports. The Godot resource has been loaded in4.5.1
+and validated by scripts/verify_godot.py; Unity execution remains unverified.
+See [ADR-003](adr/003-production-authoring.md).

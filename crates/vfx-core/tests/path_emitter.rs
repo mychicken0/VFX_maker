@@ -4,6 +4,8 @@ use vfx_core::{
 
 fn scene() -> Scene {
     Scene {
+        assets: Default::default(),
+        post_process: vec![],
         name: "Timed stroke".into(),
         canvas: Canvas {
             width: 64,

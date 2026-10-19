@@ -20,7 +20,7 @@ dependencies include:
 | rmcp, rmcp-macros | Official Rust MCP SDK | Apache-2.0 |
 | tokio, tokio-util | Async execution and framed transport | MIT |
 | futures-util | Bounded transport stream adaptation | MIT OR Apache-2.0 |
-| base64 | MCP preview image encoding | MIT OR Apache-2.0 |
+| base64 | MCP preview encoding and embedded PNG asset serialization | MIT OR Apache-2.0 |
 
 Dependency versions and registry checksums are pinned in Cargo.lock. This is a
 direct-dependency inventory, not an assertion that every researched project is

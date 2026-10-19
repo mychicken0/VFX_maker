@@ -29,6 +29,7 @@ impl Error {
             "REVISION_CONFLICT" => 4,
             "PATH_OUTSIDE_ROOT" => 5,
             "LIMIT_EXCEEDED" => 6,
+            "CANCELLED" => 130,
             _ => 2,
         }
     }

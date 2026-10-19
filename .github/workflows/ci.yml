@@ -33,3 +33,10 @@ jobs:
           "$RUNNER_TEMP/vfx-tools/bin/vfx" new custom.vfxproj --preset-file custom.recipe.json --params '{"count":12}' --json
           "$RUNNER_TEMP/vfx-tools/bin/vfx" export custom.vfxproj --format gif --fps 25 --scale 2 --out custom-gif --json
           test -s custom-gif/animation.gif
+          cp "$GITHUB_WORKSPACE/examples/assets/spark.png" sprite.png
+          "$RUNNER_TEMP/vfx-tools/bin/vfx" asset import custom.vfxproj --file sprite.png --id spark --expected-revision 0 --json
+          "$RUNNER_TEMP/vfx-tools/bin/vfx" material custom.vfxproj --emitter emitter --settings '{"sprite":{"asset":"spark"},"layer":2}' --expected-revision 1 --json
+          "$RUNNER_TEMP/vfx-tools/bin/vfx" export custom.vfxproj --format godot --out godot --progress --json
+          "$RUNNER_TEMP/vfx-tools/bin/vfx" export custom.vfxproj --format unity --out unity --json
+          test -s godot/effect.tres
+          test -s unity/Editor/VfxMakerImport.cs

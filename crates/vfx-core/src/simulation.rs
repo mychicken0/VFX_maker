@@ -1,5 +1,7 @@
+use crate::control::RenderControl;
 use crate::{Error, Result, graph::Compiled, model::*};
 use noise::{NoiseFn, Perlin};
+use std::collections::{BTreeMap, VecDeque};
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Particle {
@@ -8,6 +10,30 @@ pub struct Particle {
     pub color: [f64; 4],
     pub trail: Vec<[f64; 2]>,
     pub trail_width: f64,
+    pub appearance: Option<Appearance>,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct Appearance {
+    pub layer: i32,
+    pub blend: Option<Blend>,
+    pub shape: Option<Shape>,
+    pub sprite: Option<String>,
+    pub frame: u32,
+    pub rotation: f64,
+    pub scale: [f64; 2],
+}
+#[derive(Default)]
+pub(crate) struct SimulationCache {
+    particles: BTreeMap<(String, u32), Kinematics>,
+    pub steps: u64,
+    pub hits: usize,
+}
+struct Kinematics {
+    tick: u32,
+    position: [f64; 2],
+    velocity: [f64; 2],
+    history: VecDeque<(u32, [f64; 2])>,
 }
 
 // FNV-1a IDs + SplitMix64: explicit algorithm, no OS or wall-clock randomness.
@@ -78,6 +104,24 @@ fn spawn_position(shape: &SpawnShape, random: &mut Random) -> [f64; 2] {
 }
 
 pub fn snapshot(scene: &Scene, graph: &Compiled, time: f64) -> Result<Vec<Particle>> {
+    cached_snapshot(
+        scene,
+        graph,
+        time,
+        &mut SimulationCache::default(),
+        &RenderControl::default(),
+    )
+}
+pub(crate) fn cached_snapshot(
+    scene: &Scene,
+    graph: &Compiled,
+    time: f64,
+    cache: &mut SimulationCache,
+    control: &RenderControl,
+) -> Result<Vec<Particle>> {
+    control.check()?;
+    cache.steps = 0;
+    cache.hits = 0;
     if !time.is_finite() || time < 0.0 || time >= scene.simulation.duration_seconds {
         return Err(Error::new(
             "INVALID_TIME",
@@ -89,6 +133,50 @@ pub fn snapshot(scene: &Scene, graph: &Compiled, time: f64) -> Result<Vec<Partic
     let dt = 1.0 / hz;
     let mut particles = vec![];
     for pipeline in &graph.pipelines {
+        control.check()?;
+        let timeline = pipeline.modifiers.iter().find_map(|m| {
+            if let NodeKind::Timeline { settings } = m {
+                Some(settings)
+            } else {
+                None
+            }
+        });
+        let (sample_tick, cycle) = if let Some(t) = timeline {
+            let delay = (t.delay_seconds * hz - 1e-9).ceil().max(0.0) as u32;
+            if sample_tick < delay {
+                continue;
+            }
+            let elapsed = sample_tick - delay;
+            let ticks = (t.duration_seconds * hz).round() as u32;
+            if !t.repeat && elapsed >= ticks {
+                continue;
+            }
+            if t.repeat {
+                (elapsed % ticks, Some(ticks))
+            } else {
+                (elapsed, None)
+            }
+        } else {
+            (sample_tick, None)
+        };
+        let default_material = Material::default();
+        let material = pipeline
+            .modifiers
+            .iter()
+            .find_map(|m| {
+                if let NodeKind::Material { settings } = m {
+                    Some(settings)
+                } else {
+                    None
+                }
+            })
+            .or_else(|| {
+                pipeline
+                    .modifiers
+                    .iter()
+                    .any(|m| matches!(m, NodeKind::RotationCurve { .. }))
+                    .then_some(&default_material)
+            });
         let noise_field = pipeline
             .modifiers
             .iter()
@@ -120,7 +208,7 @@ pub fn snapshot(scene: &Scene, graph: &Compiled, time: f64) -> Result<Vec<Partic
                 angle_degrees,
                 origin,
             } => (
-                ((f64::from(sample_tick) * rate / hz) + 1e-9).floor() as u32,
+                ((f64::from(cycle.unwrap_or(sample_tick)) * rate / hz) + 1e-9).floor() as u32,
                 Some(rate),
                 lifetime,
                 speed,
@@ -164,6 +252,7 @@ pub fn snapshot(scene: &Scene, graph: &Compiled, time: f64) -> Result<Vec<Partic
             _ => unreachable!("compiled emitter"),
         };
         for index in 0..count {
+            control.check()?;
             let along = if count > 1 {
                 f64::from(index) / f64::from(count - 1)
             } else {
@@ -185,10 +274,14 @@ pub fn snapshot(scene: &Scene, graph: &Compiled, time: f64) -> Result<Vec<Partic
                     ((f64::from(index + 1) * hz / r) - 1e-9).ceil() as u32
                 })
             };
-            if birth_tick > sample_tick {
+            let birth_tick = cycle.map_or(birth_tick, |ticks| birth_tick % ticks);
+            if cycle.is_none() && birth_tick > sample_tick {
                 continue;
             }
-            let age_ticks = sample_tick - birth_tick;
+            let age_ticks = cycle.map_or_else(
+                || sample_tick - birth_tick,
+                |ticks| (sample_tick + ticks - birth_tick) % ticks,
+            );
             let age = f64::from(age_ticks) * dt;
             let mut random = Random(
                 scene.simulation.seed
@@ -206,18 +299,26 @@ pub fn snapshot(scene: &Scene, graph: &Compiled, time: f64) -> Result<Vec<Partic
                 position = spawn_position(shape, &mut random);
             }
             let mut velocity = [velocity * angle.cos(), velocity * angle.sin()];
-            let mut trail = vec![];
-            let (trail_start, trail_stride) =
-                trail_config.map_or((0, 1), |(ticks, max_points, _)| {
-                    (
-                        age_ticks.saturating_sub(ticks),
-                        ticks.div_ceil(max_points - 1).max(1),
-                    )
-                });
-            if trail_config.is_some() && trail_start == 0 {
-                trail.push(position);
-            }
-            for step in 1..=age_ticks {
+            let history_ticks = trail_config.map_or(0, |(ticks, ..)| ticks);
+            let key = (pipeline.emitter.id.clone(), index);
+            let previous = cache.particles.remove(&key).filter(|p| p.tick <= age_ticks);
+            let (start_step, mut history) = if let Some(p) = previous {
+                position = p.position;
+                velocity = p.velocity;
+                cache.hits += 1;
+                (p.tick + 1, p.history)
+            } else {
+                let mut h = VecDeque::new();
+                if trail_config.is_some() {
+                    h.push_back((0, position));
+                }
+                (1, h)
+            };
+            for step in start_step..=age_ticks {
+                if step % 32 == 0 {
+                    control.check()?;
+                }
+                cache.steps += 1;
                 for modifier in &pipeline.modifiers {
                     match modifier {
                         NodeKind::Gravity { acceleration } => {
@@ -280,13 +381,38 @@ pub fn snapshot(scene: &Scene, graph: &Compiled, time: f64) -> Result<Vec<Partic
                 }
                 position[0] += velocity[0] * dt;
                 position[1] += velocity[1] * dt;
-                if trail_config.is_some()
-                    && step >= trail_start
-                    && ((step - trail_start) % trail_stride == 0 || step == age_ticks)
-                {
-                    trail.push(position);
+                if trail_config.is_some() {
+                    history.push_back((step, position));
+                    while history
+                        .front()
+                        .is_some_and(|(tick, _)| *tick < step.saturating_sub(history_ticks))
+                    {
+                        history.pop_front();
+                    }
                 }
             }
+            let trail = if let Some((ticks, max_points, _)) = trail_config {
+                let start = age_ticks.saturating_sub(ticks);
+                let stride = ticks.div_ceil(max_points - 1).max(1);
+                history
+                    .iter()
+                    .filter(|(tick, _)| {
+                        *tick >= start && ((*tick - start) % stride == 0 || *tick == age_ticks)
+                    })
+                    .map(|(_, p)| *p)
+                    .collect()
+            } else {
+                vec![]
+            };
+            cache.particles.insert(
+                key,
+                Kinematics {
+                    tick: age_ticks,
+                    position,
+                    velocity,
+                    history,
+                },
+            );
             let fraction = (age / life).clamp(0.0, 1.0);
             let mut color = [1.0; 4];
             let mut radius = 1.0;
@@ -313,7 +439,59 @@ pub fn snapshot(scene: &Scene, graph: &Compiled, time: f64) -> Result<Vec<Partic
             {
                 radius *= (4.0 * along * (1.0 - along)).powf(taper);
             }
+            let appearance = material.map(|m| {
+                let mut rotation =
+                    random.sample(m.rotation_degrees) + random.sample(m.angular_velocity) * age;
+                for modifier in &pipeline.modifiers {
+                    if let NodeKind::RotationCurve { curve } = modifier {
+                        rotation += curve.sample(fraction);
+                    }
+                }
+                if m.align_velocity {
+                    rotation += velocity[1].atan2(velocity[0]).to_degrees();
+                }
+                let mut scale = m.scale;
+                scale[0] *= (1.0 + velocity[0].hypot(velocity[1]) * m.velocity_stretch).min(16.0);
+                let frame = m.sprite.as_ref().map_or(0, |sprite| {
+                    let n = graph.assets[&sprite.asset].frames;
+                    let initial = if sprite.random_start {
+                        (random.unit() * f64::from(n)).floor() as u32
+                    } else {
+                        sprite.start_frame
+                    };
+                    match sprite.playback {
+                        FlipbookPlayback::Lifetime => {
+                            initial
+                                + ((fraction * f64::from(n - initial)).floor() as u32)
+                                    .min(n - initial - 1)
+                        }
+                        FlipbookPlayback::Once => {
+                            (initial + (age * sprite.fps).floor() as u32).min(n - 1)
+                        }
+                        FlipbookPlayback::Loop => (initial + (age * sprite.fps).floor() as u32) % n,
+                        FlipbookPlayback::PingPong => {
+                            if n == 1 {
+                                0
+                            } else {
+                                let period = 2 * (n - 1);
+                                let step = (initial + (age * sprite.fps).floor() as u32) % period;
+                                if step < n { step } else { period - step }
+                            }
+                        }
+                    }
+                });
+                Appearance {
+                    layer: m.layer,
+                    blend: m.blend,
+                    shape: m.shape,
+                    sprite: m.sprite.as_ref().map(|s| s.asset.clone()),
+                    frame,
+                    rotation: rotation.to_radians(),
+                    scale,
+                }
+            });
             particles.push(Particle {
+                appearance,
                 position,
                 radius,
                 color,
@@ -322,5 +500,6 @@ pub fn snapshot(scene: &Scene, graph: &Compiled, time: f64) -> Result<Vec<Partic
             });
         }
     }
+    particles.sort_by_key(|p| p.appearance.as_ref().map_or(0, |a| a.layer));
     Ok(particles)
 }

@@ -1,3 +1,4 @@
+mod jobs;
 use base64::{Engine, engine::general_purpose::STANDARD};
 use clap::Parser;
 use futures_util::StreamExt;
@@ -32,6 +33,7 @@ struct Args {
 #[derive(Clone)]
 struct VfxServer {
     workspace: Workspace,
+    jobs: jobs::Jobs,
 }
 
 fn response(result: VfxResult<serde_json::Value>) -> CallToolResult {
@@ -48,12 +50,13 @@ where
     response(worker(workspace, action).await)
 }
 
+static SLOTS: tokio::sync::Semaphore = tokio::sync::Semaphore::const_new(2);
+
 async fn worker<T, F>(workspace: Workspace, action: F) -> VfxResult<T>
 where
     T: Send + 'static,
     F: FnOnce(Workspace) -> VfxResult<T> + Send + 'static,
 {
-    static SLOTS: tokio::sync::Semaphore = tokio::sync::Semaphore::const_new(2);
     let permit = SLOTS
         .acquire()
         .await
@@ -70,7 +73,97 @@ where
 #[tool_router]
 impl VfxServer {
     fn new(workspace: Workspace) -> Self {
-        Self { workspace }
+        Self {
+            workspace,
+            jobs: jobs::Jobs::default(),
+        }
+    }
+
+    #[tool(
+        description = "Set an emitter's material with automatic graph insertion/update, expected_revision and optional dry_run. Supports sprite/flipbook, rotation, velocity alignment/stretch, scale, layer and blend"
+    )]
+    async fn vfx_set_material(
+        &self,
+        Parameters(r): Parameters<vfx_core::api::MaterialRequest>,
+    ) -> CallToolResult {
+        blocking(self.workspace.clone(), move |w| w.set_material(r)).await
+    }
+
+    #[tool(
+        description = "Set an emitter's delay, local duration and repeat behavior with automatic graph insertion/update. Requires expected_revision and optionally dry_run; repeating particle lifetimes must fit the cycle"
+    )]
+    async fn vfx_set_timeline(
+        &self,
+        Parameters(r): Parameters<vfx_core::api::TimelineRequest>,
+    ) -> CallToolResult {
+        blocking(self.workspace.clone(), move |w| w.set_timeline(r)).await
+    }
+
+    #[tool(
+        description = "Import a PNG sprite/flipbook inside root into the project's embedded assets. Requires expected_revision; changes are undoable and portable. Grid defaults to 1x1"
+    )]
+    async fn vfx_import_asset(
+        &self,
+        Parameters(r): Parameters<vfx_core::api::ImportAsset>,
+    ) -> CallToolResult {
+        blocking(self.workspace.clone(), move |w| w.import_asset(r)).await
+    }
+
+    #[tool(
+        description = "List embedded asset IDs, dimensions, flipbook grids/frame counts and decoded content hashes"
+    )]
+    async fn vfx_list_assets(&self, Parameters(r): Parameters<ProjectPath>) -> CallToolResult {
+        blocking(self.workspace.clone(), move |w| w.list_assets(&r.project)).await
+    }
+
+    #[tool(
+        description = "Save a project's current scene, embedded assets and post-processing as a reusable data recipe in a NEW file within root"
+    )]
+    async fn vfx_save_recipe(
+        &self,
+        Parameters(r): Parameters<vfx_core::api::SaveRecipe>,
+    ) -> CallToolResult {
+        blocking(self.workspace.clone(), move |w| w.save_recipe(r)).await
+    }
+
+    #[tool(
+        description = "Measure 2..32 real rendered samples, clipping/empty-frame diagnostics, elapsed time and incremental simulation work. Timing measurements are diagnostic, not reproducibility guarantees"
+    )]
+    async fn vfx_analyze(
+        &self,
+        Parameters(r): Parameters<vfx_core::analysis::AnalyzeRequest>,
+    ) -> CallToolResult {
+        blocking(self.workspace.clone(), move |w| w.analyze(r)).await
+    }
+
+    #[tool(
+        description = "Queue an asynchronous export. export contains the normal export arguments; expected_revision pins the project revision. Poll vfx_get_export_job for progress/result; cancellation cleans staged outputs. Jobs live in this server session"
+    )]
+    fn vfx_start_export(
+        &self,
+        Parameters(r): Parameters<vfx_core::api::JobExportRequest>,
+    ) -> CallToolResult {
+        response(self.jobs.start(self.workspace.clone(), r))
+    }
+
+    #[tool(
+        description = "Read queued/running/succeeded/failed/cancelled export state, progress, result and error by job_id. At most 32 jobs retained per server session"
+    )]
+    fn vfx_get_export_job(
+        &self,
+        Parameters(r): Parameters<vfx_core::api::JobRequest>,
+    ) -> CallToolResult {
+        response(self.jobs.get(&r.job_id))
+    }
+
+    #[tool(
+        description = "Request cooperative export cancellation by job_id. Wait for cancelled state before assuming cleanup. A job past its atomic publication point may complete successfully"
+    )]
+    fn vfx_cancel_export_job(
+        &self,
+        Parameters(r): Parameters<vfx_core::api::JobRequest>,
+    ) -> CallToolResult {
+        response(self.jobs.cancel(&r.job_id))
     }
 
     #[tool(
@@ -99,7 +192,9 @@ impl VfxServer {
         response(Ok(catalog()))
     }
 
-    #[tool(description = "Get a JSON Schema: kind is project, patch, node or recipe")]
+    #[tool(
+        description = "Get a JSON Schema: project, patch, node, recipe, asset, post_process or export"
+    )]
     fn vfx_get_schema(&self, Parameters(r): Parameters<SchemaRequest>) -> CallToolResult {
         response(schema(&r.kind))
     }
@@ -174,7 +269,7 @@ impl VfxServer {
     }
 
     #[tool(
-        description = "Render a PNG sequence, spritesheet or GIF plus metadata.json into a NEW directory within root. GIF accepts optional scale/background/repeat/quantizer_speed settings; PNG retains transparency. Never overwrites outputs. fps is 1..=60"
+        description = "Render a PNG sequence, spritesheet, GIF, Godot SpriteFrames or Unity asset folder plus metadata.json into a NEW directory within root. GIF accepts optional scale/background/repeat/quantizer_speed settings; PNG retains transparency. Never overwrites outputs. fps is 1..=60"
     )]
     async fn vfx_export(&self, Parameters(r): Parameters<ExportRequest>) -> CallToolResult {
         blocking(self.workspace.clone(), move |w| w.export(r)).await
