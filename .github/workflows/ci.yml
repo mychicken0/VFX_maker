@@ -1,0 +1,35 @@
+name: Rust
+on: [push, pull_request]
+
+jobs:
+  headless:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install pinned Rust
+        run: rustup toolchain install 1.99.1 --profile minimal --component rustfmt,clippy
+      - name: Format
+        run: cargo fmt --all -- --check
+      - name: Clippy
+        run: cargo clippy --locked --workspace --all-targets -- -D warnings
+      - name: Test offline rendering, CLI, and MCP
+        run: cargo test --locked --workspace
+      - name: Install standalone tools
+        run: bash scripts/install.sh "$RUNNER_TEMP/vfx-tools"
+      - name: Use installed CLI outside the checkout
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir "$RUNNER_TEMP/unrelated-game"
+          cd "$RUNNER_TEMP/unrelated-game"
+          unset DISPLAY WAYLAND_DISPLAY
+          "$RUNNER_TEMP/vfx-tools/bin/vfx" new impact.vfxproj --seed 42 --json
+          "$RUNNER_TEMP/vfx-tools/bin/vfx" export impact.vfxproj --out impact --json
+          test -s impact/atlas.png
+          test -s impact/metadata.json
+
+          "$RUNNER_TEMP/vfx-tools/bin/vfx" preset show spark_burst --out custom.recipe.json --json
+          "$RUNNER_TEMP/vfx-tools/bin/vfx" new custom.vfxproj --preset-file custom.recipe.json --params '{"count":12}' --json
+          "$RUNNER_TEMP/vfx-tools/bin/vfx" export custom.vfxproj --format gif --fps 25 --scale 2 --out custom-gif --json
+          test -s custom-gif/animation.gif

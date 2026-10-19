@@ -1,0 +1,4 @@
+/target/
+*.vfxproj.lock
+__pycache__/
+*.pyc

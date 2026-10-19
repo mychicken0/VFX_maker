@@ -1,0 +1,18 @@
+[package]
+name = "vfx-core"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+description = "Portable, deterministic VFX authoring engine and command API"
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true
+schemars.workspace = true
+png.workspace = true
+sha2.workspace = true
+tempfile.workspace = true
+fs2.workspace = true
+gif.workspace = true
+noise.workspace = true

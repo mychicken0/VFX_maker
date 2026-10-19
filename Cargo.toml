@@ -1,0 +1,29 @@
+[workspace]
+members = ["crates/vfx-core", "crates/vfx-cli", "crates/vfx-mcp"]
+resolver = "3"
+
+[workspace.package]
+version = "0.2.0"
+edition = "2024"
+rust-version = "1.99"
+publish = false
+
+[workspace.dependencies]
+vfx-core = { path = "crates/vfx-core" }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+schemars = "1.2"
+clap = { version = "4.5", features = ["derive"] }
+png = "0.18"
+sha2 = "0.10"
+tempfile = "3.23"
+fs2 = "0.4"
+rmcp = { version = "=3.3.0", features = ["transport-io"] }
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "io-std"] }
+base64 = "0.22"
+gif = "0.14"
+noise = "0.9"
+
+[profile.release]
+lto = "thin"
+strip = true
