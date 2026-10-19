@@ -102,6 +102,26 @@ fn transparent_texels_bilinear_sampling_and_tint_have_no_black_fringe() {
             assert_eq!(*p, [0; 4]);
         }
     }
+    for uv in [
+        [f64::MAX, 0.5],
+        [-f64::MAX, 0.5],
+        [f64::INFINITY, 0.5],
+        [f64::NAN, 0.5],
+    ] {
+        assert_eq!(a.sample(0, uv, true), [0.0; 4]);
+    }
+    assert_eq!(a.sample(u32::MAX, [0.5, 0.5], true), [0.0; 4]);
+    if let NodeKind::SizeOverLife { start, end } = &mut s.nodes[1].kind {
+        *start = 1e-300;
+        *end = 1e-300;
+    }
+    assert_eq!(
+        render::frame(&s, &graph::compile(&s).unwrap(), 0.0)
+            .unwrap()
+            .stats
+            .nontransparent_pixels,
+        0
+    );
 }
 #[test]
 fn invalid_png_dimensions_grid_base64_and_asset_references_fail() {

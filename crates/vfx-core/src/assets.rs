@@ -28,8 +28,20 @@ pub struct DecodedAsset {
 impl DecodedAsset {
     /// Sample normalized sheet-frame coordinates, returning premultiplied linear RGBA.
     pub fn sample(&self, frame: u32, uv: [f64; 2], smooth: bool) -> [f64; 4] {
+        if frame >= self.frames || uv.iter().any(|v| !v.is_finite()) {
+            return [0.0; 4];
+        }
         let (w, h) = self.frame_size();
         let point = [uv[0] * f64::from(w) - 0.5, uv[1] * f64::from(h) - 0.5];
+        // Reject the empty filter footprint before integer conversion. Tiny
+        // transformed sprites can produce very large (or overflowing) UVs.
+        if point[0] <= -1.0
+            || point[1] <= -1.0
+            || point[0] >= f64::from(w)
+            || point[1] >= f64::from(h)
+        {
+            return [0.0; 4];
+        }
         let convert = |p: [u8; 4]| {
             let a = f64::from(p[3]) / 255.0;
             [
