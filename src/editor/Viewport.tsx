@@ -57,11 +57,13 @@ export function Viewport({
   const zoom =
     zoomChoice === "fit"
       ? Math.max(
-          0.125,
+          0.0001,
           Math.min(
             3,
-            (room.width - 48) / project.canvas.width,
-            (room.height - 48) / project.canvas.height,
+            (room.width - Math.min(48, room.width * 0.2)) /
+              project.canvas.width,
+            (room.height - Math.min(48, room.height * 0.2)) /
+              project.canvas.height,
           ),
         )
       : Number(zoomChoice);
@@ -474,8 +476,12 @@ export function Viewport({
           className={`canvas-stack ${background === "checker" ? "checker" : ""}`}
           style={{
             transform: `translate(calc(-50% + ${pan.x}px),calc(-50% + ${pan.y}px))`,
-            width: width * zoom,
-            height: height * zoom,
+            width:
+              zoomChoice === "fit"
+                ? `min(${width * 3}px, calc(100cqw - min(48px, 20cqw)), calc((100cqh - min(48px, 20cqh)) * ${width / height}))`
+                : width * zoom,
+            height: zoomChoice === "fit" ? "auto" : height * zoom,
+            aspectRatio: `${width} / ${height}`,
             backgroundColor:
               background === "dark" ? project.canvas.background : undefined,
           }}
@@ -492,7 +498,7 @@ export function Viewport({
                     style={{
                       left: `${(pos.x / width) * 100}%`,
                       top: `${(pos.y / height) * 100}%`,
-                      width: ref.image.width * ref.scale * zoom,
+                      width: `${((ref.image.width * ref.scale) / width) * 100}%`,
                       height: ref.image.height * ref.scale * zoom,
                       opacity: ref.opacity,
                     }}

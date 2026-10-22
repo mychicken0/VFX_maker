@@ -55,8 +55,16 @@ test("small windows, browser zoom-sized viewports and a 512px canvas remain usab
     expect(b.x).toBeGreaterThanOrEqual(0);
     expect(b.x + b.width).toBeLessThanOrEqual(width);
     expect(b.y).toBeGreaterThanOrEqual(0);
-    const area = (await page.locator(".viewport-area").boundingBox())!,
-      canvas = (await page.locator(".canvas-stack").boundingBox())!;
+    const { area, canvas } = await page.evaluate(() => ({
+      area: document
+        .querySelector(".viewport-area")!
+        .getBoundingClientRect()
+        .toJSON(),
+      canvas: document
+        .querySelector(".canvas-stack")!
+        .getBoundingClientRect()
+        .toJSON(),
+    }));
     expect(canvas.width).toBeLessThanOrEqual(area.width);
     expect(canvas.height).toBeLessThanOrEqual(area.height);
     await exportButton.click();
@@ -78,6 +86,46 @@ test("small windows, browser zoom-sized viewports and a 512px canvas remain usab
     .getByRole("button", { name: "Portal ribbons", exact: false })
     .click();
   await expect(page.locator(".library")).toBeHidden();
+});
+test("Fit follows layout immediately even before ResizeObserver delivers a measurement", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    // Freeze JS measurements to reproduce the stale frame seen on CI.
+    window.ResizeObserver = class {
+      observe() {}
+      unobserve() {}
+      disconnect() {}
+    };
+  });
+  await start(page);
+  const p = getPreset();
+  p.canvas.width = 512;
+  p.canvas.height = 256;
+  await open(page, p);
+  await expect(page.locator(".canvas-label")).toHaveText("512 × 256");
+  for (const [width, height] of [
+    [1440, 1000],
+    [1024, 640],
+    [390, 700],
+    [640, 360],
+    [768, 640],
+  ]) {
+    await page.setViewportSize({ width, height });
+    const { area, canvas } = await page.evaluate(() => ({
+      area: document
+        .querySelector(".viewport-area")!
+        .getBoundingClientRect()
+        .toJSON(),
+      canvas: document
+        .querySelector(".canvas-stack")!
+        .getBoundingClientRect()
+        .toJSON(),
+    }));
+    expect(canvas.width).toBeLessThanOrEqual(area.width);
+    expect(canvas.height).toBeLessThanOrEqual(area.height);
+    expect(canvas.width / canvas.height).toBeCloseTo(2, 2);
+  }
 });
 test("panel dividers support keyboard resize, persistent layout and collapse without changing the project", async ({
   page,

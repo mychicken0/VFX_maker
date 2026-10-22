@@ -7,7 +7,7 @@ Verified on 22 October 2026 with Node 24.19.0 and system Chromium
 | ----------------------------------- | --------------------------------- |
 | TypeScript                          | `npm run typecheck` passes        |
 | Core, storage and native-save tests | 44 tests pass                     |
-| Chromium end-to-end tests           | 30 tests pass in one isolated run |
+| Chromium end-to-end tests           | 31 tests pass in one isolated run |
 | Runtime dependency audit            | 0 reported vulnerabilities        |
 | Built editor and Node tools         | Production build succeeds         |
 
@@ -43,7 +43,7 @@ all export formats, trusted TypeScript building, pixel tools and the official
 MCP protocol client discovering 26 tools.
 
 The test run used for these results was sequential with a separate output
-folder (`/tmp/vfx06-e2e-verified`). An earlier overlapping local run was discarded
+folder (`/tmp/vfx06-fit-final`). An earlier overlapping local run was discarded
 because the runners shared their trace output directory.
 
 ## CI investigation
@@ -54,6 +54,18 @@ GitHub's job API confirms that formatting, typecheck, unit tests and build
 passed; the end-to-end test step failed. The detailed archived log download
 redirects to a storage host blocked by the active cloud network policy, so the
 individual failure from that run has not been confirmed here.
+
+The first 0.6 hosted run
+[39745440714](https://github.com/mychicken0/VFX_maker/actions/runs/39745440714)
+passed 29 browser scenarios and caught a transient Fit overflow: canvas width
+524px while its resized area was 474px. Fit had depended on the previous React
+measurement until ResizeObserver delivered the new size. Fit sizing now uses
+CSS container dimensions and preserves the canvas aspect ratio in the same
+layout pass. Timeline height also has a viewport-based CSS cap, and Fit reduces
+its padding in very small areas. Reference images use relative widths, so
+alignment follows that size immediately. The regression freezes ResizeObserver delivery and checks
+wide/tall windows with a non-square canvas. Related rectangles are sampled in
+one browser evaluation to compare the same layout frame.
 
 The 0.6 workflow pins Ubuntu 24.04 during the announced `ubuntu-latest` migration,
 uploads the 0.6 tarball, and uses Playwright's GitHub reporter to put individual

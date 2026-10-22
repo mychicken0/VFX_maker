@@ -1400,6 +1400,7 @@ button[aria-pressed="true"] {
 }
 .viewport-area {
   position: relative;
+  container-type: size;
   display: block;
   padding: 0;
   overflow: hidden;
@@ -1430,6 +1431,7 @@ button[aria-pressed="true"] {
 }
 .timeline {
   min-height: 43px;
+  max-height: max(90px, calc(100dvh - 300px));
   overflow: hidden;
 }
 .timeline-collapsed .timeline-ruler,
@@ -1981,6 +1983,7 @@ button[aria-pressed="true"] {
   flex: 1;
   height: auto;
   min-height: 0;
+  max-height: none;
 }
 .keyframe-editor {
   border-bottom: 1px solid #5d416d;
