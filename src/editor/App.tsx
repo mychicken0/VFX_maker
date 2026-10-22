@@ -1,11 +1,15 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   PRESETS,
+  VERSION,
   readableError,
   getPreset,
   parseProject,
   parseText,
   layerSchema,
+  uniqueLayerName,
+  replaceAssetPng,
+  inspectPng,
   type Asset,
   type Layer,
   type Project,
@@ -13,44 +17,57 @@ import {
 import { VfxRenderer } from "../render/pixi.js";
 import {
   exportEffect,
+  preview,
   zipExport,
+  toBase64,
   type ExportOptions,
 } from "../render/export.js";
 import { Inspector } from "./Inspector.js";
 import { Timeline } from "./Timeline.js";
 import { Viewport } from "./Viewport.js";
-import { NumberField, Select } from "./controls.js";
+import { NumberField } from "./controls.js";
+import { PixelLab, type PixelSource } from "./PixelLab.js";
+import {
+  RecolorDialog,
+  ExportDialog,
+  ResizeDialog,
+  JsonDialog,
+  HelpDialog,
+  RecentDialog,
+} from "./WorkspaceDialogs.js";
+import { useStudioLayout } from "./layout.js";
+import { rememberProject, listRecent, type RecentProject } from "./recent.js";
+import { downloadFile as download, safeFilename as safeName } from "./files.js";
+// Keep the same autosave key so existing browser projects open automatically.
 const STORAGE = "vfx-maker.0.4.autosave";
+const HISTORY_BYTES = 16 * 1024 * 1024;
 function initial(): Project {
   try {
-    const saved = localStorage.getItem(STORAGE);
-    if (saved) return parseText(saved);
-  } catch {
-    /* An invalid autosave must not prevent opening the editor. */
-  }
+    const text = localStorage.getItem(STORAGE);
+    if (text) return parseText(text);
+  } catch {}
   return getPreset();
 }
-function download(
-  bytes: Uint8Array,
-  name: string,
-  mime = "application/octet-stream",
-) {
-  const url = URL.createObjectURL(
-    new Blob([new Uint8Array(bytes)], { type: mime }),
-  );
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = name;
-  a.click();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
+const historyWeights = new WeakMap<Project, number>();
+function trimHistory(items: Project[]) {
+  let bytes = 0;
+  for (let i = items.length - 1; i >= 0; i--) {
+    const item = items[i];
+    if (!historyWeights.has(item))
+      historyWeights.set(item, JSON.stringify(item).length * 2);
+    bytes += historyWeights.get(item)!;
+    if (bytes > HISTORY_BYTES || items.length - i > 50) {
+      items.splice(0, i + 1);
+      break;
+    }
+  }
 }
-const safeName = (s: string) =>
-  s.replace(/[^\p{L}\p{N}_-]+/gu, "-").replace(/^-|-$/g, "") || "effect";
 export function App() {
   const [project, setProject] = useState(initial),
     [selected, setSelected] = useState<string | undefined>(
       () => project.layers.at(-1)?.id,
     );
+  const serialized = useMemo(() => JSON.stringify(project), [project]);
   const history = useRef<{ past: Project[]; future: Project[] }>({
       past: [],
       future: [],
@@ -60,98 +77,135 @@ export function App() {
     [playing, setPlaying] = useState(true),
     [tab, setTab] = useState("layers"),
     [search, setSearch] = useState(""),
+    [layerSearch, setLayerSearch] = useState(""),
     [message, setMessage] = useState(""),
-    [modal, setModal] = useState<"export" | "json" | "help" | null>(null),
-    [jsonDraft, setJsonDraft] = useState(""),
-    [saved, setSaved] = useState(JSON.stringify(project)),
-    [storageError, setStorageError] = useState(false);
-  const [format, setFormat] = useState("gif"),
-    [scale, setScale] = useState(3),
-    [progress, setProgress] = useState<{
-      completed: number;
-      total: number;
-    } | null>(null);
+    [modal, setModal] = useState<
+      | "export"
+      | "json"
+      | "help"
+      | "pixels"
+      | "resize"
+      | "recent"
+      | "recolor"
+      | null
+    >(null),
+    [saved, setSaved] = useState(serialized),
+    [storageError, setStorageError] = useState(false),
+    [solo, setSolo] = useState<string>(),
+    [pixelSource, setPixelSource] = useState<PixelSource | null>(null),
+    [recent, setRecent] = useState<RecentProject[]>([]);
+  const [progress, setProgress] = useState<{
+    completed: number;
+    total: number;
+  } | null>(null);
   const controller = useRef<AbortController | null>(null),
     openInput = useRef<HTMLInputElement>(null),
-    assetInput = useRef<HTMLInputElement>(null);
+    assetInput = useRef<HTMLInputElement>(null),
+    captureGeneration = useRef(0);
+  const layout = useStudioLayout();
   const toast = useCallback((text: string) => setMessage(text), []);
   useEffect(() => {
-    if (message) {
-      const id = setTimeout(() => setMessage(""), 7000);
-      return () => clearTimeout(id);
-    }
+    if (!message) return;
+    const id = setTimeout(() => setMessage(""), 7000);
+    return () => clearTimeout(id);
   }, [message]);
   const commit = useCallback(
     (next: Project) => {
+      const valid = parseProject(next),
+        text = JSON.stringify(valid);
+      if (
+        new TextEncoder().encode(JSON.stringify(valid, null, 2)).length >
+        4194304
+      )
+        throw new Error(
+          "Project exceeds 4 MiB. Optimize or remove embedded textures.",
+        );
+      if (text === serialized) return;
+      history.current.past.push(project);
+      trimHistory(history.current.past);
+      history.current.future = [];
+      setProject(valid);
+      setHistoryVersion((n) => n + 1);
+    },
+    [project, serialized],
+  );
+  // UI controls report validation errors without losing the current document.
+  const safeCommit = useCallback(
+    (next: Project) => {
       try {
-        const valid = parseProject(next);
-        if (JSON.stringify(valid) === JSON.stringify(project)) return;
-        history.current.past.push(project);
-        if (history.current.past.length > 50) history.current.past.shift();
-        history.current.future = [];
-        setProject(valid);
-        setHistoryVersion((n) => n + 1);
+        commit(next);
       } catch (e) {
         toast(readableError(e));
       }
     },
-    [project, toast],
+    [commit, toast],
   );
   const undo = useCallback(() => {
-    const previous = history.current.past.pop();
-    if (previous) {
+    const p = history.current.past.pop();
+    if (p) {
       history.current.future.push(project);
-      setProject(previous);
+      trimHistory(history.current.future);
+      setProject(p);
       setHistoryVersion((n) => n + 1);
     }
   }, [project]);
   const redo = useCallback(() => {
-    const next = history.current.future.pop();
-    if (next) {
+    const p = history.current.future.pop();
+    if (p) {
       history.current.past.push(project);
-      setProject(next);
+      trimHistory(history.current.past);
+      setProject(p);
       setHistoryVersion((n) => n + 1);
     }
   }, [project]);
-  const updateLayer = (id: string, patch: Record<string, unknown>) => {
-    const l = project.layers.find((l) => l.id === id);
-    if (!l || l.locked) return;
-    commit({
-      ...project,
-      layers: project.layers.map((l) =>
-        l.id === id ? ({ ...l, ...patch } as Layer) : l,
-      ),
-    });
-  };
+  const updateLayer = useCallback(
+    (id: string, patch: Record<string, unknown>) => {
+      const layer = project.layers.find((l) => l.id === id);
+      if (!layer || layer.locked) return;
+      safeCommit({
+        ...project,
+        layers: project.layers.map((l) =>
+          l.id === id ? ({ ...l, ...patch } as Layer) : l,
+        ),
+      });
+    },
+    [project, safeCommit],
+  );
+  const update = useCallback(
+    (patch: Record<string, unknown>) => {
+      if (selected) updateLayer(selected, patch);
+    },
+    [selected, updateLayer],
+  );
   const layer = project.layers.find((l) => l.id === selected);
-  const update = (patch: Record<string, unknown>) =>
-    selected && updateLayer(selected, patch);
   useEffect(() => {
     if (!project.layers.some((l) => l.id === selected))
       setSelected(project.layers.at(-1)?.id);
-  }, [project, selected]);
+    if (solo && !project.layers.some((l) => l.id === solo)) setSolo(undefined);
+  }, [project, selected, solo]);
   useEffect(() => {
     const id = setTimeout(() => {
       try {
-        localStorage.setItem(STORAGE, JSON.stringify(project));
+        localStorage.setItem(STORAGE, serialized);
         setStorageError(false);
       } catch {
         setStorageError(true);
       }
+      void rememberProject(project).catch(() => {});
     }, 500);
     return () => clearTimeout(id);
-  }, [project]);
-  const dirty = JSON.stringify(project) !== saved;
+  }, [project, serialized]);
+  const dirty = serialized !== saved;
   useEffect(() => {
     const handler = (e: BeforeUnloadEvent) => {
       try {
-        localStorage.setItem(STORAGE, JSON.stringify(project));
+        localStorage.setItem(STORAGE, serialized);
       } catch {}
       if (dirty) e.preventDefault();
     };
     window.addEventListener("beforeunload", handler);
     return () => window.removeEventListener("beforeunload", handler);
-  }, [dirty, project]);
+  }, [dirty, serialized]);
   useEffect(() => {
     if (!playing) return;
     let frame = 0,
@@ -175,7 +229,7 @@ export function App() {
   }, [playing, project.duration, project.loop]);
   useEffect(() => {
     if (time > project.duration) setTime(project.duration);
-  }, [project.duration, time]);
+  }, [time, project.duration]);
   const save = useCallback(() => {
     download(
       new TextEncoder().encode(JSON.stringify(project, null, 2) + "\n"),
@@ -183,38 +237,124 @@ export function App() {
       "application/json",
     );
     try {
-      localStorage.setItem(STORAGE, JSON.stringify(project));
+      localStorage.setItem(STORAGE, serialized);
       setStorageError(false);
     } catch {
       setStorageError(true);
     }
-    setSaved(JSON.stringify(project));
-    toast("Project downloaded. PNG textures are embedded in the file.");
-  }, [project, toast]);
+    void rememberProject(project).catch(() => {});
+    setSaved(serialized);
+    toast("Project downloaded. PNG textures are embedded.");
+  }, [project, serialized, toast]);
+  const closeModal = useCallback(() => {
+    if (progress) return;
+    captureGeneration.current++;
+    setModal(null);
+  }, [progress]);
+  const removeSelected = useCallback(() => {
+    if (layer && !layer.locked)
+      safeCommit({
+        ...project,
+        layers: project.layers.filter((l) => l.id !== layer.id),
+      });
+  }, [project, layer, safeCommit]);
+  const duplicate = useCallback(() => {
+    if (!layer || project.layers.length >= 32) return;
+    const id = layer.type + "-" + crypto.randomUUID().slice(0, 8);
+    const copy = {
+      ...structuredClone(layer),
+      id,
+      name: uniqueLayerName(
+        layer.name,
+        project.layers.map((l) => l.name),
+      ),
+      locked: false,
+    };
+    const layers = [...project.layers];
+    layers.splice(layers.indexOf(layer) + 1, 0, copy);
+    safeCommit({ ...project, layers });
+    setSelected(id);
+  }, [project, layer, safeCommit]);
+  function moveLayer(delta: number) {
+    if (!layer) return;
+    const layers = [...project.layers],
+      at = layers.indexOf(layer),
+      to = Math.max(0, Math.min(layers.length - 1, at + delta));
+    layers.splice(at, 1);
+    layers.splice(to, 0, layer);
+    safeCommit({ ...project, layers });
+  }
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && !progress) setModal(null);
-      const input = (e.target as HTMLElement).closest(
-        "input,textarea,select,[contenteditable]",
-      );
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "s") {
+      if (e.key === "Escape") {
+        closeModal();
+        layout.setDrawer(null);
+        return;
+      }
+      if (modal) return;
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") {
         e.preventDefault();
         save();
+        return;
       }
-      if (input || modal) return;
+      if (
+        (e.target as HTMLElement).closest(
+          "input,textarea,select,[contenteditable]",
+        )
+      )
+        return;
       if (e.code === "Space") {
         e.preventDefault();
-        setPlaying((v) => !v);
+        setPlaying((p) => !p);
       }
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "z") {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") {
         e.preventDefault();
         if (e.shiftKey) redo();
         else undo();
       }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "d") {
+        e.preventDefault();
+        duplicate();
+      }
+      if (e.key === "Delete" || e.key === "Backspace") {
+        e.preventDefault();
+        removeSelected();
+      }
+      if (
+        layer &&
+        !layer.locked &&
+        !e.ctrlKey &&
+        !e.metaKey &&
+        ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(e.key)
+      ) {
+        e.preventDefault();
+        const d = e.shiftKey ? 10 : 1;
+        update({
+          position: {
+            x:
+              layer.position.x +
+              (e.key === "ArrowLeft" ? -d : e.key === "ArrowRight" ? d : 0),
+            y:
+              layer.position.y +
+              (e.key === "ArrowUp" ? -d : e.key === "ArrowDown" ? d : 0),
+          },
+        });
+      }
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [undo, redo, save, modal, progress]);
+  }, [
+    modal,
+    closeModal,
+    save,
+    undo,
+    redo,
+    duplicate,
+    removeSelected,
+    layer,
+    update,
+    layout.setDrawer,
+  ]);
   useEffect(() => {
     const token = new URLSearchParams(location.hash.slice(1)).get("project");
     if (!token) return;
@@ -223,7 +363,7 @@ export function App() {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((r) => {
-        if (!r.ok) throw new Error("Cannot load the project passed to Studio");
+        if (!r.ok) throw Error("Cannot load the project passed to Studio");
         return r.json();
       })
       .then((value) => {
@@ -235,17 +375,21 @@ export function App() {
         }
       })
       .catch((e) => toast(readableError(e)));
-  }, []);
+  }, [toast]);
+  function loadProject(p: Project, fromFile = false) {
+    commit(p);
+    setSelected(p.layers.at(-1)?.id);
+    setSolo(undefined);
+    setTime(0);
+    setPlaying(false);
+    layout.setDrawer(null);
+    if (fromFile) setSaved(JSON.stringify(p));
+  }
   async function open(file?: File) {
     if (!file) return;
     try {
-      if (file.size > 4194304) throw new Error("Project exceeds 4 MiB");
-      const p = parseText(await file.text());
-      commit(p);
-      setSelected(p.layers.at(-1)?.id);
-      setSaved(JSON.stringify(p));
-      setTime(0);
-      setPlaying(false);
+      if (file.size > 4194304) throw Error("Project exceeds 4 MiB");
+      loadProject(parseText(await file.text()), true);
       toast("Project opened.");
     } catch (e) {
       toast(readableError(e));
@@ -254,46 +398,42 @@ export function App() {
   async function importAsset(file?: File) {
     if (!file) return;
     try {
-      if (file.size > 1048576) throw new Error("PNG must be at most 1 MiB");
-      const bytes = new Uint8Array(await file.arrayBuffer());
-      if (bytes.slice(0, 8).join(",") !== "137,80,78,71,13,10,26,10")
-        throw new Error("Choose a PNG image");
-      const data = await new Promise<string>((resolve, reject) => {
-        const r = new FileReader();
-        r.onload = () => resolve(String(r.result));
-        r.onerror = reject;
-        r.readAsDataURL(file);
-      });
-      const img = new Image();
-      img.src = data;
-      await img.decode();
+      if (file.size > 1048576) throw Error("PNG must be at most 1 MiB");
+      const bytes = new Uint8Array(await file.arrayBuffer()),
+        { width, height } = inspectPng(bytes);
       const asset: Asset = {
         id: "asset-" + crypto.randomUUID().slice(0, 8),
-        name: file.name,
-        data,
-        width: img.width,
-        height: img.height,
+        name: file.name.slice(0, 100),
+        data: "data:image/png;base64," + toBase64(bytes),
+        width,
+        height,
         columns: 1,
         rows: 1,
         frames: 1,
       };
       commit({ ...project, assets: [...project.assets, asset] });
-      toast("PNG imported. Set its grid below if it is a flipbook.");
+      setTab("assets");
+      toast("PNG imported. Set its grid if it is a flipbook.");
     } catch (e) {
       toast(readableError(e));
     }
   }
   function add(type: Layer["type"]) {
+    if (project.layers.length >= 32) return;
     if (type === "sprite" && !project.assets.length) {
       setTab("assets");
-      toast("Import a PNG first, then add a sprite layer.");
+      toast("Import a PNG first, then add a sprite.");
       return;
     }
-    const id = `${type}-${crypto.randomUUID().slice(0, 8)}`;
-    const newLayer = layerSchema.parse({
+    const id = type + "-" + crypto.randomUUID().slice(0, 8),
+      name = uniqueLayerName(
+        `New ${type === "path" ? "stroke" : type}`,
+        project.layers.map((l) => l.name),
+      );
+    const next = layerSchema.parse({
       id,
       type,
-      name: `New ${type === "path" ? "stroke" : type}`,
+      name,
       position: { x: project.canvas.width / 2, y: project.canvas.height / 2 },
       duration: project.duration,
       ...(type === "path"
@@ -307,63 +447,119 @@ export function App() {
         : {}),
       ...(type === "sprite" ? { asset: project.assets[0].id } : {}),
     });
-    commit({ ...project, layers: [...project.layers, newLayer] });
+    safeCommit({ ...project, layers: [...project.layers, next] });
     setSelected(id);
     setTab("layers");
   }
-  function duplicate() {
-    if (!layer) return;
-    const id = layer.type + "-" + crypto.randomUUID().slice(0, 8),
-      copy = {
-        ...structuredClone(layer),
-        id,
-        name: layer.name + " copy",
-        locked: false,
-      };
-    const layers = [...project.layers];
-    layers.splice(layers.indexOf(layer) + 1, 0, copy);
-    commit({ ...project, layers });
-    setSelected(id);
+  async function openPixels() {
+    setPlaying(false);
+    setPixelSource(null);
+    setModal("pixels");
+    const generation = ++captureGeneration.current;
+    let r: VfxRenderer | undefined;
+    try {
+      r = await VfxRenderer.create();
+      await r.setProject(project);
+      const bytes = await preview(r, project, time);
+      if (generation === captureGeneration.current)
+        setPixelSource({ name: safeName(project.name) + "-frame.png", bytes });
+    } catch (e) {
+      toast(readableError(e));
+    } finally {
+      r?.destroy();
+    }
   }
-  async function runExport() {
+  async function runExport(options: ExportOptions) {
     const abort = new AbortController();
     controller.current = abort;
+    setPlaying(false);
     setProgress({
       completed: 0,
       total: Math.ceil(project.duration * project.fps),
     });
     let r: VfxRenderer | undefined;
     try {
+      const snapshot = parseProject({
+        ...project,
+        output: {
+          ...project.output,
+          ...Object.fromEntries(
+            Object.entries(options).filter(([key]) => key in project.output),
+          ),
+        },
+      });
+      commit(snapshot);
       r = await VfxRenderer.create();
-      await r.setProject(project);
+      await r.setProject(snapshot);
       const files = await exportEffect(
         r,
-        project,
-        { format, scale } as ExportOptions,
+        snapshot,
+        options,
         (completed, total) => setProgress({ completed, total }),
         abort.signal,
       );
       abort.signal.throwIfAborted();
       download(
         zipExport(files),
-        `${safeName(project.name)}-${format}.zip`,
+        `${safeName(project.name)}-${options.format}.zip`,
         "application/zip",
       );
       toast(
-        "Export complete. ZIP includes your editable project and timing metadata.",
+        "Export downloaded with editable project, frame timing and checksums.",
       );
       setModal(null);
     } catch (e) {
-      toast(abort.signal.aborted ? "Export cancelled." : String(e));
+      toast(abort.signal.aborted ? "Export cancelled." : readableError(e));
     } finally {
       r?.destroy();
       controller.current = null;
       setProgress(null);
     }
   }
+  const separator = (panel: "left" | "right" | "timeline") => (
+    <div
+      className={`panel-divider divider-${panel}`}
+      role="separator"
+      aria-label={`Resize ${panel === "left" ? "library" : panel === "right" ? "inspector" : "timeline"}`}
+      aria-orientation={panel === "timeline" ? "horizontal" : "vertical"}
+      aria-valuemin={panel === "left" ? 180 : panel === "right" ? 240 : 90}
+      aria-valuemax={panel === "left" ? 380 : panel === "right" ? 420 : 400}
+      aria-valuenow={layout.layout[panel]}
+      tabIndex={0}
+      onPointerDown={(e) => layout.drag(e, panel)}
+      onKeyDown={(e) => {
+        if (
+          !["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(e.key)
+        )
+          return;
+        e.preventDefault();
+        e.stopPropagation();
+        layout.resize(
+          panel,
+          (["ArrowLeft", "ArrowUp"].includes(e.key) ? -10 : 10) *
+            (panel === "left" ? 1 : -1),
+        );
+      }}
+    />
+  );
   return (
-    <div className="studio" data-history={historyVersion}>
-      <header className="topbar">
+    <div
+      className={`studio ${layout.compact ? "compact" : ""} ${layout.layout.timelineOpen ? "" : "timeline-collapsed"}`}
+      data-history={historyVersion}
+      style={layout.style}
+      onDragOver={(e) => {
+        if (e.dataTransfer.types.includes("Files")) e.preventDefault();
+      }}
+      onDrop={(e) => {
+        if (!e.dataTransfer.types.includes("Files")) return;
+        e.preventDefault();
+        if (modal) return;
+        const file = e.dataTransfer.files[0];
+        if (file?.name.toLowerCase().endsWith(".png")) void importAsset(file);
+        else void open(file);
+      }}
+    >
+      <header className="topbar" inert={!!modal}>
         <div className="brand-mark">
           <svg viewBox="0 0 24 24">
             <path
@@ -378,7 +574,7 @@ export function App() {
           VFX<span>MAKER</span>
           <small>STUDIO</small>
         </div>
-        <span className="version">0.4.0</span>
+        <span className="version">{VERSION}</span>
         <span className="top-divider" />
         <div className="project-label">
           {project.name}
@@ -404,18 +600,97 @@ export function App() {
         >
           ↷
         </button>
-        <span className="top-divider" />
         <button onClick={() => openInput.current?.click()}>Open</button>
-        <button onClick={save}>Save project</button>
-        <button className="primary" onClick={() => setModal("export")}>
-          Export <span>↗</span>
+        <button onClick={save}>
+          Save<span className="save-long"> project</span>
+        </button>
+        <button
+          className="primary"
+          onClick={() => {
+            setPlaying(false);
+            setModal("export");
+          }}
+        >
+          Export ↗
         </button>
         <button aria-label="Help" onClick={() => setModal("help")}>
           ?
         </button>
       </header>
-      <main className="workspace">
-        <aside className="library">
+      <nav
+        className="workspace-tools"
+        aria-label="Workspace tools"
+        inert={!!modal}
+      >
+        <button
+          aria-pressed={layout.leftVisible}
+          onClick={() => layout.toggle("left")}
+        >
+          Library
+        </button>
+        <button
+          aria-pressed={layout.rightVisible}
+          onClick={() => layout.toggle("right")}
+        >
+          Inspector
+        </button>
+        <button
+          aria-pressed={layout.layout.timelineOpen}
+          onClick={() => layout.toggle("timeline")}
+        >
+          Timeline
+        </button>
+        <span className="toolbar-separator" />
+        <button onClick={() => void openPixels()}>Pixel optimizer</button>
+        <button onClick={() => setModal("resize")}>Resize canvas</button>
+        <button
+          onClick={() => {
+            setPlaying(false);
+            setModal("recolor");
+          }}
+        >
+          Recolor
+        </button>
+        <button
+          onClick={() => {
+            void listRecent()
+              .then((entries) => {
+                setRecent(entries);
+                setModal("recent");
+              })
+              .catch((e) => toast(readableError(e)));
+          }}
+        >
+          Recent
+        </button>
+        <button
+          onClick={() => {
+            layout.reset();
+            toast("Workspace layout reset.");
+          }}
+        >
+          Reset layout
+        </button>
+        {solo && (
+          <span className="solo-notice">
+            Solo preview{" "}
+            <button onClick={() => setSolo(undefined)}>Show all</button>
+          </span>
+        )}
+      </nav>
+      <main className="workspace" inert={!!modal}>
+        {layout.compact && layout.drawer && (
+          <button
+            className="drawer-backdrop"
+            aria-label="Close panel"
+            onClick={() => layout.setDrawer(null)}
+          />
+        )}
+        <aside
+          className={`library ${layout.leftVisible ? "panel-visible" : "panel-hidden"}`}
+          aria-label="Library"
+          inert={!layout.leftVisible}
+        >
           <div className="library-tabs">
             {["layers", "effects", "assets"].map((t) => (
               <button
@@ -433,98 +708,130 @@ export function App() {
                 <span>COMPOSITION</span>
                 <small>{project.layers.length} / 32</small>
               </div>
+              <div className="search">
+                <input
+                  aria-label="Search layers"
+                  placeholder="Find a layer…"
+                  value={layerSearch}
+                  onChange={(e) => setLayerSearch(e.target.value)}
+                />
+              </div>
               <div className="layer-list">
-                {[...project.layers].reverse().map((l) => (
-                  <div
-                    key={l.id}
-                    draggable
-                    onDragStart={(e) =>
-                      e.dataTransfer.setData("text/vfx-layer", l.id)
-                    }
-                    onDragOver={(e) => e.preventDefault()}
-                    onDrop={(e) => {
-                      e.preventDefault();
-                      const id = e.dataTransfer.getData("text/vfx-layer");
-                      const layers = [...project.layers],
-                        from = layers.findIndex((x) => x.id === id),
-                        to = layers.indexOf(l);
-                      if (from < 0 || from === to) return;
-                      const moved = layers.splice(from, 1)[0];
-                      layers.splice(to, 0, moved);
-                      commit({ ...project, layers });
-                    }}
-                    className={`layer-row ${selected === l.id ? "selected" : ""} ${!l.visible ? "muted" : ""}`}
-                  >
-                    <button
-                      className="layer-visibility"
-                      aria-label={`${l.visible ? "Hide" : "Show"} ${l.name}`}
-                      onClick={() =>
-                        commit({
-                          ...project,
-                          layers: project.layers.map((x) =>
-                            x.id === l.id ? { ...x, visible: !x.visible } : x,
-                          ),
-                        })
+                {[...project.layers]
+                  .reverse()
+                  .filter((l) =>
+                    l.name.toLowerCase().includes(layerSearch.toLowerCase()),
+                  )
+                  .map((l) => (
+                    <div
+                      key={l.id}
+                      draggable
+                      onDragStart={(e) =>
+                        e.dataTransfer.setData("text/vfx-layer", l.id)
                       }
+                      onDragOver={(e) => e.preventDefault()}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        const id = e.dataTransfer.getData("text/vfx-layer");
+                        const layers = [...project.layers],
+                          from = layers.findIndex((x) => x.id === id),
+                          to = layers.indexOf(l);
+                        if (from < 0 || from === to) return;
+                        const moved = layers.splice(from, 1)[0];
+                        layers.splice(to, 0, moved);
+                        safeCommit({ ...project, layers });
+                      }}
+                      className={`layer-row ${selected === l.id ? "selected" : ""} ${!l.visible ? "muted" : ""}`}
                     >
-                      {l.visible ? "◉" : "○"}
-                    </button>
-                    <button
-                      className="layer-select"
-                      onClick={() => setSelected(l.id)}
-                    >
-                      <span className={`type-dot ${l.type}`} />
-                      <span>
-                        {l.name}
-                        <small>{l.type === "path" ? "stroke" : l.type}</small>
-                      </span>
-                    </button>
-                    <button
-                      className="lock-button"
-                      title={l.locked ? "Unlock layer" : "Lock layer"}
-                      aria-label={`${l.locked ? "Unlock" : "Lock"} ${l.name}`}
-                      onClick={() =>
-                        commit({
-                          ...project,
-                          layers: project.layers.map((x) =>
-                            x.id === l.id ? { ...x, locked: !x.locked } : x,
-                          ),
-                        })
-                      }
-                    >
-                      {l.locked ? "◆" : "◇"}
-                    </button>
-                  </div>
-                ))}
+                      <button
+                        className="layer-visibility"
+                        aria-label={`${l.visible ? "Hide" : "Show"} ${l.name}`}
+                        onClick={() =>
+                          safeCommit({
+                            ...project,
+                            layers: project.layers.map((x) =>
+                              x.id === l.id ? { ...x, visible: !x.visible } : x,
+                            ),
+                          })
+                        }
+                      >
+                        {l.visible ? "◉" : "○"}
+                      </button>
+                      <button
+                        className="layer-select"
+                        onClick={() => setSelected(l.id)}
+                      >
+                        <span className={`type-dot ${l.type}`} />
+                        <span>
+                          {l.name}
+                          <small>{l.type === "path" ? "stroke" : l.type}</small>
+                        </span>
+                      </button>
+                      <button
+                        className="lock-button"
+                        title={l.locked ? "Unlock layer" : "Lock layer"}
+                        aria-label={`${l.locked ? "Unlock" : "Lock"} ${l.name}`}
+                        onClick={() =>
+                          safeCommit({
+                            ...project,
+                            layers: project.layers.map((x) =>
+                              x.id === l.id ? { ...x, locked: !x.locked } : x,
+                            ),
+                          })
+                        }
+                      >
+                        {l.locked ? "◆" : "◇"}
+                      </button>
+                    </div>
+                  ))}
               </div>
               <div className="layer-actions">
                 <button
                   onClick={duplicate}
-                  disabled={!layer}
+                  disabled={!layer || project.layers.length >= 32}
                   title="Duplicate selected layer"
                 >
                   Duplicate
                 </button>
                 <button
                   disabled={!layer || layer.locked}
-                  onClick={() => {
-                    if (layer)
-                      commit({
-                        ...project,
-                        layers: project.layers.filter((l) => l.id !== layer.id),
-                      });
-                  }}
+                  onClick={removeSelected}
                 >
                   Delete
                 </button>
                 <button
                   title="Edit project as JSON"
                   onClick={() => {
-                    setJsonDraft(JSON.stringify(project, null, 2));
                     setModal("json");
                   }}
                 >
                   {"{ }"}
+                </button>
+              </div>
+              <div className="layer-tools">
+                <button
+                  aria-label="Raise layer"
+                  disabled={!layer || project.layers.at(-1)?.id === layer.id}
+                  onClick={() => moveLayer(1)}
+                >
+                  ↑ Raise
+                </button>
+                <button
+                  aria-label="Lower layer"
+                  disabled={!layer || project.layers[0]?.id === layer.id}
+                  onClick={() => moveLayer(-1)}
+                >
+                  ↓ Lower
+                </button>
+                <button
+                  aria-label="Solo selected layer"
+                  aria-pressed={!!solo}
+                  disabled={!layer}
+                  onClick={() =>
+                    setSolo((v) => (v === selected ? undefined : selected))
+                  }
+                >
+                  Solo
                 </button>
               </div>
               <div className="add-section">
@@ -588,10 +895,12 @@ export function App() {
                     key={p.id}
                     className="preset-card"
                     onClick={() => {
-                      commit(getPreset(p.id));
+                      safeCommit(getPreset(p.id));
                       setTime(0);
                       setPlaying(true);
                       setSelected(p.project.layers.at(-1)?.id);
+                      setSolo(undefined);
+                      layout.setDrawer(null);
                     }}
                   >
                     <div className={`preset-art art-${i % 6}`}>
@@ -640,7 +949,7 @@ export function App() {
                         min={1}
                         max={64}
                         onChange={(columns) =>
-                          commit({
+                          safeCommit({
                             ...project,
                             assets: project.assets.map((v) =>
                               v.id === a.id ? { ...v, columns } : v,
@@ -654,7 +963,7 @@ export function App() {
                         min={1}
                         max={64}
                         onChange={(rows) =>
-                          commit({
+                          safeCommit({
                             ...project,
                             assets: project.assets.map((v) =>
                               v.id === a.id ? { ...v, rows } : v,
@@ -669,7 +978,7 @@ export function App() {
                       min={1}
                       max={a.columns * a.rows}
                       onChange={(frames) =>
-                        commit({
+                        safeCommit({
                           ...project,
                           assets: project.assets.map((v) =>
                             v.id === a.id ? { ...v, frames } : v,
@@ -678,8 +987,23 @@ export function App() {
                       }
                     />
                     <button
+                      onClick={() => {
+                        setPixelSource({
+                          name: a.name,
+                          assetId: a.id,
+                          bytes: Uint8Array.from(
+                            atob(a.data.split(",")[1]),
+                            (c) => c.charCodeAt(0),
+                          ),
+                        });
+                        setModal("pixels");
+                      }}
+                    >
+                      Optimize PNG
+                    </button>
+                    <button
                       onClick={() =>
-                        commit({
+                        safeCommit({
                           ...project,
                           assets: project.assets.filter((v) => v.id !== a.id),
                         })
@@ -698,7 +1022,8 @@ export function App() {
               </div>
             </>
           )}
-        </aside>
+        </aside>{" "}
+        {layout.leftVisible && !layout.compact && separator("left")}
         <div className="center-column">
           <Viewport
             project={project}
@@ -707,7 +1032,9 @@ export function App() {
             update={update}
             onError={toast}
             onInteract={() => setPlaying(false)}
+            solo={solo}
           />
+          {layout.layout.timelineOpen && separator("timeline")}
           <Timeline
             project={project}
             selected={selected}
@@ -719,20 +1046,26 @@ export function App() {
             updateLayer={updateLayer}
           />
         </div>
-        <Inspector
-          layer={layer}
-          project={project}
-          update={update}
-          updateProject={commit}
-        />
+        {layout.rightVisible && !layout.compact && separator("right")}
+        <div
+          className={`inspector-panel ${layout.rightVisible ? "panel-visible" : "panel-hidden"}`}
+          inert={!layout.rightVisible}
+        >
+          <Inspector
+            layer={layer}
+            project={project}
+            update={update}
+            updateProject={safeCommit}
+          />
+        </div>
       </main>
-      <footer className="statusbar">
+      <footer className="statusbar" inert={!!modal}>
         <span className={storageError ? "warning" : ""}>
           {storageError
             ? "Autosave unavailable — download your project"
             : "● Local autosave on"}
         </span>
-        <span>
+        <span className="status-shortcut">
           Ctrl / ⌘ S to save <i>·</i> No account needed
         </span>
         <div className="spacer" />
@@ -742,7 +1075,7 @@ export function App() {
         ref={openInput}
         type="file"
         hidden
-        accept=".json,.vfxproj"
+        accept=".json"
         onChange={(e) => {
           void open(e.target.files?.[0]);
           e.target.value = "";
@@ -766,197 +1099,71 @@ export function App() {
           </button>
         </div>
       )}
-      {modal && (
-        <div
-          className="modal-backdrop"
-          onClick={() => {
-            if (!progress) setModal(null);
+      {modal === "pixels" && (
+        <PixelLab
+          source={pixelSource}
+          onSource={(source) => {
+            captureGeneration.current++;
+            setPixelSource(source);
           }}
-        >
-          <section
-            className={`modal ${modal === "json" ? "json-modal" : ""}`}
-            role="dialog"
-            aria-modal="true"
-            aria-label={
-              modal === "export"
-                ? "Export effect"
-                : modal === "json"
-                  ? "Project JSON"
-                  : "Studio help"
+          onClose={closeModal}
+          initial={project.output}
+          onOutput={(output) => {
+            safeCommit({ ...project, output });
+            closeModal();
+            toast("Pixel settings applied to exports.");
+          }}
+          onAsset={(source, png, stats) => {
+            try {
+              commit(
+                replaceAssetPng(
+                  project,
+                  source.assetId!,
+                  png,
+                  stats.width,
+                  stats.height,
+                ),
+              );
+              closeModal();
+              toast("Texture replaced. Undo restores the original.");
+            } catch (e) {
+              toast(readableError(e));
             }
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="modal-heading">
-              <h2>
-                {modal === "export"
-                  ? "Export your effect"
-                  : modal === "json"
-                    ? "Project source"
-                    : "Your VFX workspace"}
-              </h2>
-              <button
-                disabled={!!progress}
-                aria-label="Close dialog"
-                onClick={() => setModal(null)}
-              >
-                ×
-              </button>
-            </div>
-            {modal === "export" && (
-              <>
-                <p>
-                  Render with the same PixiJS engine as your preview. Every ZIP
-                  includes the editable project and frame timing metadata.
-                </p>
-                <Select
-                  label="Export format"
-                  value={format}
-                  options={["gif", "spritesheet", "sequence", "godot", "unity"]}
-                  onChange={setFormat}
-                />
-                {format === "gif" && (
-                  <>
-                    <NumberField
-                      label="GIF scale"
-                      value={scale}
-                      min={1}
-                      max={8}
-                      onChange={setScale}
-                    />
-                    <label className="field">
-                      <span>GIF background</span>
-                      <input
-                        aria-label="GIF background"
-                        type="color"
-                        value={project.canvas.background}
-                        onChange={(e) =>
-                          commit({
-                            ...project,
-                            canvas: {
-                              ...project.canvas,
-                              background: e.target.value,
-                            },
-                          })
-                        }
-                      />
-                    </label>
-                    <p className="hint">
-                      GIF uses an opaque background. PNG exports preserve
-                      transparency. GIF timing rounds cumulative frame times to
-                      centiseconds.
-                    </p>
-                  </>
-                )}
-                {["godot", "unity"].includes(format) && (
-                  <p className="hint">
-                    Exports a baked atlas animation for{" "}
-                    {format === "godot"
-                      ? "Godot 4"
-                      : "Unity 2022.3+ (2D Sprite package)"}
-                    , with import instructions.
-                  </p>
-                )}
-                <div className="export-summary">
-                  <span>
-                    {Math.ceil(project.duration * project.fps)} frames
-                  </span>
-                  <span>
-                    {project.canvas.width} × {project.canvas.height}
-                  </span>
-                  <span>{project.fps} fps</span>
-                </div>
-                {progress ? (
-                  <>
-                    <progress max={progress.total} value={progress.completed} />
-                    <p className="hint">
-                      Rendering {progress.completed} / {progress.total}
-                    </p>
-                    <button onClick={() => controller.current?.abort()}>
-                      Cancel export
-                    </button>
-                  </>
-                ) : (
-                  <button
-                    className="primary wide"
-                    onClick={() => void runExport()}
-                  >
-                    Render & download ZIP ↗
-                  </button>
-                )}
-              </>
-            )}
-            {modal === "json" && (
-              <>
-                <p>
-                  Optional source editing. All changes are validated before
-                  applying.
-                </p>
-                <textarea
-                  aria-label="Project JSON source"
-                  spellCheck={false}
-                  value={jsonDraft}
-                  onChange={(e) => setJsonDraft(e.target.value)}
-                />
-                <button
-                  className="primary"
-                  onClick={() => {
-                    try {
-                      const p = parseText(jsonDraft);
-                      commit(p);
-                      setModal(null);
-                    } catch (e) {
-                      toast(readableError(e));
-                    }
-                  }}
-                >
-                  Apply changes
-                </button>
-              </>
-            )}
-            {modal === "help" && (
-              <>
-                <p>
-                  Build an effect from layers, or start with one of 18 editable
-                  examples. The project is stored locally in your browser;
-                  download a project file to share it or continue on another
-                  device.
-                </p>
-                <dl>
-                  <dt>Drag in preview</dt>
-                  <dd>
-                    Move the center handle to position a layer. Move numbered
-                    points to reshape a stroke; double-click to add a point.
-                  </dd>
-                  <dt>Keyframes</dt>
-                  <dd>
-                    Expand a curve to edit time, value and easing. Double-click
-                    its graph to add a key.
-                  </dd>
-                  <dt>Timeline</dt>
-                  <dd>
-                    Drag a clip to change its start; drag its right edge to
-                    change duration. Space plays or pauses.
-                  </dd>
-                  <dt>Use in any folder</dt>
-                  <dd>
-                    <code>vfx studio effect.vfx.json</code>
-                    <br />
-                    <code>
-                      vfx export effect.vfx.json --format gif --out render
-                    </code>
-                  </dd>
-                  <dt>Connect an agent</dt>
-                  <dd>
-                    <code>
-                      codex mcp add vfx -- vfx-mcp --root /path/to/effects
-                    </code>
-                  </dd>
-                </dl>
-              </>
-            )}
-          </section>
-        </div>
+          }}
+        />
       )}
+      {modal === "export" && (
+        <ExportDialog
+          project={project}
+          progress={progress}
+          onClose={closeModal}
+          onExport={(options) => void runExport(options)}
+          onCancel={() => controller.current?.abort()}
+        />
+      )}
+      {modal === "recolor" && (
+        <RecolorDialog
+          project={project}
+          selected={selected}
+          time={time}
+          onApply={commit}
+          onClose={closeModal}
+        />
+      )}
+      {modal === "resize" && (
+        <ResizeDialog project={project} onApply={commit} onClose={closeModal} />
+      )}
+      {modal === "json" && (
+        <JsonDialog project={project} onApply={commit} onClose={closeModal} />
+      )}
+      {modal === "recent" && (
+        <RecentDialog
+          entries={recent}
+          onLoad={(p) => loadProject(parseProject(p))}
+          onClose={closeModal}
+        />
+      )}
+      {modal === "help" && <HelpDialog onClose={closeModal} />}
     </div>
   );
 }

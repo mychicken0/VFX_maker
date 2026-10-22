@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { expect, test } from "@playwright/test";
 import { PNG } from "pngjs";
 import {
@@ -245,4 +246,105 @@ test("flipbooks, half alpha, transform keyframes and glow affect actual RGBA pix
   expect(glowing.data[(7 * 32 + 16) * 4 + 3]).toBeGreaterThan(
     bare.data[(7 * 32 + 16) * 4 + 3],
   );
+});
+test("pixel export settings preserve output palette and alpha; metadata hashes match scaled files", async ({
+  page,
+}) => {
+  await page.goto("/render.html");
+  await page.waitForFunction(() => !!window.vfx);
+  const p = getPreset();
+  p.duration = 0.31;
+  p.fps = 10;
+  p.output = {
+    scale: 0.5,
+    colors: 8,
+    dither: true,
+    pixelSize: 2,
+    alphaLevels: 4,
+  };
+  const files = await page.evaluate(
+      (p) => window.vfx.export(p, { format: "sequence" }),
+      p,
+    ),
+    meta = JSON.parse(Buffer.from(files["metadata.json"], "base64").toString());
+  expect(meta.version).toBe("0.5.0");
+  expect(meta.canvas.width).toBe(64);
+  expect(meta.sourceCanvas.width).toBe(128);
+  const palettes = new Set<string>();
+  for (const frame of meta.frames) {
+    const data = Buffer.from(files[frame.file], "base64"),
+      image = PNG.sync.read(data);
+    expect(image.width).toBe(64);
+    expect(frame.rect).toEqual({ x: 0, y: 0, width: 64, height: 64 });
+    for (let i = 0; i < image.data.length; i += 4) {
+      expect([0, 85, 170, 255]).toContain(image.data[i + 3]);
+      if (image.data[i + 3])
+        palettes.add([...image.data.subarray(i, i + 3)].join(","));
+    }
+    expect(createHash("sha256").update(data).digest("hex")).toBe(
+      meta.files[frame.file],
+    );
+  }
+  expect(palettes.size).toBeLessThanOrEqual(8);
+  expect(palettes.size).toBeGreaterThan(1);
+});
+test("atlas edge extrusion repeats exact straight RGBA at padded borders", async ({
+  page,
+}) => {
+  await page.goto("/render.html");
+  await page.waitForFunction(() => !!window.vfx);
+  const image = new PNG({ width: 4, height: 4 });
+  for (let i = 0; i < image.data.length; i += 4)
+    image.data.set([240, 40, 20, 255], i);
+  const p = defineEffect({
+    canvas: { width: 32, height: 32 },
+    duration: 0.1,
+    fps: 10,
+    assets: [
+      {
+        id: "square",
+        name: "Square",
+        width: 4,
+        height: 4,
+        data:
+          "data:image/png;base64," + PNG.sync.write(image).toString("base64"),
+      },
+    ],
+    layers: [
+      sprite({
+        id: "s",
+        name: "S",
+        position: { x: 16, y: 16 },
+        asset: "square",
+        width: curve(32),
+        height: curve(32),
+        opacity: curve(1),
+        blend: "normal",
+      }),
+    ],
+  });
+  const files = await page.evaluate(
+      (p) =>
+        window.vfx.export(p, {
+          format: "spritesheet",
+          scale: 0.5,
+          padding: 3,
+          extrude: true,
+        }),
+      p,
+    ),
+    png = PNG.sync.read(Buffer.from(files["atlas.png"], "base64"));
+  expect(png.width).toBe(22);
+  expect(png.height).toBe(22);
+  for (const [x, y] of [
+    [0, 0],
+    [21, 0],
+    [0, 21],
+    [21, 21],
+    [3, 3],
+    [18, 18],
+  ])
+    expect([
+      ...png.data.subarray((y * 22 + x) * 4, (y * 22 + x) * 4 + 4),
+    ]).toEqual([240, 40, 20, 255]);
 });

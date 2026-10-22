@@ -1,5 +1,6 @@
 import { readFile, readdir, mkdir, writeFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
+const pkgVersion = JSON.parse(await readFile("package.json", "utf8")).version;
 const lock = JSON.parse(await readFile("package-lock.json", "utf8"));
 const inventory = [],
   texts = [];
@@ -71,6 +72,6 @@ await writeFile(
 await writeFile("docs/licenses/npm-runtime.txt", texts.join(""));
 await writeFile(
   "THIRD_PARTY_NOTICES.md",
-  `# Third-party notices\n\nVFX Maker 0.4.0 uses pinned npm packages. The browser build includes PixiJS, React,\nZod, gifenc, fflate and their dependencies. Node tools use the official MCP SDK,\nCommander, Playwright Core and esbuild.\n\nThe exact installed runtime inventory, package integrity values and upstream\nrepository URLs are in [npm-runtime.json](docs/licenses/npm-runtime.json).\nUpstream license/notice texts are collected in [npm-runtime.txt](docs/licenses/npm-runtime.txt).\nRuntime inventory: ${inventory.length} installed packages, including the browser libraries.\nPlatform-specific optional packages may differ on another operating system.\n\nOriginal demonstration textures are retained from our own 0.3 assets. The 0.4\neditor, API and render routines are original implementation; third-party engine\nsource/assets have not been copied into them. Previous OSS research and Rust\ndependency notices remain under [legacy/rust](legacy/rust/THIRD_PARTY_NOTICES.md).\n\nThe project's own distribution license has not been selected; package metadata\nuses UNLICENSED. This does not change any upstream package's license.\n`,
+  `# Third-party notices\n\nVFX Maker ${pkgVersion} uses pinned npm packages. The browser build includes PixiJS, React,\nZod, gifenc, fflate, UPNG.js, pako and their dependencies. Node tools use the official MCP SDK,\nCommander, Playwright Core and esbuild.\n\nThe exact installed runtime inventory, package integrity values and upstream\nrepository URLs are in [npm-runtime.json](docs/licenses/npm-runtime.json).\nUpstream license/notice texts are collected in [npm-runtime.txt](docs/licenses/npm-runtime.txt).\nRuntime inventory: ${inventory.length} installed packages, including the browser libraries.\nPlatform-specific optional packages may differ on another operating system.\n\nDemonstration textures are original project assets. Application code is original;\nupstream packages are included with their notices.\n\nThe project's own distribution license has not been selected; package metadata\nuses UNLICENSED. This does not change any upstream package's license.\n`,
 );
 process.stdout.write(`${inventory.length} runtime package notices collected\n`);

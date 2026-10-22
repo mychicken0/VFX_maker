@@ -9,6 +9,7 @@ import { Service } from "./service.js";
 import { Jobs } from "./jobs.js";
 import { getPreset } from "../core/presets.js";
 import { VERSION } from "../core/model.js";
+import { pixelOptionsSchema } from "../core/pixel-options.js";
 import { exportOptionsSchema } from "../core/export-options.js";
 const cli = new Command()
   .name("vfx-mcp")
@@ -23,7 +24,7 @@ const server = new McpServer(
   {
     maxToolInputElements: 50000,
     instructions:
-      "VFX Maker 0.4 uses editable layers, not graphs. Inspect a project to get its revision before changes. Updates merge nested objects and replace arrays. Layer order is bottom to top. Start with get_preset, then update_layer; use curves and paths for custom shapes. Export uses local Chromium + PixiJS, no network. Files are confined to the selected root and output paths must be unused. Prefer start_export and poll for long renders. TypeScript code execution is available only in the CLI build command for trusted sources.",
+      "VFX Maker 0.5 uses editable layers. Inspect a project to get its revision before changes. Updates merge nested objects and replace arrays. Layer order is bottom to top. Start with get_preset, then update_layer; use curves and paths for custom shapes. Export uses local Chromium + PixiJS, no network. Files are confined to the selected root and output paths must be unused. Prefer start_export and poll for long renders. TypeScript code execution is available only in the CLI build command for trusted sources.",
   },
 );
 const file = z.string().min(1).max(2048),
@@ -86,7 +87,14 @@ tool(
       frames: 300,
       sourcePixels: 16777216,
       fileBytes: 4194304,
+      pngInputSide: 1024,
+      outputScale: [0.125, 8],
+      pngOutputPixels: 16777216,
+      gifOutputPixels: 33554432,
+      paletteColors: [2, 256],
     },
+    imageProcessing:
+      "Local PNG optimization needs no browser. Palette, scale, block and alpha reductions are lossy; default PNG recompression preserves decoded RGBA.",
     editing:
       "No graph wiring. Merge fields directly on named layers; curves are arrays of {t,value,ease}; colors are {t,color} stops.",
   }),
@@ -108,8 +116,8 @@ tool(
 );
 tool(
   "get_schema",
-  "Get schema, defaults and limits for project, layer or asset.",
-  { kind: z.enum(["project", "layer", "asset"]) },
+  "Get schema, defaults and limits for project, layer, asset, pixels or export.",
+  { kind: z.enum(["project", "layer", "asset", "pixels", "export"]) },
   (a) => s.schema(a.kind),
   true,
 );
@@ -174,6 +182,52 @@ tool(
     frames: z.number().int().optional(),
   },
   (a) => s.importAsset(a.file, a.revision, a.png, a),
+);
+tool(
+  "optimize_png",
+  "Optimize a root-scoped static PNG to a new file. No Chromium needed; returns actual size/dimension/color stats and SHA-256.",
+  {
+    png: file,
+    out: file,
+    options: pixelOptionsSchema.default({
+      scale: 1,
+      colors: 0,
+      dither: false,
+      pixelSize: 1,
+      alphaLevels: 0,
+    }),
+  },
+  (a) => s.optimize(a.png, a.out, a.options),
+);
+tool(
+  "optimize_asset",
+  "Optimize an embedded PNG with a required revision. Rejects resized sheets whose grid no longer divides the image.",
+  { file, revision, id: z.string(), options: pixelOptionsSchema },
+  (a) => s.optimizeAsset(a.file, a.revision, a.id, a.options),
+);
+tool(
+  "resize_project",
+  "Uniformly fit and center the complete composition, or crop/expand just the canvas. Required revision; whole-project resize includes locked layers.",
+  {
+    file,
+    revision,
+    width: z.number().int().min(16).max(512),
+    height: z.number().int().min(16).max(512),
+    mode: z.enum(["scale", "canvas"]).default("scale"),
+  },
+  (a) => s.resize(a.file, a.revision, a.width, a.height, a.mode),
+);
+tool(
+  "recolor_project",
+  "Rotate all or selected layer gradients/tints while retaining shading. Texture pixels stay unchanged. Locked layers are skipped unless included.",
+  {
+    file,
+    revision,
+    hue: z.number().min(-360).max(360),
+    includeLocked: z.boolean().default(false),
+    ids: z.array(z.string()).max(32).optional(),
+  },
+  (a) => s.recolor(a.file, a.revision, a.hue, a.includeLocked, a.ids),
 );
 server.registerTool(
   "render_preview",

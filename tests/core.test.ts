@@ -90,7 +90,9 @@ describe("authoring API and validation", () => {
         ],
       }),
     ).toThrow("4000");
-    expect(() => parseText('{"schema_version":1}')).toThrow("Rust 0.3");
+    expect(() => parseText('{"schema_version":1}')).toThrow(
+      "Unsupported project format",
+    );
     expect(() => parseText(" ".repeat(4194305))).toThrow("4 MiB");
   });
 });

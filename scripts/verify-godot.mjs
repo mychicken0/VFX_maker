@@ -3,6 +3,9 @@ import { join, resolve } from "node:path";
 import { tmpdir } from "node:os";
 import { promisify } from "node:util";
 import { execFile } from "node:child_process";
+const VERSION = JSON.parse(
+  await readFile(new URL("../package.json", import.meta.url), "utf8"),
+).version;
 const run = promisify(execFile);
 const [engine, folder] = process.argv.slice(2);
 if (!engine || !folder)
@@ -10,12 +13,12 @@ if (!engine || !folder)
     "Usage: node scripts/verify-godot.mjs /path/to/godot /path/to/export",
   );
 const source = resolve(folder),
-  root = await mkdtemp(join(tmpdir(), "vfx-godot-04-"));
+  root = await mkdtemp(join(tmpdir(), "vfx-godot-"));
 try {
   for (const name of ["atlas.png", "metadata.json", "effect.tres"])
     await copyFile(join(source, name), join(root, name));
   const meta = JSON.parse(await readFile(join(root, "metadata.json"), "utf8"));
-  if (meta.version !== "0.4.0") throw new Error("Expected 0.4 metadata");
+  if (meta.version !== VERSION) throw new Error(`Expected ${VERSION} metadata`);
   await writeFile(
     join(root, "project.godot"),
     '[application]\nconfig/name="VFX resource verification"\n[rendering]\nrenderer/rendering_method="gl_compatibility"\n',

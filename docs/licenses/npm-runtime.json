@@ -808,6 +808,26 @@
     ]
   },
   {
+    "name": "pako",
+    "version": "2.1.0",
+    "license": "(MIT AND Zlib)",
+    "repository": "nodeca/pako",
+    "integrity": "sha512-w+eufiZ1WuJYgPXbV/PO3NCMEc3xqylkKHzp8bxp1uW4qaSNQUkwmLLEc3kKsfz8lpV1F8Ht3U1Cm+9Srog2ug==",
+    "licenseFiles": [
+      "LICENSE"
+    ]
+  },
+  {
+    "name": "pako",
+    "version": "1.0.11",
+    "license": "(MIT AND Zlib)",
+    "repository": "nodeca/pako",
+    "integrity": "sha512-4hLB8Py4zZce5s4yd9XzopqwVv/yGNhV1Bl8NTmCq1763HeK2+EwVTv+leGeL13Dnh2wfbqowVPXCIO0z4taYw==",
+    "licenseFiles": [
+      "LICENSE"
+    ]
+  },
+  {
     "name": "parse-svg-path",
     "version": "0.2.0",
     "license": "MIT",
@@ -1114,6 +1134,16 @@
     "license": "MIT",
     "repository": "stream-utils/unpipe",
     "integrity": "sha512-pjy2bYhSsufwWlKwPc+l3cN7+wuJlK6uz0YdJEOlQDbl6jo/YlPi4mb8agUkVC8BF7V8NuzeyPNqRksA3hztKQ==",
+    "licenseFiles": [
+      "LICENSE"
+    ]
+  },
+  {
+    "name": "upng-js",
+    "version": "2.1.0",
+    "license": "MIT",
+    "repository": "github:photopea/UPNG.js",
+    "integrity": "sha512-d3xzZzpMP64YkjP5pr8gNyvBt7dLk/uGI67EctzDuVp4lCZyVMo0aJO6l/VDlgbInJYDY6cnClLoBp29eKWI6g==",
     "licenseFiles": [
       "LICENSE"
     ]

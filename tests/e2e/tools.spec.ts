@@ -32,7 +32,7 @@ test("installed-style CLI works outside the repository with portable TypeScript 
     p.fps = 10;
     await writeFile(join(dir, "custom.json"), JSON.stringify(p));
     const info = await cli("inspect", "custom.json");
-    expect(info.project.version).toBe("0.4.0");
+    expect(info.project.version).toBe("0.5.0");
     await cli(
       "set",
       "custom.json",
@@ -75,10 +75,31 @@ test("installed-style CLI works outside the repository with portable TypeScript 
     expect(
       (await cli("build", "custom.ts", "--out", "scripted.json")).project.name,
     ).toBe("Scripted");
+    const compressed = await cli(
+      "optimize",
+      "preview.png",
+      "--out",
+      "small.png",
+      "--scale",
+      "0.5",
+      "--colors",
+      "16",
+    );
+    expect(compressed.stats.width).toBe(64);
+    expect(compressed.stats.colorsAfter).toBeLessThanOrEqual(16);
+    const resized = await cli(
+      "resize",
+      "custom.json",
+      "--width",
+      "64",
+      "--height",
+      "64",
+    );
+    expect(resized.project.canvas.width).toBe(64);
     const version = await exec(process.execPath, [cliEntrypoint, "--version"], {
       cwd: dir,
     });
-    expect(version.stdout.trim()).toBe("0.4.0");
+    expect(version.stdout.trim()).toBe("0.5.0");
   } finally {
     await rm(dir, { recursive: true, force: true });
   }
@@ -113,7 +134,7 @@ test("official MCP client authors without graph wiring, returns real image and m
   };
   try {
     await client.connect(transport);
-    expect((await client.listTools()).tools).toHaveLength(17);
+    expect((await client.listTools()).tools).toHaveLength(21);
     const project = getPreset("spark_burst");
     project.duration = 0.31;
     project.fps = 10;
@@ -156,6 +177,38 @@ test("official MCP client authors without graph wiring, returns real image and m
     expect(Buffer.from(block.data, "base64")).toEqual(
       await readFile(join(dir, "cli.png")),
     );
+    const optimized = await call("optimize_png", {
+      png: "cli.png",
+      out: "optimized.png",
+      options: { scale: 0.5, colors: 16 },
+    });
+    expect(optimized.stats.width).toBe(64);
+    expect(optimized.stats.colorsAfter).toBeLessThanOrEqual(16);
+    const sheet = getPreset("flipbook_burst");
+    const assetProject = await call("new_project", {
+      file: "sheet.json",
+      project: sheet,
+    });
+    const optimizedAsset = await call("optimize_asset", {
+      file: "sheet.json",
+      revision: assetProject.revision,
+      id: sheet.assets[0].id,
+      options: { colors: 16, scale: 0.5 },
+    });
+    expect(optimizedAsset.project.assets[0].frames).toBe(6);
+    a = await call("resize_project", {
+      file: "effect.json",
+      revision: a.revision,
+      width: 64,
+      height: 64,
+      mode: "scale",
+    });
+    expect(a.project.canvas.width).toBe(64);
+    a = await call("recolor_project", {
+      file: "effect.json",
+      revision: a.revision,
+      hue: 120,
+    });
     const job = await call("start_export", {
       file: "effect.json",
       revision: a.revision,

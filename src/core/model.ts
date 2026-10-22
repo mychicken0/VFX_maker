@@ -1,6 +1,8 @@
 import { z } from "zod";
+import { inspectPng } from "./pixels.js";
+import { pixelOptionsSchema } from "./pixel-options.js";
 
-export const VERSION = "0.4.0" as const;
+export const VERSION = "0.5.0" as const;
 const finite = z.number().finite();
 const bounded = (min: number, max: number) => finite.min(min).max(max);
 export const vecSchema = z
@@ -173,6 +175,8 @@ export const layerSchema = z.discriminatedUnion("type", [
   ringSchema,
   spriteSchema,
 ]);
+// Retain a small validation cache so dragging a layer does not re-inflate its textures.
+const validatedAssets = new Map<string, ReturnType<typeof inspectPng>>();
 export const assetSchema = z
   .object({
     id: z.string().regex(/^[a-zA-Z][\w-]{0,63}$/),
@@ -197,34 +201,29 @@ export const assetSchema = z
   )
   .refine((a) => {
     try {
-      const bytes = Uint8Array.from(atob(a.data.split(",")[1]), (c) =>
-        c.charCodeAt(0),
-      );
-      if (
-        bytes.length > 1048576 ||
-        bytes.length < 33 ||
-        bytes.slice(0, 8).join(",") !== "137,80,78,71,13,10,26,10"
-      )
-        return false;
-      const view = new DataView(bytes.buffer);
-      if (view.getUint32(16) !== a.width || view.getUint32(20) !== a.height)
-        return false;
-      for (let i = 8; i + 12 <= bytes.length;) {
-        if (String.fromCharCode(...bytes.slice(i + 4, i + 8)) === "acTL")
-          return false;
-        i += view.getUint32(i) + 12;
+      if (a.data.length > 1400000) return false;
+      let info = validatedAssets.get(a.data);
+      if (!info) {
+        const bytes = Uint8Array.from(atob(a.data.split(",")[1]), (c) =>
+          c.charCodeAt(0),
+        );
+        if (bytes.length > 1048576) return false;
+        info = inspectPng(bytes);
+        if (validatedAssets.size >= 8)
+          validatedAssets.delete(validatedAssets.keys().next().value!);
+        validatedAssets.set(a.data, info);
       }
-      return true;
+      return info.width === a.width && info.height === a.height;
     } catch {
       return false;
     }
-  }, "Asset must be a static PNG of at most 1 MiB with matching dimensions");
+  }, "Asset must be a valid static sRGB PNG of at most 1 MiB with matching dimensions (up to 8-bit)");
 export const projectSchema = z
   .object({
     format: z.literal("vfx-maker").default("vfx-maker"),
     version: z
       .literal(VERSION, {
-        error: "Unsupported project version; expected 0.4.0",
+        error: "Unsupported project version; expected 0.5.0",
       })
       .default(VERSION),
     name: z.string().min(1).max(100).default("Untitled effect"),
@@ -248,6 +247,13 @@ export const projectSchema = z
     loop: z.boolean().default(true),
     layers: z.array(layerSchema).max(32).default([]),
     assets: z.array(assetSchema).max(8).default([]),
+    output: pixelOptionsSchema.default({
+      scale: 1,
+      colors: 0,
+      dither: false,
+      pixelSize: 1,
+      alphaLevels: 0,
+    }),
   })
   .strict()
   .superRefine((p, ctx) => {
@@ -310,8 +316,16 @@ export type Asset = z.infer<typeof assetSchema>;
 export type Project = z.infer<typeof projectSchema>;
 export type LayerInput = z.input<typeof layerSchema>;
 export type ProjectInput = z.input<typeof projectSchema>;
-export const parseProject = (value: unknown): Project =>
-  projectSchema.parse(value);
+export function parseProject(value: unknown): Project {
+  if (
+    value &&
+    typeof value === "object" &&
+    "version" in value &&
+    value.version === "0.4.0"
+  )
+    value = { ...value, version: VERSION };
+  return projectSchema.parse(value);
+}
 
 export function parseText(text: string): Project {
   if (new TextEncoder().encode(text).length > 4 * 1024 * 1024)
@@ -319,7 +333,7 @@ export function parseText(text: string): Project {
   const value: unknown = JSON.parse(text);
   if (value && typeof value === "object" && "schema_version" in value)
     throw new Error(
-      "This is a Rust 0.3 project. Open it with legacy/rust tools; see docs/MIGRATION.md.",
+      "Unsupported project format. Use a vfx-maker .vfx.json project.",
     );
   return parseProject(value);
 }

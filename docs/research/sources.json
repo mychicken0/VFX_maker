@@ -1,0 +1,81 @@
+{
+  "reviewedAt": "2026-10-22",
+  "sources": [
+    {
+      "name": "piskel",
+      "url": "https://github.com/piskelapp/piskel",
+      "commit": "d828941fa9fe76464d69d91d5fd862067c98c02c",
+      "license": "Apache-2.0",
+      "usage": "feature reference"
+    },
+    {
+      "name": "squoosh",
+      "url": "https://github.com/GoogleChromeLabs/squoosh",
+      "commit": "e8d35e0fb66eb16eff6fe8fc773eabcbb7128de3",
+      "license": "Apache-2.0",
+      "usage": "feature reference"
+    },
+    {
+      "name": "UPNG.js",
+      "url": "https://github.com/photopea/UPNG.js",
+      "commit": "88f504b6577b726975f593caa38ba85d327c7c1f",
+      "license": "MIT",
+      "usage": "runtime npm 2.1.0; upstream implementation review"
+    },
+    {
+      "name": "react-resizable-panels",
+      "url": "https://github.com/bvaughn/react-resizable-panels",
+      "commit": "c19f0a93a96e4f214e9bd7b77eaec155f31f50d7",
+      "license": "MIT",
+      "usage": "feature reference"
+    },
+    {
+      "name": "pixellab-mcp",
+      "url": "https://github.com/pixellab-code/pixellab-mcp",
+      "commit": "b66c475110dc13365e589691353930c955d4e358",
+      "license": "All rights reserved",
+      "usage": "public product README only"
+    },
+    {
+      "name": "pixelorama",
+      "url": "https://github.com/Orama-Interactive/Pixelorama",
+      "commit": "4d1c3289b2b25ec42b6cfa82564026c840ff40d7",
+      "license": "MIT",
+      "usage": "README/LICENSE feature and compatibility reference"
+    },
+    {
+      "name": "effekseer",
+      "url": "https://github.com/effekseer/Effekseer",
+      "commit": "effd528a5ae5dbc60531c03e290db33e187f815b",
+      "license": "MIT",
+      "usage": "README/LICENSE feature and compatibility reference"
+    },
+    {
+      "name": "pixi-particle-emitter",
+      "url": "https://github.com/pixijs/particle-emitter",
+      "commit": "0fffdd9d18cabd99e5ee1d5dc94136613d5fcb04",
+      "license": "MIT",
+      "usage": "README/LICENSE feature and compatibility reference"
+    }
+  ],
+  "product": {
+    "url": "https://www.pixellab.ai/create-vfx#",
+    "browserResult": "Redirected to Sign in - PixelLab without authentication; no generation requested",
+    "publicBundleUrl": "https://www.pixellab.ai/_next/static/chunks/pages/create-vfx-7478e7e88d8d3152.js",
+    "publicBundleSha256": "f1e7a060319ce11fb60e276b8d4e4f9ae72840f965aaa7e13a1348cc3d660216",
+    "observedLabels": [
+      "Change the canvas size",
+      "Change one colour and the rest turn the same way, keeping the effect’s shading",
+      "Frames",
+      "Pick frame",
+      "Drop an image or click to choose"
+    ],
+    "codeOrAssetsCopied": false
+  },
+  "runtimePackages": {
+    "upng-js": "2.1.0",
+    "pako": "2.1.0",
+    "gifenc": "1.0.3"
+  },
+  "runtimeLicenseInventory": "../licenses/npm-runtime.json"
+}

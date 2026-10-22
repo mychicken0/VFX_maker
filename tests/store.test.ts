@@ -142,3 +142,67 @@ describe("managed exports", () => {
     expect(jobs.get(b.id).status).toBe("cancelled");
   });
 });
+describe("pixel and canvas tools", () => {
+  it("optimizes to a new file with real statistics and no overwrite or root escape", async () => {
+    const p = getPreset("flipbook_burst"),
+      bytes = Buffer.from(p.assets[0].data.split(",")[1], "base64");
+    await writeFile(join(dir, "input.png"), bytes);
+    const result = await s.optimize("input.png", "small.png", {
+      scale: 0.5,
+      colors: 16,
+    });
+    expect(result.stats.width).toBe(p.assets[0].width / 2);
+    expect(result.stats.colorsAfter).toBeLessThanOrEqual(16);
+    expect(result.stats.outputBytes).toBe(
+      (await readFile(join(dir, "small.png"))).length,
+    );
+    expect(result.sha256).toMatch(/^[0-9a-f]{64}$/);
+    await expect(s.optimize("input.png", "small.png")).rejects.toThrow(
+      "exists",
+    );
+    await expect(s.optimize("input.png", "../outside.png")).rejects.toThrow(
+      "inside",
+    );
+    expect(await readFile(join(dir, "input.png"))).toEqual(bytes);
+  });
+  it("preserves a flipbook grid and atomically rejects an incompatible resize or stale revision", async () => {
+    const p = getPreset("flipbook_burst"),
+      a = await s.create("a.json", { project: p }),
+      id = p.assets[0].id;
+    const b = await s.optimizeAsset("a.json", a.revision, id, {
+      scale: 0.5,
+      colors: 16,
+    });
+    expect(b.project.assets[0].columns).toBe(3);
+    expect(b.project.assets[0].frames).toBe(6);
+    const before = await readFile(join(dir, "a.json"));
+    await expect(
+      s.optimizeAsset("a.json", b.revision, id, { scale: 0.13 }),
+    ).rejects.toThrow("grid");
+    expect(await readFile(join(dir, "a.json"))).toEqual(before);
+    await expect(s.optimizeAsset("a.json", a.revision, id, {})).rejects.toThrow(
+      "Revision conflict",
+    );
+    const c = await s.resize("a.json", b.revision, 64, 64);
+    expect(c.project.canvas.width).toBe(64);
+    expect(c.revision).not.toBe(b.revision);
+  });
+});
+it("rejects a corrupted embedded PNG atomically instead of passing it to browser image decode", async () => {
+  const p = getPreset("stardust"),
+    a = await s.create("a.json", { project: p }),
+    bytes = Buffer.from(p.assets[0].data.split(",")[1], "base64");
+  bytes[30] ^= 1;
+  const before = await readFile(join(dir, "a.json"));
+  await expect(
+    s.update("a.json", a.revision, {
+      assets: [
+        {
+          ...p.assets[0],
+          data: "data:image/png;base64," + bytes.toString("base64"),
+        },
+      ],
+    }),
+  ).rejects.toThrow("valid static");
+  expect(await readFile(join(dir, "a.json"))).toEqual(before);
+});

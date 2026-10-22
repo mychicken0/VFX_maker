@@ -5,3 +5,7 @@ export * from "./simulation.js";
 export * from "./presets.js";
 export * from "./export-options.js";
 export * from "./errors.js";
+
+export * from "./pixel-options.js";
+export * from "./pixels.js";
+export * from "./authoring.js";

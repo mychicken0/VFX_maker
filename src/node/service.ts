@@ -9,7 +9,15 @@ import {
   type Project,
 } from "../core/model.js";
 import type { ExportOptions } from "../render/export.js";
-import { Store, merge } from "./store.js";
+import { optimizePng, inspectPng } from "../core/pixels.js";
+import { pixelOptionsSchema, type PixelInput } from "../core/pixel-options.js";
+import { exportOptionsSchema, exportPlan } from "../core/export-options.js";
+import {
+  recolorProject,
+  replaceAssetPng,
+  resizeProject,
+} from "../core/authoring.js";
+import { Store, merge, revision as hash } from "./store.js";
 import { render } from "./driver.js";
 export class Service {
   constructor(readonly store: Store) {}
@@ -21,9 +29,15 @@ export class Service {
       tags,
     }));
   }
-  schema(kind: "project" | "layer" | "asset") {
+  schema(kind: "project" | "layer" | "asset" | "pixels" | "export") {
     return z.toJSONSchema(
-      { project: projectSchema, layer: layerSchema, asset: assetSchema }[kind],
+      {
+        project: projectSchema,
+        layer: layerSchema,
+        asset: assetSchema,
+        pixels: pixelOptionsSchema,
+        export: exportOptionsSchema,
+      }[kind],
     );
   }
   create(
@@ -98,30 +112,78 @@ export class Service {
       stat = await fs.stat(path);
     if (stat.size > 1048576) throw new Error("PNG exceeds 1 MiB");
     const bytes = await fs.readFile(path);
-    if (
-      bytes.length < 33 ||
-      !bytes
-        .subarray(0, 8)
-        .equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]))
-    )
-      throw new Error("Input is not a PNG");
-    for (let i = 8; i + 12 <= bytes.length;) {
-      const size = bytes.readUInt32BE(i);
-      if (bytes.toString("ascii", i + 4, i + 8) === "acTL")
-        throw new Error("APNG is not supported; use a static flipbook sheet");
-      i += size + 12;
-    }
+    const { width, height } = inspectPng(bytes);
     const asset = assetSchema.parse({
       ...options,
       name: png.split(/[\\/]/).at(-1),
       data: `data:image/png;base64,${bytes.toString("base64")}`,
-      width: bytes.readUInt32BE(16),
-      height: bytes.readUInt32BE(20),
+      width,
+      height,
     });
     return this.store.edit(file, revision, (p) => ({
       ...p,
       assets: [...p.assets, asset],
     }));
+  }
+  async optimize(png: string, out: string, options: PixelInput = {}) {
+    const path = await this.store.path(png),
+      dest = await this.store.path(out, false);
+    if ((await fs.stat(path)).size > 4194304)
+      throw new Error("PNG exceeds 4 MiB");
+    const result = optimizePng(await fs.readFile(path), options);
+    await fs.writeFile(dest, result.png, { flag: "wx" });
+    return {
+      file: dest,
+      stats: result.stats,
+      sha256: hash(Buffer.from(result.png)),
+    };
+  }
+  async optimizeAsset(
+    file: string,
+    revision: string,
+    id: string,
+    options: PixelInput = {},
+  ) {
+    let stats: ReturnType<typeof optimizePng>["stats"] | undefined;
+    const result = await this.store.edit(file, revision, (project) => {
+      const asset = project.assets.find((a) => a.id === id);
+      if (!asset) throw new Error(`Unknown asset ${id}`);
+      const optimized = optimizePng(
+        Buffer.from(asset.data.split(",")[1], "base64"),
+        options,
+      );
+      stats = optimized.stats;
+      return replaceAssetPng(
+        project,
+        id,
+        optimized.png,
+        optimized.bitmap.width,
+        optimized.bitmap.height,
+      );
+    });
+    return { ...result, stats };
+  }
+  resize(
+    file: string,
+    revision: string,
+    width: number,
+    height: number,
+    mode: "scale" | "canvas" = "scale",
+  ) {
+    return this.store.edit(file, revision, (project) =>
+      resizeProject(project, width, height, mode),
+    );
+  }
+  recolor(
+    file: string,
+    revision: string,
+    hue: number,
+    includeLocked = false,
+    ids?: string[],
+  ) {
+    return this.store.edit(file, revision, (p) =>
+      recolorProject(p, hue, includeLocked, ids),
+    );
   }
   async preview(file: string, time = 0.3) {
     const { project, revision } = await this.store.read(file),
@@ -159,6 +221,7 @@ export class Service {
     signal?: AbortSignal,
     progress?: (a: number, b: number) => void,
   ) {
+    exportPlan(project, options);
     const files = await render(project, { options }, signal, progress);
     return { ...(await this.store.publish(out, files, signal)), revision };
   }

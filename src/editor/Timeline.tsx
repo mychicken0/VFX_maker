@@ -25,7 +25,7 @@ export function Timeline({
     l: Layer,
     resize: boolean,
   ) => {
-    if (l.locked) return;
+    if (e.button !== 0 || l.locked) return;
     e.stopPropagation();
     select(l.id);
     setPlaying(false);
@@ -54,19 +54,25 @@ export function Timeline({
           `${(Math.min(next, p.duration - start) / p.duration) * 100}%`;
       else el.style.left = `${(next / p.duration) * 100}%`;
     };
+    let cancelled = false;
+    const cancel = () => {
+      cancelled = true;
+      end();
+    };
     const end = () => {
       el.removeEventListener("pointermove", move);
       el.removeEventListener("pointerup", end);
-      el.removeEventListener("pointercancel", end);
+      el.removeEventListener("pointercancel", cancel);
       if (resize)
         (el.parentElement as HTMLElement).style.width =
           `${(Math.min(duration, p.duration - start) / p.duration) * 100}%`;
       else el.style.left = `${(start / p.duration) * 100}%`;
-      updateLayer(l.id, resize ? { duration: next } : { start: next });
+      if (!cancelled)
+        updateLayer(l.id, resize ? { duration: next } : { start: next });
     };
     el.addEventListener("pointermove", move);
     el.addEventListener("pointerup", end);
-    el.addEventListener("pointercancel", end);
+    el.addEventListener("pointercancel", cancel);
   };
   return (
     <section className="timeline">

@@ -1,13 +1,15 @@
 import { GIFEncoder, quantize, applyPalette } from "gifenc";
 import { zipSync } from "fflate";
-import { parseProject, type Project } from "../core/model.js";
+import { VERSION, parseProject, type Project } from "../core/model.js";
 import { VfxRenderer } from "./pixi.js";
-
 import {
-  exportOptionsSchema,
-  atlasLayout,
-  type ExportOptions,
-} from "../core/export-options.js";
+  createPalette,
+  processPixels,
+  encodePng,
+  type Bitmap,
+} from "../core/pixels.js";
+
+import { exportPlan, type ExportOptions } from "../core/export-options.js";
 export {
   exportOptionsSchema,
   type ExportOptions,
@@ -58,6 +60,54 @@ export async function preview(
     rgbaCanvas(renderer.pixels(), project.canvas.width, project.canvas.height),
   );
 }
+// Bound palette sampling independently from total frame count.
+function sampleFrames(frames: Bitmap[]) {
+  const total = frames.reduce((n, frame) => n + frame.width * frame.height, 0);
+  const step = Math.max(1, Math.ceil(total / 65536));
+  const bytes = new Uint8ClampedArray(Math.ceil(total / step) * 4);
+  let index = 0,
+    offset = 0;
+  for (const frame of frames)
+    for (let i = 0; i < frame.rgba.length; i += 4, index++)
+      if (index % step === 0) {
+        bytes.set(frame.rgba.subarray(i, i + 4), offset);
+        offset += 4;
+      }
+  return bytes.subarray(0, offset);
+}
+function mattePixels(frame: Bitmap, matte: string): Bitmap {
+  const rgb = [1, 3, 5].map((i) => parseInt(matte.slice(i, i + 2), 16));
+  const rgba = new Uint8ClampedArray(frame.rgba);
+  for (let i = 0; i < rgba.length; i += 4) {
+    const a = rgba[i + 3] / 255;
+    for (let c = 0; c < 3; c++)
+      rgba[i + c] = Math.round(rgba[i + c] * a + rgb[c] * (1 - a));
+    rgba[i + 3] = 255;
+  }
+  return { ...frame, rgba };
+}
+function drawPadded(
+  atlas: Bitmap,
+  frame: Bitmap,
+  x: number,
+  y: number,
+  padding: number,
+  extrude: boolean,
+) {
+  for (let dy = -padding; dy < frame.height + padding; dy++)
+    for (let dx = -padding; dx < frame.width + padding; dx++) {
+      if (
+        !extrude &&
+        (dx < 0 || dy < 0 || dx >= frame.width || dy >= frame.height)
+      )
+        continue;
+      const sx = Math.max(0, Math.min(frame.width - 1, dx)),
+        sy = Math.max(0, Math.min(frame.height - 1, dy));
+      const from = (sy * frame.width + sx) * 4,
+        to = ((y + dy) * atlas.width + x + dx) * 4;
+      atlas.rgba.set(frame.rgba.subarray(from, from + 4), to);
+    }
+}
 export async function exportEffect(
   renderer: VfxRenderer,
   value: Project,
@@ -66,74 +116,104 @@ export async function exportEffect(
   signal?: AbortSignal,
 ): Promise<ExportFiles> {
   const project = parseProject(value),
-    options = exportOptionsSchema.parse(input);
-  const fps = options.fps ?? project.fps,
-    times = schedule(project.duration, fps);
-  const { width, height } = project.canvas;
-  if (times.length > 300 || times.length * width * height > 16777216)
-    throw new Error(
-      "Export budget exceeded (300 frames / 16 million source pixels)",
-    );
-  if (
-    options.format === "gif" &&
-    times.length * width * height * options.scale ** 2 > 33554432
-  )
-    throw new Error("GIF scale exceeds the 32 million pixel export budget");
-  const files: ExportFiles = {},
-    layout = atlasLayout(width, height, times.length);
-  const { columns, padding } = layout;
-  const atlas = canvas(layout.width, layout.height);
-  const ctx = atlas.getContext("2d")!;
-  ctx.imageSmoothingEnabled = false;
+    plan = exportPlan(project, input);
+  const { options, pixels, fps, width, height } = plan;
+  const times = schedule(project.duration, fps),
+    files: ExportFiles = {};
+  const originals: Bitmap[] = [];
+  progress?.(0, times.length);
+  // Collect source pixels once; simulation is identical to the preview.
+  for (let i = 0; i < times.length; i++) {
+    signal?.throwIfAborted();
+    renderer.render(times[i].time);
+    originals.push({
+      width: project.canvas.width,
+      height: project.canvas.height,
+      rgba: renderer.pixels(),
+    });
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  }
+  const palette = pixels.colors
+    ? createPalette(sampleFrames(originals), pixels.colors)
+    : undefined;
+  const layout = plan.atlas;
+  const atlas: Bitmap | null = layout
+    ? {
+        width: layout.width,
+        height: layout.height,
+        rgba: new Uint8ClampedArray(layout.width * layout.height * 4),
+      }
+    : null;
   const gif = options.format === "gif" ? GIFEncoder() : null;
-  const matte = options.matte ?? project.canvas.background;
+  // Reuse a single palette for every animation frame to prevent color flicker.
+  const gifFrames: Bitmap[] = [];
   const frames: {
     index: number;
     time: number;
     duration: number;
     rect: { x: number; y: number; width: number; height: number };
+    file?: string;
   }[] = [];
   for (let i = 0; i < times.length; i++) {
     signal?.throwIfAborted();
+    const frame = processPixels(originals[i], pixels, palette);
+    // Release source buffers as soon as their processed frame is available.
+    originals[i] = { width: 0, height: 0, rgba: new Uint8ClampedArray() };
     const { time, duration } = times[i];
-    renderer.render(time);
-    const frame = rgbaCanvas(renderer.pixels(), width, height);
-    const x = (i % columns) * (width + padding * 2) + padding,
-      y = Math.floor(i / columns) * (height + padding * 2) + padding;
-    frames.push({ index: i, time, duration, rect: { x, y, width, height } });
-    if (gif) {
-      const scaled = canvas(width * options.scale, height * options.scale),
-        sc = scaled.getContext("2d")!;
-      sc.imageSmoothingEnabled = false;
-      sc.fillStyle = matte;
-      sc.fillRect(0, 0, scaled.width, scaled.height);
-      sc.drawImage(frame, 0, 0, scaled.width, scaled.height);
-      const rgba = sc.getImageData(0, 0, scaled.width, scaled.height).data,
-        palette = quantize(rgba, 256),
-        indexed = applyPalette(rgba, palette);
-      // Quantize cumulative endpoints, so centisecond rounding does not drift.
+    const x = layout
+      ? (i % layout.columns) * (width + layout.padding * 2) + layout.padding
+      : 0;
+    const y = layout
+      ? Math.floor(i / layout.columns) * (height + layout.padding * 2) +
+        layout.padding
+      : 0;
+    const member = `frames/${String(i).padStart(4, "0")}.png`;
+    frames.push({
+      index: i,
+      time,
+      duration,
+      rect: { x, y, width, height },
+      ...(options.format === "sequence" ? { file: member } : {}),
+    });
+    if (gif)
+      gifFrames.push(
+        mattePixels(frame, options.matte ?? project.canvas.background),
+      );
+    else {
+      if (options.format === "sequence") files[member] = encodePng(frame);
+      else drawPadded(atlas!, frame, x, y, layout!.padding, options.extrude);
+      progress?.(i + 1, times.length);
+    }
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  }
+  if (gif) {
+    const globalPalette = quantize(
+      sampleFrames(gifFrames),
+      pixels.colors || 256,
+    );
+    for (let i = 0; i < times.length; i++) {
+      signal?.throwIfAborted();
+      const frame = gifFrames[i],
+        { time, duration } = times[i];
+      const indexed = applyPalette(frame.rgba, globalPalette);
       const delay =
         Math.max(
           1,
           Math.round((time + duration) * 100) - Math.round(time * 100),
         ) * 10;
-      gif.writeFrame(indexed, scaled.width, scaled.height, {
-        palette,
+      gif.writeFrame(indexed, width, height, {
+        palette: globalPalette,
         delay,
         repeat: project.loop ? 0 : -1,
       });
-    } else if (options.format === "sequence")
-      files[`frames/${String(i).padStart(4, "0")}.png`] = await png(frame);
-    else ctx.drawImage(frame, x, y);
-    progress?.(i + 1, times.length);
-    await new Promise((resolve) => setTimeout(resolve, 0));
-  }
-  signal?.throwIfAborted();
-  if (gif) {
+      gifFrames[i] = { width: 0, height: 0, rgba: new Uint8ClampedArray() };
+      progress?.(i + 1, times.length);
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    }
     gif.finish();
     files["animation.gif"] = gif.bytes();
-  } else if (options.format !== "sequence")
-    files["atlas.png"] = await png(atlas);
+  } else if (atlas) files["atlas.png"] = encodePng(atlas);
+  signal?.throwIfAborted();
   if (options.format === "godot") {
     const resources = frames
       .map(
@@ -151,15 +231,16 @@ export async function exportEffect(
       `[gd_resource type="SpriteFrames" load_steps=${frames.length + 2} format=3]\n\n[ext_resource type="Texture2D" path="atlas.png" id="1"]\n\n${resources}\n\n[resource]\nanimations = [{\n"frames": [${frameDefs}],\n"loop": ${project.loop},\n"name": &"default",\n"speed": ${fps}.0\n}]\n`,
     );
     files["IMPORT.txt"] = text(
-      "Godot 4: place this folder in your project. Assign effect.tres to AnimatedSprite2D.sprite_frames. For pixel art set Texture Filter to Nearest. This is a baked animation.\n",
+      "Godot 4: assign effect.tres to AnimatedSprite2D.sprite_frames. Set Texture Filter to Nearest for pixel art. This is a baked animation.\n",
     );
   }
   if (options.format === "unity") {
     files["Editor/VfxMakerImport.cs"] = text(unityImporter);
     files["IMPORT.txt"] = text(
-      "Unity 2022.3+ with 2D Sprite package: place this entire export folder in Assets, select metadata.json, then Assets > VFX Maker > Import selected metadata. Creates sliced sprites and a uniquely named AnimationClip. This is a baked animation.\n",
+      "Unity 2022.3+ with 2D Sprite package: place this entire folder in Assets, select metadata.json, then Assets > VFX Maker > Import selected metadata. Creates sliced sprites and a uniquely named AnimationClip. This is a baked animation.\n",
     );
   }
+  files["effect.vfx.json"] = text(JSON.stringify(project, null, 2) + "\n");
   const hashes: Record<string, string> = {};
   for (const [name, bytes] of Object.entries(files))
     hashes[name] = Array.from(
@@ -173,17 +254,23 @@ export async function exportEffect(
     JSON.stringify(
       {
         format: "vfx-maker.export",
-        version: "0.4.0",
+        version: VERSION,
         name: project.name,
         renderer: "pixi-webgl",
-        canvas: project.canvas,
+        canvas: { ...project.canvas, width, height },
+        sourceCanvas: project.canvas,
+        output: pixels,
         fps,
         duration: project.duration,
         loop: project.loop,
-        atlas:
-          options.format !== "gif" && options.format !== "sequence"
-            ? { width: atlas.width, height: atlas.height, padding }
-            : null,
+        atlas: layout
+          ? {
+              width: layout.width,
+              height: layout.height,
+              padding: layout.padding,
+              extrude: options.extrude,
+            }
+          : null,
         frames,
         files: hashes,
       },
@@ -191,7 +278,6 @@ export async function exportEffect(
       2,
     ) + "\n",
   );
-  files["effect.vfx.json"] = text(JSON.stringify(project, null, 2) + "\n");
   return files;
 }
 export function zipExport(files: ExportFiles): Uint8Array {
@@ -211,7 +297,7 @@ export function toBase64(bytes: Uint8Array): string {
     out += String.fromCharCode(...bytes.subarray(i, i + 8192));
   return btoa(out);
 }
-const unityImporter = `// VFX Maker 0.4.0 — Unity 2022.3+; requires com.unity.2d.sprite.
+const unityImporter = `// VFX Maker ${VERSION} — Unity 2022.3+; requires com.unity.2d.sprite.
 using System; using System.IO; using System.Linq; using UnityEditor; using UnityEngine; using UnityEditor.U2D.Sprites;
 public static class VfxMakerImport {
  [Serializable] public class RectData { public int x, y, width, height; }
@@ -222,7 +308,7 @@ public static class VfxMakerImport {
   var selected = AssetDatabase.GetAssetPath(Selection.activeObject);
   if (Path.GetFileName(selected) != "metadata.json") throw new Exception("Select a VFX Maker metadata.json");
   var meta = JsonUtility.FromJson<Meta>(File.ReadAllText(selected));
-  if (meta == null || meta.format != "vfx-maker.export" || meta.version != "0.4.0" || meta.frames == null || meta.frames.Length == 0 || meta.frames.Length > 300) throw new Exception("Invalid VFX metadata");
+  if (meta == null || meta.format != "vfx-maker.export" || meta.version != "${VERSION}" || meta.frames == null || meta.frames.Length == 0 || meta.frames.Length > 300) throw new Exception("Invalid VFX metadata");
   var dir = Path.GetDirectoryName(selected).Replace('\\\\', '/'); var texPath = dir + "/atlas.png";
   var importer = AssetImporter.GetAtPath(texPath) as TextureImporter; if (importer == null) throw new Exception("atlas.png missing");
   importer.textureType = TextureImporterType.Sprite; importer.spriteImportMode = SpriteImportMode.Multiple; importer.filterMode = FilterMode.Point; importer.mipmapEnabled = false; importer.textureCompression = TextureImporterCompression.Uncompressed; importer.alphaIsTransparency = true; importer.npotScale = TextureImporterNPOTScale.None; importer.maxTextureSize = 8192;

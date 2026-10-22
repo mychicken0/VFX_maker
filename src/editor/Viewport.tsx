@@ -11,6 +11,7 @@ export function Viewport({
   update,
   onError,
   onInteract,
+  solo,
 }: {
   project: Project;
   layer?: Layer;
@@ -18,26 +19,86 @@ export function Viewport({
   update: (patch: Record<string, unknown>) => void;
   onError: (e: string) => void;
   onInteract: () => void;
+  solo?: string;
 }) {
-  const host = useRef<HTMLDivElement>(null),
+  const area = useRef<HTMLDivElement>(null),
+    host = useRef<HTMLDivElement>(null),
     renderer = useRef<VfxRenderer | null>(null),
     timeRef = useRef(time);
   const [ready, setReady] = useState(false),
-    [zoom, setZoom] = useState(3),
+    [zoomChoice, setZoomChoice] = useState("fit"),
+    [room, setRoom] = useState({ width: 640, height: 480 }),
+    [pan, setPan] = useState({ x: 0, y: 0 }),
+    [panMode, setPanMode] = useState(false),
+    [grid, setGrid] = useState(false),
+    [snap, setSnap] = useState(true),
     [guides, setGuides] = useState(true),
     [background, setBackground] = useState<"dark" | "checker">("dark"),
     [draft, setDraft] = useState<Layer>();
   timeRef.current = time;
+  const zoom =
+    zoomChoice === "fit"
+      ? Math.max(
+          0.125,
+          Math.min(
+            3,
+            (room.width - 48) / project.canvas.width,
+            (room.height - 48) / project.canvas.height,
+          ),
+        )
+      : Number(zoomChoice);
+  const zoomRef = useRef(zoom);
+  zoomRef.current = zoom;
   const viewProject = useMemo(
-    () =>
-      draft
-        ? {
-            ...project,
-            layers: project.layers.map((l) => (l.id === draft.id ? draft : l)),
-          }
-        : project,
-    [project, draft],
+    () => ({
+      ...project,
+      layers: project.layers.map((l) => {
+        const value = draft?.id === l.id ? draft : l;
+        return solo
+          ? { ...value, visible: l.id === solo && value.visible }
+          : value;
+      }),
+    }),
+    [project, draft, solo],
   );
+  useEffect(() => {
+    if (!area.current) return;
+    const observer = new ResizeObserver(([entry]) =>
+      setRoom({
+        width: entry.contentRect.width,
+        height: entry.contentRect.height,
+      }),
+    );
+    observer.observe(area.current);
+    return () => observer.disconnect();
+  }, []);
+  useEffect(() => {
+    const el = area.current;
+    if (!el) return;
+    const wheel = (event: WheelEvent) => {
+      if (!event.ctrlKey && !event.metaKey) return;
+      event.preventDefault();
+      const z = zoomRef.current,
+        next = Math.max(
+          0.125,
+          Math.min(16, z * Math.exp(-event.deltaY * 0.0015)),
+        );
+      const b = el.getBoundingClientRect(),
+        x = event.clientX - b.left - b.width / 2,
+        y = event.clientY - b.top - b.height / 2;
+      setPan((p) => ({
+        x: x - ((x - p.x) * next) / z,
+        y: y - ((y - p.y) * next) / z,
+      }));
+      zoomRef.current = next;
+      setZoomChoice(String(next));
+    };
+    el.addEventListener("wheel", wheel, { passive: false });
+    return () => el.removeEventListener("wheel", wheel);
+  }, []);
+  useEffect(() => {
+    setPan({ x: 0, y: 0 });
+  }, [project.canvas.width, project.canvas.height]);
   useEffect(() => {
     let alive = true;
     VfxRenderer.create()
@@ -96,6 +157,8 @@ export function Viewport({
     };
   };
   const anchor = active ? world({ x: 0, y: 0 }, active) : { x: 0, y: 0 };
+  const rounded = (n: number) =>
+    snap ? Math.round(n) : Math.round(n * 100) / 100;
   const pointFromEvent = (e: React.PointerEvent | React.MouseEvent) => {
     const box = e.currentTarget
       .closest(".canvas-stack")!
@@ -106,7 +169,7 @@ export function Viewport({
     };
   };
   const drag = (e: React.PointerEvent<SVGElement>, index: number | null) => {
-    if (!active || active.locked) return;
+    if (e.button !== 0 || !active || active.locked || panMode) return;
     e.stopPropagation();
     onInteract();
     const target = e.currentTarget;
@@ -122,8 +185,8 @@ export function Viewport({
         next = {
           ...original,
           position: {
-            x: Math.round(original.position.x + dx),
-            y: Math.round(original.position.y + dy),
+            x: rounded(original.position.x + dx),
+            y: rounded(original.position.y + dy),
           },
         };
       else if ("points" in original) {
@@ -134,10 +197,10 @@ export function Viewport({
           points: original.points.map((p, i) =>
             i === index
               ? {
-                  x: Math.round(
+                  x: rounded(
                     p.x + (dx * Math.cos(a) - dy * Math.sin(a)) / tx.scale,
                   ),
-                  y: Math.round(
+                  y: rounded(
                     p.y + (dx * Math.sin(a) + dy * Math.cos(a)) / tx.scale,
                   ),
                 }
@@ -191,22 +254,89 @@ export function Viewport({
           {background === "checker" ? "Checker" : "Dark"}
         </button>
         <div className="spacer" />
+        <button
+          aria-label="Pixel grid"
+          aria-pressed={grid}
+          onClick={() => setGrid(!grid)}
+          title="Show pixel grid at 400% and above"
+        >
+          Grid
+        </button>
+        <button
+          aria-label="Snap to pixels"
+          aria-pressed={snap}
+          onClick={() => setSnap(!snap)}
+        >
+          Snap
+        </button>
+        <button
+          aria-label="Pan canvas"
+          aria-pressed={panMode}
+          onClick={() => setPanMode(!panMode)}
+        >
+          Hand
+        </button>
+        <button
+          aria-label="Fit canvas"
+          onClick={() => {
+            setZoomChoice("fit");
+            setPan({ x: 0, y: 0 });
+          }}
+        >
+          Fit
+        </button>
         <select
           aria-label="Preview zoom"
-          value={zoom}
-          onChange={(e) => setZoom(Number(e.target.value))}
+          value={zoomChoice}
+          onChange={(e) => {
+            setZoomChoice(e.target.value);
+            setPan({ x: 0, y: 0 });
+          }}
         >
-          {[1, 2, 3, 4, 5, 6].map((z) => (
-            <option key={z} value={z}>
+          <option value="fit">Fit · {Math.round(zoom * 100)}%</option>
+          {[0.25, 0.5, 1, 2, 3, 4, 6, 8, 12].map((z) => (
+            <option key={z} value={String(z)}>
               {z * 100}%
             </option>
           ))}
+          {zoomChoice !== "fit" &&
+            ![0.25, 0.5, 1, 2, 3, 4, 6, 8, 12].includes(zoom) && (
+              <option value={zoomChoice}>{Math.round(zoom * 100)}%</option>
+            )}
         </select>
       </div>
-      <div className="viewport-area">
+      <div
+        ref={area}
+        className={`viewport-area ${panMode ? "pan-active" : ""}`}
+        onPointerDown={(event) => {
+          if (event.button !== 1 && !(panMode && event.button === 0)) return;
+          event.preventDefault();
+          onInteract();
+          const el = event.currentTarget;
+          el.setPointerCapture(event.pointerId);
+          let x = event.clientX,
+            y = event.clientY;
+          const move = (e: PointerEvent) => {
+            const dx = e.clientX - x,
+              dy = e.clientY - y;
+            x = e.clientX;
+            y = e.clientY;
+            setPan((p) => ({ x: p.x + dx, y: p.y + dy }));
+          };
+          const end = () => {
+            el.removeEventListener("pointermove", move);
+            el.removeEventListener("pointerup", end);
+            el.removeEventListener("pointercancel", end);
+          };
+          el.addEventListener("pointermove", move);
+          el.addEventListener("pointerup", end);
+          el.addEventListener("pointercancel", end);
+        }}
+      >
         <div
           className={`canvas-stack ${background === "checker" ? "checker" : ""}`}
           style={{
+            transform: `translate(calc(-50% + ${pan.x}px),calc(-50% + ${pan.y}px))`,
             width: width * zoom,
             height: height * zoom,
             backgroundColor:
@@ -218,12 +348,37 @@ export function Viewport({
             className={`pixi-host ${project.canvas.pixelArt ? "pixel-art" : ""}`}
             data-testid="pixi-viewport"
           />
+          {grid && zoom >= 4 && (
+            <svg
+              className="pixel-grid"
+              viewBox={`0 0 ${width} ${height}`}
+              aria-hidden="true"
+            >
+              <defs>
+                <pattern
+                  id="pixel-grid"
+                  width="1"
+                  height="1"
+                  patternUnits="userSpaceOnUse"
+                >
+                  <path
+                    d="M1 0H0V1"
+                    stroke="#ffffff33"
+                    fill="none"
+                    strokeWidth={0.6 / zoom}
+                  />
+                </pattern>
+              </defs>
+              <rect width={width} height={height} fill="url(#pixel-grid)" />
+            </svg>
+          )}
           {guides && (
             <svg
               className="canvas-guides"
               viewBox={`0 0 ${width} ${height}`}
               onDoubleClick={(e) => {
                 if (
+                  panMode ||
                   !active ||
                   active.locked ||
                   !("points" in active) ||
@@ -241,10 +396,10 @@ export function Viewport({
                   points: [
                     ...active.points,
                     {
-                      x: Math.round(
+                      x: rounded(
                         (dx * Math.cos(a) - dy * Math.sin(a)) / tx.scale,
                       ),
-                      y: Math.round(
+                      y: rounded(
                         (dx * Math.sin(a) + dy * Math.cos(a)) / tx.scale,
                       ),
                     },
@@ -285,7 +440,7 @@ export function Viewport({
                                 className="drag-handle"
                                 cx={w.x}
                                 cy={w.y}
-                                r={4 / zoom}
+                                r={6 / zoom}
                                 fill="#d1c4ff"
                                 stroke="#262235"
                                 strokeWidth={1 / zoom}
@@ -313,7 +468,7 @@ export function Viewport({
                     <circle
                       cx={anchor.x}
                       cy={anchor.y}
-                      r={7 / zoom}
+                      r={9 / zoom}
                       fill="#14121f"
                       stroke="#c4b0ff"
                       strokeWidth={1 / zoom}

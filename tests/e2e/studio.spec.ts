@@ -124,8 +124,7 @@ test("opens a portable textured effect and renders a downloadable GIF ZIP", asyn
     .getByRole("button", { name: "Export", exact: false })
     .first()
     .click();
-  await page.getByLabel("GIF scale", { exact: true }).fill("1");
-  await page.getByLabel("GIF scale", { exact: true }).blur();
+  await page.getByLabel("Export scale", { exact: true }).selectOption("1");
   const wait = page.waitForEvent("download");
   await page
     .getByRole("button", { name: "Render & download ZIP", exact: false })
@@ -134,7 +133,7 @@ test("opens a portable textured effect and renders a downloadable GIF ZIP", asyn
   const bytes = await readFile((await d.path())!);
   expect(bytes.subarray(0, 2).toString()).toBe("PK");
   expect(d.suggestedFilename()).toContain("gif.zip");
-  await expect(page.getByRole("status")).toContainText("Export complete");
+  await expect(page.getByRole("status")).toContainText("Export downloaded");
 });
 test("imports a PNG, authors a sprite and reports invalid input without losing the project", async ({
   page,
@@ -164,6 +163,6 @@ test("imports a PNG, authors a sprite and reports invalid input without losing t
       mimeType: "application/json",
       buffer: Buffer.from('{"version":"99"}'),
     });
-  await expect(page.getByRole("status")).toContainText("0.4.0");
+  await expect(page.getByRole("status")).toContainText("0.5.0");
   expect((await saved(page)).layers).toEqual(p.layers);
 });

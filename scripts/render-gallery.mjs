@@ -3,7 +3,7 @@ import { spawn } from "node:child_process";
 import { mkdir, writeFile, copyFile } from "node:fs/promises";
 import { resolve, join } from "node:path";
 import { parseArgs } from "node:util";
-import { PRESETS } from "../dist/core.js";
+import { VERSION, PRESETS } from "../dist/core.js";
 const { values } = parseArgs({
   options: {
     out: { type: "string" },
@@ -59,7 +59,10 @@ try {
     for (const format of ["gif", "spritesheet"]) {
       const files = await page.evaluate(
         ({ project, format }) =>
-          window.vfx.export(project, { format, scale: 2 }),
+          window.vfx.export(project, {
+            format,
+            scale: format === "gif" ? 2 : 1,
+          }),
         { project: preset.project, format },
       );
       await mkdir(join(dir, format));
@@ -94,7 +97,7 @@ try {
       .replaceAll('"', "&quot;");
   await writeFile(
     join(out, "index.html"),
-    `<!doctype html><html lang="en"><meta charset="utf-8"><title>VFX Maker 0.4.0 gallery</title><style>body{background:#111017;color:#e0d6ee;font:14px system-ui;margin:40px}h1{font-size:28px}p{color:#9b8da9}main{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px}article{border:1px solid #3f304e;border-radius:10px;padding:18px;background:#1e1828}img{image-rendering:pixelated;width:100%;aspect-ratio:1;object-fit:contain;background:#110f19;border-radius:7px}a{color:#c29ef4;font-size:12px;margin-right:10px}h2{font-size:17px}</style><h1>VFX Maker 0.4.0</h1><p>18 real PixiJS renders · editable layers · GIF + transparent PNG atlases</p><main>${PRESETS.map((p) => `<article><img src="${p.id}/gif/animation.gif" alt="${esc(p.name)}"><h2>${esc(p.name)}</h2><p>${esc(p.description)}</p><a href="${p.id}/gif/animation.gif">GIF</a><a href="${p.id}/spritesheet/atlas.png">Atlas</a><a href="${p.id}/spritesheet/metadata.json">Timing</a><a href="${p.id}/spritesheet/effect.vfx.json">Project</a></article>`).join("")}</main></html>`,
+    `<!doctype html><html lang="en"><meta charset="utf-8"><title>VFX Maker ${VERSION} gallery</title><style>body{background:#111017;color:#e0d6ee;font:14px system-ui;margin:40px}h1{font-size:28px}p{color:#9b8da9}main{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px}article{border:1px solid #3f304e;border-radius:10px;padding:18px;background:#1e1828}img{image-rendering:pixelated;width:100%;aspect-ratio:1;object-fit:contain;background:#110f19;border-radius:7px}a{color:#c29ef4;font-size:12px;margin-right:10px}h2{font-size:17px}</style><h1>VFX Maker ${VERSION}</h1><p>18 real PixiJS renders · editable layers · GIF + transparent PNG atlases</p><main>${PRESETS.map((p) => `<article><img src="${p.id}/gif/animation.gif" alt="${esc(p.name)}"><h2>${esc(p.name)}</h2><p>${esc(p.description)}</p><a href="${p.id}/gif/animation.gif">GIF</a><a href="${p.id}/spritesheet/atlas.png">Atlas</a><a href="${p.id}/spritesheet/metadata.json">Timing</a><a href="${p.id}/spritesheet/effect.vfx.json">Project</a></article>`).join("")}</main></html>`,
   );
 } finally {
   await browser.close();

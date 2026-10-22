@@ -1,4 +1,4 @@
-# VFX Maker 0.4.0
+# VFX Maker 0.5.0
 
 **A visual VFX studio built with TypeScript, PixiJS 8 and React 19.**
 Shape a sword slash by dragging its points, retime layers in the timeline, edit
@@ -17,17 +17,17 @@ npm run build
 node dist/cli.js studio --open
 ```
 
-Or install the prepared `vfx-maker-0.4.0.tgz` once and use it in any folder:
+Or install the prepared `vfx-maker-0.5.0.tgz` once and use it in any folder:
 
 ```bash
-npm install -g /path/to/vfx-maker-0.4.0.tgz
+npm install -g /path/to/vfx-maker-0.5.0.tgz
 cd /path/to/your/game
 vfx studio --open
 ```
 
 Source installer: `bash /path/to/VFX_maker/scripts/install.sh /path/to/tools`;
 add `/path/to/tools/bin` to PATH. The installed package includes the built editor
-and renderer; it does not need this checkout, Rust or a game repository.
+and renderer; it does not need this checkout or a game repository.
 This package has not been published to the npm registry.
 
 **Browser:** Studio runs in a modern browser with WebGL2. CLI/MCP rendering uses
@@ -49,10 +49,24 @@ tested; macOS, Windows, Firefox and Safari are not verified.
   Transform keyframes animate X/Y offsets, rotation and scale.
 - Import PNG textures or flipbooks. Set columns/rows/frame count; textures are
   embedded in the portable `.vfx.json` project.
+- Fit the canvas, pan with Hand or middle mouse, zoom around the pointer with
+  Ctrl/⌘ wheel, and toggle pixel grid or snapping. Panels resize, collapse and
+  remember their layout; narrow windows use side drawers.
+- Recolor all or selected layer gradients/tints together, with a real preview
+  and one-step undo. Locked layers are skipped by default.
+- Resize the composition uniformly to fit a new canvas, or crop/expand only
+  the canvas. Raise/lower, solo-preview, search and keyboard-nudge layers.
+- Open **Pixel optimizer** to compare a frame or PNG before/after. Recompress
+  losslessly, reduce colors/alpha levels, resize with nearest-neighbor sampling,
+  or make larger pixel blocks. Download PNG, replace a texture or reuse the
+  settings on every export format. Actual byte savings are shown.
 - Undo/redo with Ctrl/⌘ Z and Ctrl/⌘ Shift Z. Local browser autosave protects
-  recent work; **Save project** downloads a file you can move or share.
+  recent work; eight named project backups are available under **Recent**.
+  **Save project** downloads a file you can move or share.
 - Export GIF, transparent PNG sequence, padded spritesheet, Godot SpriteFrames
-  or Unity import folder directly from Studio. Export ZIPs include the project.
+  or Unity import folder directly from Studio. Output scale works in every
+  format; atlas padding and optional edge extrusion support game textures.
+  Palettes are shared across animation frames. Export ZIPs include the project.
 
 Open/Save use browser files. A project passed to `vfx studio file.vfx.json` is
 loaded into the editor; downloading does **not** overwrite that disk file.
@@ -66,7 +80,10 @@ vfx studio slash.vfx.json --open
 vfx set slash.vfx.json --layer cut-a --set '{"position":{"x":70}}'
 vfx preview slash.vfx.json --time 0.4 --out preview.png
 vfx export slash.vfx.json --format gif --scale 3 --out slash-gif --progress
-vfx export slash.vfx.json --format godot --out slash-godot
+vfx export slash.vfx.json --format godot --scale 0.5 --out slash-godot
+vfx optimize preview.png --out small.png --colors 16 --scale 0.5
+vfx resize slash.vfx.json --width 64 --height 64
+vfx recolor slash.vfx.json --hue 120
 ```
 
 See the [rendered sword GIF](examples/red-magic-cross.gif).
@@ -130,12 +147,12 @@ For clients with `mcpServers`, merge this entry into their settings:
 }
 ```
 
-17 tools cover templates, schemas, portable projects, direct layer updates,
-embedded assets, inline image previews, exports and cancellable background
-jobs. The official MCP SDK is used; stdout carries only the protocol.
+21 tools cover templates, schemas, portable projects, direct layer updates,
+embedded assets, inline image previews, PNG optimization, canvas resizing,
+recoloring, exports and cancellable background jobs. The official MCP SDK is used; stdout carries only the protocol.
 Read the [agent workflow](docs/MCP.md).
 
-## Development and migration
+## Development
 
 ```bash
 npm run dev           # Vite + React hot reload
@@ -150,10 +167,17 @@ Set `VFX_CHROMIUM_PATH` for browser tests when needed. CI installs Playwright
 Chromium and its Linux dependencies. `scripts/render-gallery.mjs` produces a
 full local gallery using the actual Pixi renderer.
 
-0.4 is a **new layer-based engine and project format**. Rust 0.3 source,
-recipes, original tests and documentation are preserved under
-[legacy/rust](legacy/rust). Old `.vfxproj` files are detected and rejected with
-migration guidance; they are not silently approximated. New presets are
-re-authored and pixels/RNG semantics differ. See [migration and feature
-differences](docs/MIGRATION.md), [architecture](docs/ARCHITECTURE.md),
-[release notes](docs/RELEASE_0.4.0.md) and [third-party notices](THIRD_PARTY_NOTICES.md).
+## Pixel output and research
+
+Default PNG recompression preserves decoded RGBA and keeps the original encoding
+when it is smaller. Palette, alpha, block and scale changes are lossy; the UI
+labels them explicitly. GIF uses an opaque matte. PNG input is static, up to
+1024 × 1024 and 4 MiB; embedded assets are limited to 1 MiB. Compressed metadata,
+16-bit PNG and non-sRGB gamma are rejected by the optimizer. Metadata may be
+stripped during recompression. PNG optimization does not require Chromium.
+
+See [pixel workflows](docs/PIXEL_WORKFLOWS.md),
+[open source/product references](docs/OPEN_SOURCE_RESEARCH.md),
+[0.5.0 changes](docs/RELEASE_0.5.0.md),
+[validation and measurements](docs/VALIDATION_0.5.0.md), and
+[project compatibility](docs/MIGRATION.md).

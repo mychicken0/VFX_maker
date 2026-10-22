@@ -39,7 +39,9 @@ export function NumberField({
             const n = Number(draft);
             setDraft(String(Number(value.toFixed(4))));
             if (draft !== "" && Number.isFinite(n))
-              onChange(Math.max(min, Math.min(max, n)));
+              onChange(
+                Math.max(min, Math.min(max, step === 1 ? Math.round(n) : n)),
+              );
             else setDraft(String(value));
           }}
         />

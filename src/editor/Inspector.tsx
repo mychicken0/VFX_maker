@@ -1,3 +1,4 @@
+import { memo } from "react";
 import type { Layer, Project, Vec } from "../core/model.js";
 import {
   Check,
@@ -6,7 +7,7 @@ import {
   NumberField,
   Select,
 } from "./controls.js";
-export function Inspector({
+export const Inspector = memo(function Inspector({
   layer: l,
   project: p,
   update,
@@ -545,4 +546,4 @@ export function Inspector({
       </div>
     </aside>
   );
-}
+});

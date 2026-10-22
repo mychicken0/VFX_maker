@@ -90,7 +90,8 @@ the supported layers; it does not inject executable callbacks into projects.
 Projects support 32 layers, 4000 particle births per cycle, 8 textures with one
 million combined decoded pixels, 4 MiB serialized files, 16..512px canvas sides,
 10 seconds and 300 frames. Export additionally caps source pixels at 16 million
-and scaled GIF pixels at 32 million. Keys: 32 per curve; points: 64 per path.
+output PNG pixels at 16 million, GIF pixels at 32 million, and atlas pixels at
+32 million. Atlas sides are at most 8192; output frame sides at most 4096. Keys: 32 per curve; points: 64 per path.
 
 Repeat wraps local time. Particle layers reuse the same cohort each cycle and
 include previous-cycle particles at time zero; maximum particle lifetime must
@@ -103,3 +104,22 @@ oscillating acceleration, not a fluid simulation. Sampling is stateless: seeking
 or changing frame rate does not accumulate simulation error. Exact pixels are
 verified within the tested Chromium/SwiftShader version; GPU/driver/browser
 versions may differ in rasterization, filters and PNG encoding.
+
+## Whole-composition helpers
+
+`resizeProject(project, width, height, "scale")` fits uniformly, centers the
+composition and scales positions, motion offsets, layer scale and glow blur.
+`"canvas"` changes only canvas bounds. Invalid values are rejected together,
+without clamping individual layer parameters. Whole-project resize includes
+locked layers.
+
+`recolorProject(project, hueDegrees, includeLocked = false, ids?)` rotates every
+selected gradient/tint hue while retaining RGB brightness and saturation.
+It keeps geometry, texture bytes, timings and color-stop times. Pure grayscale
+colors keep their original values. Omit `ids` for all unlocked layers.
+
+Project `output` stores `{scale, colors, dither, pixelSize, alphaLevels}`.
+`colors: 0` and `alphaLevels: 0` keep those values unchanged. RGB quantization
+and alpha quantization are separate; a 16-color RGB palette can therefore have
+more than 16 RGBA combinations. `processPixels`, `decodePng`, `encodePng` and
+`optimizePng` are also exported for Node/browser scripts.

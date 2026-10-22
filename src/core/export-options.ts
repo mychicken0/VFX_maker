@@ -1,11 +1,21 @@
 import { z } from "zod";
+import { outputSize, pixelOptionsSchema } from "./pixel-options.js";
+import type { Project } from "./model.js";
 export const exportOptionsSchema = z
   .object({
     format: z
       .enum(["gif", "spritesheet", "sequence", "godot", "unity"])
       .default("spritesheet"),
     fps: z.number().int().min(1).max(60).optional(),
-    scale: z.number().int().min(1).max(8).default(1),
+    scale: pixelOptionsSchema.shape.scale.removeDefault().optional(),
+    colors: pixelOptionsSchema.shape.colors.removeDefault().optional(),
+    dither: pixelOptionsSchema.shape.dither.removeDefault().optional(),
+    pixelSize: pixelOptionsSchema.shape.pixelSize.removeDefault().optional(),
+    alphaLevels: pixelOptionsSchema.shape.alphaLevels
+      .removeDefault()
+      .optional(),
+    padding: z.number().int().min(0).max(16).default(2),
+    extrude: z.boolean().default(false),
     matte: z
       .string()
       .regex(/^#[0-9a-fA-F]{6}$/)
@@ -44,4 +54,38 @@ export function atlasLayout(
     width: columns * cellWidth,
     height: rows * cellHeight,
   };
+}
+
+/** Validate memory budgets before allocating frame buffers or opening an export. */
+export function exportPlan(project: Project, input: ExportOptions = {}) {
+  const options = exportOptionsSchema.parse(input);
+  const pixels = pixelOptionsSchema.parse({
+    ...project.output,
+    ...Object.fromEntries(
+      Object.entries(options).filter(
+        ([key, value]) => key in project.output && value !== undefined,
+      ),
+    ),
+  });
+  const fps = options.fps ?? project.fps;
+  const count = Math.ceil(project.duration * fps - 1e-9);
+  const source = project.canvas;
+  if (count > 300 || count * source.width * source.height > 16777216)
+    throw new Error(
+      "Export budget exceeded (300 frames / 16 million source pixels)",
+    );
+  const size = outputSize(source.width, source.height, pixels.scale);
+  if (
+    count * size.width * size.height >
+    (options.format === "gif" ? 33554432 : 16777216)
+  )
+    throw new Error(
+      "Output pixel budget exceeded. Reduce scale, frame rate or duration.",
+    );
+  const atlas = ["gif", "sequence"].includes(options.format)
+    ? null
+    : atlasLayout(size.width, size.height, count, options.padding);
+  if (atlas && atlas.width * atlas.height > 33554432)
+    throw new Error("Atlas pixel budget exceeded. Reduce scale or padding.");
+  return { options, pixels, fps, count, ...size, atlas };
 }

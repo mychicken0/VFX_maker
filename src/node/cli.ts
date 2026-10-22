@@ -26,10 +26,10 @@ cli
   .action(async () => output((await service()).presets()));
 cli
   .command("schema")
-  .argument("[kind]", "project, layer or asset", "project")
+  .argument("[kind]", "project, layer, asset, pixels or export", "project")
   .action(async (kind) => {
-    if (!["project", "layer", "asset"].includes(kind))
-      throw new Error("Schema must be project, layer or asset");
+    if (!["project", "layer", "asset", "pixels", "export"].includes(kind))
+      throw new Error("Schema must be project, layer, asset, pixels or export");
     output((await service()).schema(kind));
   });
 cli
@@ -144,7 +144,13 @@ cli
     "spritesheet",
   )
   .option("--fps <number>", "Override frame rate", Number)
-  .option("--scale <number>", "GIF integer scale", Number, 1)
+  .option("--scale <number>", "Nearest-neighbor output scale, 0.125..8", Number)
+  .option("--colors <number>", "Visible RGB limit, 0 or 2..256", Number)
+  .option("--dither", "Ordered palette dithering")
+  .option("--pixel-size <number>", "Output pixel block size, 1..16", Number)
+  .option("--alpha-levels <number>", "Alpha limit, 0 or 2..256", Number)
+  .option("--padding <number>", "Atlas padding, 0..16", Number)
+  .option("--extrude", "Fill atlas padding with frame edge pixels")
   .option("--matte <hex>", "GIF background color")
   .option("--if-match <revision>")
   .option("--progress", "Write progress JSON to stderr")
@@ -160,7 +166,18 @@ cli
         ).export(
           file,
           o.out,
-          { format: o.format, fps: o.fps, scale: o.scale, matte: o.matte },
+          {
+            format: o.format,
+            fps: o.fps,
+            scale: o.scale,
+            matte: o.matte,
+            colors: o.colors,
+            dither: o.dither,
+            pixelSize: o.pixelSize,
+            alphaLevels: o.alphaLevels,
+            padding: o.padding,
+            extrude: o.extrude,
+          },
           o.ifMatch,
           abort.signal,
           o.progress
@@ -175,6 +192,83 @@ cli
       process.removeListener("SIGINT", stop);
       process.removeListener("SIGTERM", stop);
     }
+  });
+function pixelFlags(command: Command) {
+  return command
+    .option("--scale <number>", "Nearest-neighbor scale, 0.125..8", Number)
+    .option("--colors <number>", "Visible RGB limit, 0 or 2..256", Number)
+    .option("--dither", "Ordered palette dithering")
+    .option("--pixel-size <number>", "Pixel block size, 1..16", Number)
+    .option("--alpha-levels <number>", "Alpha limit, 0 or 2..256", Number);
+}
+const pixelSettings = (o: Record<string, unknown>) => ({
+  scale: o.scale as number | undefined,
+  colors: o.colors as number | undefined,
+  dither: o.dither as boolean | undefined,
+  pixelSize: o.pixelSize as number | undefined,
+  alphaLevels: o.alphaLevels as number | undefined,
+});
+pixelFlags(
+  cli
+    .command("optimize <png>")
+    .description("Optimize a static PNG locally without Chromium")
+    .requiredOption("--out <png>", "New output file"),
+).action(async (png, o) =>
+  output(await (await service()).optimize(png, o.out, pixelSettings(o))),
+);
+pixelFlags(
+  cli
+    .command("optimize-asset <file> <id>")
+    .description("Optimize an embedded texture, preserving its grid")
+    .option("--if-match <revision>"),
+).action(async (file, id, o) => {
+  const s = await service();
+  output(
+    await s.optimizeAsset(
+      file,
+      o.ifMatch ?? (await s.store.read(file)).revision,
+      id,
+      pixelSettings(o),
+    ),
+  );
+});
+cli
+  .command("resize <file>")
+  .description("Scale a composition to fit, or change only its canvas")
+  .requiredOption("--width <number>", "Canvas width, 16..512", Number)
+  .requiredOption("--height <number>", "Canvas height, 16..512", Number)
+  .option("--mode <mode>", "scale or canvas", "scale")
+  .option("--if-match <revision>")
+  .action(async (file, o) => {
+    const s = await service();
+    output(
+      await s.resize(
+        file,
+        o.ifMatch ?? (await s.store.read(file)).revision,
+        o.width,
+        o.height,
+        o.mode,
+      ),
+    );
+  });
+cli
+  .command("recolor <file>")
+  .description("Rotate layer gradient/tint hues together")
+  .requiredOption("--hue <degrees>", "Hue rotation, -360..360", Number)
+  .option("--layers <ids>", "Comma-separated layer IDs; defaults to all")
+  .option("--include-locked", "Also recolor locked layers")
+  .option("--if-match <revision>")
+  .action(async (file, o) => {
+    const s = await service();
+    output(
+      await s.recolor(
+        file,
+        o.ifMatch ?? (await s.store.read(file)).revision,
+        o.hue,
+        o.includeLocked,
+        o.layers?.split(","),
+      ),
+    );
   });
 cli
   .command("build <source>")
