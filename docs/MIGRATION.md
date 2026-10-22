@@ -24,3 +24,5 @@ New projects may also use `field` layers, `controls`, `variants`, per-layer
 trails preserve the behavior of existing projects. Component files use a separate
 `vfx-component` wrapper and are imported through **Saved → Import component**,
 not the normal project Open action. Saving a component excludes preview references.
+Version 0.7.1 accepts both saved-library items and portable components from 0.7.0,
+normalizing their wrapper and embedded project to 0.7.1 when read.

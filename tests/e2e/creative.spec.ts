@@ -290,7 +290,7 @@ test("simple effect controls support one-step undo and save multiple looks", asy
   ).toBe(0);
 });
 
-test("a saved component survives reload and inserts as editable layers", async ({
+test("a 0.7.0 saved component survives upgrade and inserts as editable layers", async ({
   page,
 }) => {
   await start(page);
@@ -298,6 +298,33 @@ test("a saved component survives reload and inserts as editable layers", async (
   await page.getByLabel("Component name", { exact: true }).fill("My sparks");
   await button(page, "Save selection (1)").click();
   await expect(page.locator(".component-card")).toHaveCount(1);
+  // Preserve a real persisted item from the previous application version.
+  await page.evaluate(async () => {
+    const db = await new Promise<IDBDatabase>((resolve, reject) => {
+      const request = indexedDB.open("vfx-maker-projects", 3);
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+    try {
+      await new Promise<void>((resolve, reject) => {
+        const tx = db.transaction("components", "readwrite");
+        const store = tx.objectStore("components");
+        const request = store.getAll();
+        request.onsuccess = () => {
+          for (const item of request.result) {
+            item.component.version = "0.7.0";
+            item.component.project.version = "0.7.0";
+            store.put(item);
+          }
+        };
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => reject(tx.error);
+        tx.onabort = () => reject(tx.error);
+      });
+    } finally {
+      db.close();
+    }
+  });
   await page.reload();
   await button(page, "Pause").click();
   await button(page, "saved").click();

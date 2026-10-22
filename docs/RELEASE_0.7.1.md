@@ -21,6 +21,7 @@ scrolls to all 22 effects, with search and the undo hint remaining visible.
 - Space activates focused buttons and disclosures normally; the global playback
   shortcut no longer intercepts their keyboard activation.
 - Existing 0.7.0 projects open without losing their controls, modifiers or looks.
+  Saved components and portable component files from 0.7.0 also open in 0.7.1.
   Normal Save writes version 0.7.1; reading a file does not overwrite it.
 
 The README Studio image is recaptured from the built application with Effects

@@ -41,7 +41,7 @@ export function parseComponent(value: unknown): Component {
   const wrapper = z
     .object({
       format: z.literal("vfx-component"),
-      version: z.literal(VERSION),
+      version: z.enum(["0.7.0", VERSION]),
       name: z.string().min(1).max(100),
       project: z.unknown(),
     })
@@ -55,7 +55,7 @@ export function parseComponent(value: unknown): Component {
     throw Error("Component exceeds 4 MiB");
   if (project.editor.reference)
     throw Error("A component cannot include a preview reference");
-  return { ...wrapper, project };
+  return { ...wrapper, version: VERSION, project };
 }
 export function makeComponent(
   p: Project,

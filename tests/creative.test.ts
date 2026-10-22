@@ -7,6 +7,7 @@ import {
   curve,
   getPreset,
   parseProject,
+  parseComponent,
   resolveControls,
   setControl,
   editCreative,
@@ -192,6 +193,19 @@ describe("portable creative authoring", () => {
       name.layers.map((l) => l.id),
       "Reusable effect",
     );
+    const previous = {
+      ...component,
+      version: "0.7.0",
+      project: { ...component.project, version: "0.7.0" },
+    };
+    expect(parseComponent(previous)).toEqual(component);
+    expect(
+      parseComponent({
+        ...previous,
+        project: JSON.stringify(previous.project),
+      }),
+    ).toEqual(component);
+    expect(() => parseComponent({ ...component, version: "0.8.0" })).toThrow();
     const empty = defineEffect({ duration: 1.2 });
     const first = insertComponent(empty, component),
       second = insertComponent(first.project, component, { x: 30, y: 40 });

@@ -36,14 +36,16 @@ that is its faded-out tail, not a renderer failure.
 
 - Formatting, TypeScript and production build pass.
 - **56 unit tests** pass, including migration of an existing 0.7.0 project without
-  losing its creative settings.
+  losing its creative settings and migration of portable component wrappers.
 - **53 browser scenarios** pass. They include the layout regressions, native
   keyboard activation, replay/restart, undo, file Save/Save As, backups, crash
   recovery, masks, references, controls, components, modifiers, keyframes, PNG
   optimization and exact exported pixels.
-- **16 scenarios** are repeated using the tarball installed under
+  The component persistence scenario restores an actual IndexedDB item marked
+  as 0.7.0, then inserts and undoes it after reload.
+- **24 scenarios** are repeated using the tarball installed under
   `/workspace/.vfx-js-tools`. The Studio server starts in a separate temporary
-  directory. Twelve UI scenarios use its packaged web assets; four CLI/MCP
+  directory. Twenty browser scenarios use its packaged web assets; four CLI/MCP
   workflows select its installed executables and work outside the checkout.
 - All **22 templates** were rendered as GIFs and atlases. The nine README GIFs
   were regenerated; their bytes are unchanged by this UI patch. Their checked-in
