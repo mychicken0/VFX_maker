@@ -1,0 +1,325 @@
+import { z } from "zod";
+
+export const VERSION = "0.4.0" as const;
+const finite = z.number().finite();
+const bounded = (min: number, max: number) => finite.min(min).max(max);
+export const vecSchema = z
+  .object({ x: bounded(-4096, 4096), y: bounded(-4096, 4096) })
+  .strict();
+export const colorSchema = z
+  .string()
+  .regex(/^#[\da-fA-F]{6}$/, "Use a six-digit hex color");
+export const curveSchema = z
+  .array(
+    z
+      .object({
+        t: bounded(0, 1),
+        value: bounded(-4096, 4096),
+        ease: z.enum(["linear", "smooth", "hold"]).default("linear"),
+      })
+      .strict(),
+  )
+  .min(1)
+  .max(32)
+  .refine(
+    (keys) => keys.every((k, i) => i === 0 || k.t > keys[i - 1].t),
+    "Keyframe times must increase",
+  );
+export const gradientSchema = z
+  .array(z.object({ t: bounded(0, 1), color: colorSchema }).strict())
+  .min(1)
+  .max(16)
+  .refine(
+    (keys) => keys.every((k, i) => i === 0 || k.t > keys[i - 1].t),
+    "Color stops must increase",
+  );
+const range = (min: number, max: number) =>
+  z
+    .tuple([bounded(min, max), bounded(min, max)])
+    .refine((v) => v[0] <= v[1], "Minimum must not exceed maximum");
+const curveDefault = (a: number, b = a) => [
+  { t: 0, value: a, ease: "linear" as const },
+  { t: 1, value: b, ease: "linear" as const },
+];
+const common = {
+  id: z.string().regex(/^[a-zA-Z][\w-]{0,63}$/),
+  name: z.string().min(1).max(100),
+  visible: z.boolean().default(true),
+  locked: z.boolean().default(false),
+  start: bounded(0, 20).default(0),
+  duration: bounded(0.02, 20).default(1),
+  repeat: z.boolean().default(false),
+  position: vecSchema.default({ x: 64, y: 64 }),
+  rotation: bounded(-3600, 3600).default(0),
+  scale: bounded(0.01, 16).default(1),
+  opacity: curveSchema.default(curveDefault(1, 0)),
+  motion: z
+    .object({
+      x: curveSchema.default(curveDefault(0)),
+      y: curveSchema.default(curveDefault(0)),
+      rotation: curveSchema.default(curveDefault(0)),
+      scale: curveSchema.default(curveDefault(1)),
+    })
+    .strict()
+    .default({
+      x: curveDefault(0),
+      y: curveDefault(0),
+      rotation: curveDefault(0),
+      scale: curveDefault(1),
+    }),
+  blend: z.enum(["normal", "add", "screen", "multiply"]).default("add"),
+  glow: z
+    .object({
+      strength: bounded(0, 4).default(0),
+      blur: bounded(0, 16).default(3),
+    })
+    .strict()
+    .default({ strength: 0, blur: 3 }),
+};
+export const particleSchema = z
+  .object({
+    ...common,
+    type: z.literal("particles"),
+    mode: z.enum(["burst", "stream", "path"]).default("burst"),
+    count: z.number().int().min(1).max(2000).default(48),
+    rate: bounded(1, 1000).default(60),
+    life: range(0.02, 10).default([0.3, 0.8]),
+    speed: range(0, 1000).default([30, 90]),
+    angle: bounded(-3600, 3600).default(-90),
+    spread: bounded(0, 360).default(360),
+    spawn: z
+      .object({
+        shape: z.enum(["point", "disk", "ring", "box"]).default("point"),
+        radius: bounded(0, 512).default(10),
+        width: bounded(0, 1024).default(20),
+        height: bounded(0, 1024).default(20),
+      })
+      .strict()
+      .default({ shape: "point", radius: 10, width: 20, height: 20 }),
+    points: z
+      .array(vecSchema)
+      .min(2)
+      .max(64)
+      .default([
+        { x: -35, y: -35 },
+        { x: 35, y: 35 },
+      ]),
+    travel: bounded(0.01, 10).default(0.2),
+    gravity: vecSchema.default({ x: 0, y: 45 }),
+    drag: bounded(0, 20).default(0.6),
+    turbulence: bounded(0, 300).default(0),
+    frequency: bounded(0.1, 30).default(4),
+    shape: z.enum(["circle", "square", "spark", "sprite"]).default("spark"),
+    asset: z.string().max(64).optional(),
+    size: curveSchema.default(curveDefault(2, 0)),
+    colors: gradientSchema.default([
+      { t: 0, color: "#fff2b5" },
+      { t: 1, color: "#ff4b22" },
+    ]),
+    spin: range(-3600, 3600).default([-180, 180]),
+    stretch: bounded(1, 16).default(2),
+    frameMode: z.enum(["life", "loop", "once", "pingpong"]).default("life"),
+    frameFps: bounded(1, 120).default(12),
+  })
+  .strict();
+export const pathSchema = z
+  .object({
+    ...common,
+    type: z.literal("path"),
+    points: z.array(vecSchema).min(2).max(64),
+    closed: z.boolean().default(false),
+    width: curveSchema.default(curveDefault(5, 0)),
+    draw: curveSchema.default([
+      { t: 0, value: 0, ease: "linear" },
+      { t: 0.2, value: 1, ease: "smooth" },
+      { t: 1, value: 1, ease: "linear" },
+    ]),
+    taper: bounded(0, 1).default(0.8),
+    colors: gradientSchema.default([
+      { t: 0, color: "#fff6df" },
+      { t: 1, color: "#ff2459" },
+    ]),
+  })
+  .strict();
+export const ringSchema = z
+  .object({
+    ...common,
+    type: z.literal("ring"),
+    radius: curveSchema.default(curveDefault(2, 42)),
+    width: curveSchema.default(curveDefault(4, 0)),
+    arc: bounded(1, 360).default(360),
+    segments: z.number().int().min(3).max(128).default(64),
+    colors: gradientSchema.default([
+      { t: 0, color: "#ffffff" },
+      { t: 1, color: "#ff3159" },
+    ]),
+  })
+  .strict();
+export const spriteSchema = z
+  .object({
+    ...common,
+    type: z.literal("sprite"),
+    asset: z.string().min(1).max(64),
+    width: curveSchema.default(curveDefault(32, 48)),
+    height: curveSchema.default(curveDefault(32, 48)),
+    frameMode: z.enum(["life", "loop", "once", "pingpong"]).default("life"),
+    frameFps: bounded(1, 120).default(12),
+    colors: gradientSchema.default([{ t: 0, color: "#ffffff" }]),
+  })
+  .strict();
+export const layerSchema = z.discriminatedUnion("type", [
+  particleSchema,
+  pathSchema,
+  ringSchema,
+  spriteSchema,
+]);
+export const assetSchema = z
+  .object({
+    id: z.string().regex(/^[a-zA-Z][\w-]{0,63}$/),
+    name: z.string().min(1).max(100),
+    data: z
+      .string()
+      .max(1400000)
+      .regex(/^data:image\/png;base64,[A-Za-z0-9+/]+={0,2}$/),
+    width: z.number().int().min(1).max(1024),
+    height: z.number().int().min(1).max(1024),
+    columns: z.number().int().min(1).max(64).default(1),
+    rows: z.number().int().min(1).max(64).default(1),
+    frames: z.number().int().min(1).max(256).default(1),
+  })
+  .strict()
+  .refine(
+    (a) =>
+      a.width % a.columns === 0 &&
+      a.height % a.rows === 0 &&
+      a.frames <= a.columns * a.rows,
+    "Flipbook grid must divide the image and contain all frames",
+  )
+  .refine((a) => {
+    try {
+      const bytes = Uint8Array.from(atob(a.data.split(",")[1]), (c) =>
+        c.charCodeAt(0),
+      );
+      if (
+        bytes.length > 1048576 ||
+        bytes.length < 33 ||
+        bytes.slice(0, 8).join(",") !== "137,80,78,71,13,10,26,10"
+      )
+        return false;
+      const view = new DataView(bytes.buffer);
+      if (view.getUint32(16) !== a.width || view.getUint32(20) !== a.height)
+        return false;
+      for (let i = 8; i + 12 <= bytes.length;) {
+        if (String.fromCharCode(...bytes.slice(i + 4, i + 8)) === "acTL")
+          return false;
+        i += view.getUint32(i) + 12;
+      }
+      return true;
+    } catch {
+      return false;
+    }
+  }, "Asset must be a static PNG of at most 1 MiB with matching dimensions");
+export const projectSchema = z
+  .object({
+    format: z.literal("vfx-maker").default("vfx-maker"),
+    version: z
+      .literal(VERSION, {
+        error: "Unsupported project version; expected 0.4.0",
+      })
+      .default(VERSION),
+    name: z.string().min(1).max(100).default("Untitled effect"),
+    seed: z.number().int().min(0).max(0xffffffff).default(42),
+    canvas: z
+      .object({
+        width: z.number().int().min(16).max(512),
+        height: z.number().int().min(16).max(512),
+        pixelArt: z.boolean().default(true),
+        background: colorSchema.default("#110f19"),
+      })
+      .strict()
+      .default({
+        width: 128,
+        height: 128,
+        pixelArt: true,
+        background: "#110f19",
+      }),
+    duration: bounded(0.1, 10).default(1.2),
+    fps: z.number().int().min(1).max(60).default(30),
+    loop: z.boolean().default(true),
+    layers: z.array(layerSchema).max(32).default([]),
+    assets: z.array(assetSchema).max(8).default([]),
+  })
+  .strict()
+  .superRefine((p, ctx) => {
+    const fail = (message: string) => ctx.addIssue({ code: "custom", message });
+    if (new Set(p.layers.map((l) => l.id)).size !== p.layers.length)
+      fail("Layer IDs must be unique");
+    if (new Set(p.assets.map((a) => a.id)).size !== p.assets.length)
+      fail("Asset IDs must be unique");
+    const assets = new Set(p.assets.map((a) => a.id));
+    for (const l of p.layers) {
+      if (l.motion.scale.some((k) => k.value < 0.01 || k.value > 16))
+        fail(`${l.id}.motion.scale must stay in 0.01..16`);
+      if (
+        (l.type === "sprite" ||
+          (l.type === "particles" && l.shape === "sprite")) &&
+        (!l.asset || !assets.has(l.asset))
+      )
+        fail(`Layer ${l.id} needs an existing sprite asset`);
+      if (l.type === "particles" && l.repeat && l.life[1] > l.duration)
+        fail(`Repeating layer ${l.id}: lifetime must fit in its cycle`);
+      for (const key of [
+        "opacity",
+        "size",
+        "width",
+        "height",
+        "radius",
+      ] as const) {
+        if (key in l) {
+          const keys = (l as unknown as Record<string, Curve>)[key];
+          if (
+            keys.some((k) => k.value < 0 || (key === "opacity" && k.value > 1))
+          )
+            fail(`${l.id}.${key} is outside its allowed range`);
+        }
+      }
+    }
+    const births = p.layers.reduce(
+      (n, l) =>
+        n +
+        (l.type !== "particles"
+          ? 0
+          : l.mode === "stream"
+            ? Math.ceil(l.rate * l.duration)
+            : l.count),
+      0,
+    );
+    if (births > 4000)
+      fail("A project supports at most 4000 particle births per cycle");
+    if (Math.ceil(p.duration * p.fps) > 300)
+      fail("A project supports at most 300 frames");
+    if (p.assets.reduce((n, a) => n + a.width * a.height, 0) > 1048576)
+      fail("Combined textures exceed one million pixels");
+  });
+export type Curve = z.infer<typeof curveSchema>;
+export type Gradient = z.infer<typeof gradientSchema>;
+export type Vec = z.infer<typeof vecSchema>;
+export type Layer = z.infer<typeof layerSchema>;
+export type Particles = z.infer<typeof particleSchema>;
+export type Asset = z.infer<typeof assetSchema>;
+export type Project = z.infer<typeof projectSchema>;
+export type LayerInput = z.input<typeof layerSchema>;
+export type ProjectInput = z.input<typeof projectSchema>;
+export const parseProject = (value: unknown): Project =>
+  projectSchema.parse(value);
+
+export function parseText(text: string): Project {
+  if (new TextEncoder().encode(text).length > 4 * 1024 * 1024)
+    throw new Error("Project exceeds 4 MiB");
+  const value: unknown = JSON.parse(text);
+  if (value && typeof value === "object" && "schema_version" in value)
+    throw new Error(
+      "This is a Rust 0.3 project. Open it with legacy/rust tools; see docs/MIGRATION.md.",
+    );
+  return parseProject(value);
+}

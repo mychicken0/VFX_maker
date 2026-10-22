@@ -1,196 +1,159 @@
-# VFX Maker
+# VFX Maker 0.4.0
 
-Standalone **Terminal + MCP** tools for deterministic 2D and pixel-art VFX.
-Install `vfx` and `vfx-mcp` once and use them in any game repository or asset
-folder. Runtime needs no source checkout, GPU, display, Rust, Python, Node.js,
-LLM account or internet connection.
+**A visual VFX studio built with TypeScript, PixiJS 8 and React 19.**
+Shape a sword slash by dragging its points, retime layers in the timeline, edit
+color gradients and animation curves, and export the result. No graph wiring is
+required. The same Pixi renderer powers the browser editor, Terminal and MCP.
 
-Version **0.3** supports embedded PNG sprites and flipbooks, rotation and velocity
-alignment/stretch, explicit layers and blend modes, per-emitter timelines,
-ordered palette/dithering/mask/distortion operations, incremental simulation and
-cancellable background exports through MCP. It exports transparent PNG assets,
-GIFs, Godot SpriteFrames and Unity import folders.
+![VFX Maker Studio](examples/studio.png)
 
-Eighteen editable data recipes ship inside the binaries. New examples include
-`stardust`, `flipbook_burst`, `energy_orb_loop`, `charge_impact`, `masked_portal`
-and `pixel_flame`, alongside the original sword, fire, smoke, rain and magic
-recipes. Discover complete descriptions and parameters with `vfx preset list`.
+## Run
 
-Effects are scene data, not branches keyed on effect names. Load your own recipe
-file without rebuilding. CLI and MCP share the same graph, rendering, revision
-checks, atomic edits and persistent undo/redo. A native GUI and GPU backend remain
-future work.
-
-View the actual renders: [charge and impact](examples/rendered/charge-impact.gif) ·
-[portal loop](examples/rendered/portal-loop.gif) ·
-[red magic sword GIF](examples/rendered/red-magic-cross.gif) ·
-[12-effect gallery GIF](examples/rendered/overview.gif). These examples are retained
-in the repository alongside the source.
-
-## Install
-
-Build with Rust 1.99.1 and a C linker. The toolchain and Cargo dependencies are
-pinned. From any directory:
+Requires **Node 22.18+** (Node 24 recommended). From source:
 
 ```bash
-bash /path/to/VFX_maker/scripts/install.sh
-export PATH="$HOME/.local/bin:$PATH"
-vfx --version
-vfx doctor --json
+npm ci
+npm run build
+node dist/cli.js studio --open
 ```
 
-Use `scripts/install.sh /path/to/tools` for another installation prefix. The
-script replaces both executables in that prefix. Only building needs Rust.
-Linux x86_64 is validated; macOS and Windows builds are not verified. Prepared
-Linux binary bundles also include a Rust-free `install.sh`.
-
-## Create the red magic sword slash
+Or install the prepared `vfx-maker-0.4.0.tgz` once and use it in any folder:
 
 ```bash
+npm install -g /path/to/vfx-maker-0.4.0.tgz
 cd /path/to/your/game
-vfx new slash.vfxproj --preset red_magic_cross --canvas 96x96 --seed 42
-vfx preview slash.vfxproj --times 0.15,0.3,0.45,0.65 --out slash-preview.png
-vfx export slash.vfxproj --format gif --fps 25 --scale 5 \
-  --background '#100811' --out slash-gif
-vfx export slash.vfxproj --format spritesheet --fps 25 --out slash-atlas
+vfx studio --open
 ```
 
-The outputs are a 480×480 looping `slash-gif/animation.gif` and a transparent
-96×96-frame PNG atlas with JSON frame rectangles/timing/hashes. GIF uses an
-opaque background; PNG preserves partial alpha. No FFmpeg is required.
-`--no-loop` plays the GIF once. Repeating playback does not guarantee a seamless
-animation. All new output names must be unused.
+Source installer: `bash /path/to/VFX_maker/scripts/install.sh /path/to/tools`;
+add `/path/to/tools/bin` to PATH. The installed package includes the built editor
+and renderer; it does not need this checkout, Rust or a game repository.
+This package has not been published to the npm registry.
 
-The default file root is the current directory. Use `vfx --root /path/to/game`
-to work elsewhere; no Git repository is required. All input/output paths must
-stay inside this root, and parent directories must already exist.
+**Browser:** Studio runs in a modern browser with WebGL2. CLI/MCP rendering uses
+local Chrome/Chromium through Playwright. Discover it with `vfx doctor`, or use
+`vfx browser install` / `VFX_CHROMIUM_PATH=/absolute/path/to/chromium`.
+On Linux, install the browser's normal system libraries as well. No API key,
+account or network connection is needed after installation. Linux/Chromium is
+tested; macOS, Windows, Firefox and Safari are not verified.
 
-## Use your own sprites
+## Customize visually
 
-Place a PNG sprite or sheet inside your chosen project root. Import is revision
-checked and embeds the PNG, so moving the project does not lose its textures.
-For a 3×2 sheet with six frames named `my-sheet.png`:
+- Start with one of **18 editable effects**, or add particles, strokes, rings
+  and sprites. Drag layers to change compositing order; hide, lock or duplicate.
+- Drag the viewport's center handle to move a layer. Drag numbered stroke
+  points to reshape it; double-click to add a point.
+- Move and resize timeline clips to change start and duration. Step by frame,
+  scrub, loop, or press Space to play/pause.
+- Edit color stops and curves for opacity, size, draw progress and geometry.
+  Transform keyframes animate X/Y offsets, rotation and scale.
+- Import PNG textures or flipbooks. Set columns/rows/frame count; textures are
+  embedded in the portable `.vfx.json` project.
+- Undo/redo with Ctrl/⌘ Z and Ctrl/⌘ Shift Z. Local browser autosave protects
+  recent work; **Save project** downloads a file you can move or share.
+- Export GIF, transparent PNG sequence, padded spritesheet, Godot SpriteFrames
+  or Unity import folder directly from Studio. Export ZIPs include the project.
+
+Open/Save use browser files. A project passed to `vfx studio file.vfx.json` is
+loaded into the editor; downloading does **not** overwrite that disk file.
+Browser autosave is specific to the browser and origin/port.
+
+## Terminal
 
 ```bash
-vfx new particles.vfxproj --preset spark_burst
-vfx asset import particles.vfxproj --file my-sheet.png --id sprite \
-  --columns 3 --rows 2 --frames 6 --expected-revision 0
-vfx material particles.vfxproj --emitter emitter --expected-revision 1 \
-  --settings '{"sprite":{"asset":"sprite","playback":"lifetime"},"rotation_degrees":[-45,45],"layer":2}'
-vfx timeline particles.vfxproj --emitter emitter --expected-revision 2 \
-  --settings '{"delay_seconds":0.1,"duration_seconds":0.7,"repeat":false}'
-vfx export particles.vfxproj --format gif --out textured-gif --progress
+vfx new slash.vfx.json --preset red_magic_cross --seed 42
+vfx studio slash.vfx.json --open
+vfx set slash.vfx.json --layer cut-a --set '{"position":{"x":70}}'
+vfx preview slash.vfx.json --time 0.4 --out preview.png
+vfx export slash.vfx.json --format gif --scale 3 --out slash-gif --progress
+vfx export slash.vfx.json --format godot --out slash-godot
 ```
 
-The material/timeline commands insert or update their nodes automatically. For
-asset-free setup, `vfx new blast.vfxproj --preset flipbook_burst` already contains
-an original demonstration sheet. See the [production workflow](docs/PRODUCTION_WORKFLOW.md)
-for transforms, post-processing, background jobs and portable custom recipes.
+See the [rendered sword GIF](examples/red-magic-cross.gif).
 
-## Export into a game
+Use `vfx presets`, `vfx schema layer` and `vfx --help` to explore. Commands return
+JSON; progress goes to stderr. Files live inside `--root` (defaults to cwd).
+Output names must be unused; parent folders must exist. Edits validate before
+publication, use an exclusive file lock and atomic replacement, and support
+`--if-match REVISION` from `inspect`. MCP mutations require that revision.
+
+## Write your own effect in TypeScript
+
+```ts
+import { defineEffect, path, curve, colors } from "vfx-maker";
+
+export default defineEffect({
+  name: "My slash",
+  layers: [
+    path({
+      id: "cut",
+      name: "Blade trail",
+      points: [
+        { x: -40, y: 30 },
+        { x: 0, y: -10 },
+        { x: 40, y: -30 },
+      ],
+      width: curve(8, 4, 0),
+      colors: colors("#ffffff", "#ff2459"),
+      glow: { strength: 1.4, blur: 3 },
+    }),
+  ],
+});
+```
 
 ```bash
-vfx new portal.vfxproj --preset masked_portal
-vfx export portal.vfxproj --format godot --fps 25 --out portal-godot
-vfx export portal.vfxproj --format unity --fps 25 --out portal-unity
-vfx analyze portal.vfxproj --samples 12 --compare-fresh --json
+vfx build my-effect.ts --out my-effect.vfx.json
+vfx studio my-effect.vfx.json --open
 ```
 
-Godot output includes `atlas.png`, `metadata.json` and `effect.tres`; assign the
-resource to an AnimatedSprite2D. Unity output includes an Editor importer that
-creates sliced sprites and an animation clip; it requires Unity 2022.3+ and the
-2D Sprite package. Read each output's `IMPORT.txt`.
+`build` executes **trusted local TypeScript**, with normal Node access. It is
+not exposed as an MCP tool. Modules can generate shapes, parameters and layers
+using ordinary code; saved projects contain data and can be opened without
+executing code. See [customization](docs/CUSTOMIZATION.md).
 
-Actual Godot 4.5.1 loading, frame rectangles and durations are verified with
-`scripts/verify_godot.py`. Unity host execution has not been verified here.
-`analyze --compare-fresh` measures cached versus fresh rendering and verifies
-pixel equality for the requested samples; speedups depend on the scene/machine.
-
-## Customize without application code
+## Codex / Claude through MCP
 
 ```bash
-vfx preset list --json
-vfx preset show spark_burst --json
-vfx new impact.vfxproj --preset spark_burst \
-  --params '{"count":80,"size":2.5,"color":[255,50,100,255]}'
-vfx preset show spark_burst --out my-effect.recipe.json
-# Edit the recipe's graph, parameter declarations or keyframes in a text editor.
-vfx new custom.vfxproj --preset-file my-effect.recipe.json --canvas 128x128
-vfx export custom.vfxproj --format gif --fps 25 --scale 3 --out custom-gif
+codex mcp add vfx -- /absolute/path/to/vfx-mcp --root /path/to/effects
 ```
 
-Recipes expose their own typed parameters; unknown names fail. Exporting a
-recipe saves a reusable template. Creating a project copies its graph; later
-recipe-file edits do not silently change existing projects. See
-[recipe and node guide](docs/RECIPES.md) for bindings, curves, forces and scaling.
-
-To render every discovered built-in recipe through the CLI:
-
-```bash
-python3 scripts/render_gallery.py --vfx /absolute/path/to/vfx --out /new/gallery
-```
-
-Add `--engine godot --engine unity` to include downloadable game asset folders.
-Open the resulting offline `index.html`. Every card links its GIF, transparent
-atlas and editable project. Python is only needed by this optional batch script.
-
-## Connect Codex / Claude
-
-Let the client launch `vfx-mcp --root /path/to/projects --stdio`. Use an absolute
-binary path because GUI clients may not inherit shell PATH. One root can contain
-multiple game folders.
-
-```bash
-codex mcp add vfx -- /absolute/path/to/vfx-mcp --root /path/to/projects --stdio
-```
-
-For Claude Desktop or clients using `mcpServers`, merge this entry into existing
-settings, using real absolute paths:
+For clients with `mcpServers`, merge this entry into their settings:
 
 ```json
 {
   "mcpServers": {
     "vfx": {
       "command": "/absolute/path/to/vfx-mcp",
-      "args": ["--root", "/path/to/projects", "--stdio"]
+      "args": ["--root", "/path/to/effects"]
     }
   }
 }
 ```
 
-The server exposes 22 tools, typed JSON schemas, inline PNG previews and bounded background export jobs. See the
-[agent playbook](docs/AGENT_PLAYBOOK.md) and [command reference](docs/COMMANDS.md).
-The official Rust SDK child-client workflow is tested; external Codex/Claude UI
-sessions have not been exercised. Installation does not modify host settings.
+17 tools cover templates, schemas, portable projects, direct layer updates,
+embedded assets, inline image previews, exports and cancellable background
+jobs. The official MCP SDK is used; stdout carries only the protocol.
+Read the [agent workflow](docs/MCP.md).
 
-## Edit existing projects
-
-Inspect the current revision before editing. All changes validate atomically.
+## Development and migration
 
 ```bash
-vfx inspect impact.vfxproj --json
-vfx patch impact.vfxproj --expected-revision 0 --dry-run \
-  --ops '[{"op":"set_name","name":"Golden impact"}]'
-vfx patch impact.vfxproj --expected-revision 0 \
-  --ops '[{"op":"set_name","name":"Golden impact"}]'
-vfx undo impact.vfxproj --expected-revision 1
-vfx redo impact.vfxproj --expected-revision 2
+npm run dev           # Vite + React hot reload
+npm run typecheck
+npm test             # simulation, validation, storage and jobs
+npm run build
+npm run test:e2e      # actual Chromium UI/pixels/exports/CLI/MCP
+npm run format:check
 ```
 
-Old schema-1 projects from engines 0.1.0 and 0.2.0 can be opened/rendered without rewriting.
-The first committed edit upgrades their engine header to the current version.
-A dry-run does not upgrade it. Future unsupported versions are rejected.
+Set `VFX_CHROMIUM_PATH` for browser tests when needed. CI installs Playwright
+Chromium and its Linux dependencies. `scripts/render-gallery.mjs` produces a
+full local gallery using the actual Pixi renderer.
 
-## Development and sources
-
-```bash
-cargo fmt --all -- --check
-cargo clippy --locked --workspace --all-targets -- -D warnings
-cargo test --locked --workspace
-```
-
-See [architecture](docs/ARCHITECTURE.md), [60 integration checks](docs/TEST_PLAN.md),
-[15 researched open-source projects](docs/OPEN_SOURCE_RESEARCH.md) with pinned
-revisions and license evidence, and [dependency notices](THIRD_PARTY_NOTICES.md).
-`gif` and `noise` are integrated upstream crates; editor/engine source and assets
-were not copied. GitHub Actions is configured; local success is not a hosted run.
+0.4 is a **new layer-based engine and project format**. Rust 0.3 source,
+recipes, original tests and documentation are preserved under
+[legacy/rust](legacy/rust). Old `.vfxproj` files are detected and rejected with
+migration guidance; they are not silently approximated. New presets are
+re-authored and pixels/RNG semantics differ. See [migration and feature
+differences](docs/MIGRATION.md), [architecture](docs/ARCHITECTURE.md),
+[release notes](docs/RELEASE_0.4.0.md) and [third-party notices](THIRD_PARTY_NOTICES.md).

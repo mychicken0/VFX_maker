@@ -2,3 +2,11 @@
 *.vfxproj.lock
 __pycache__/
 *.pyc
+/node_modules/
+/dist/
+/test-results/
+/playwright-report/
+/coverage/
+*.tgz
+*.tsbuildinfo
+/legacy/rust/target/

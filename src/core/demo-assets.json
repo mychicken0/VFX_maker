@@ -1,0 +1,22 @@
+[
+  {
+    "id": "spark",
+    "name": "Soft spark",
+    "data": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABEAAAARCAYAAAA7bUf6AAAAc0lEQVR4nK2RUQ7AIAhD7W42Dz6Oxn6cYcYKbPbHRMuzQCkbhNWjql7dCFTmOwIfnX+TqElCvZEkrqYQmyByTyPOClhLaAXPFtwhGkkDV9tOBvDyW4gkId2/ZSZ0O2MBALDtTCF0C5kkWXkQGc5PEBewTTdjwCmYMPuEfwAAAABJRU5ErkJggg==",
+    "width": 17,
+    "height": 17,
+    "columns": 1,
+    "rows": 1,
+    "frames": 1
+  },
+  {
+    "id": "blast",
+    "name": "Blast flipbook",
+    "data": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEgAAAAwCAYAAACynDzrAAAEN0lEQVR4nO1aoVIjQRDtpVAxwW4sVAoTzIkYFBqVbwjm9AnUCRRfcIb8wVVFoVFnIjDBUBRnTiSWGOycYDt0Zrt7emYnG6jiVW2x7O50T7/p7umeCsAXvoCY97uLeb+7iBmzt63JpCB28laZeA1GnTJ2fJF7QqlAAx6mr8uTp1Uvl0wAAJ8YqoMuCqf3QxDkr25xvSzouxTCQh7zMH1d0vfSwuzHKs4FLZz8lZ9PIYmkGsbDt7+TWc2rBqNOCder2pAoglJXU0JthSsDBjCrrXxIt5q/kBjp2WQGD9PXJTc0KsTcZelQUCpRbF7gDEBMZgAAENIrhpQmm9Hhyw/uYvN+d+EuSzfvdxcwHsJg1CkHo06ZsmWiEWZyyPuoHWg8fL8oDn+pw9Au+izoQe6ydKwRCusa1isdmvzf7zVdNHlHyebkCzp8e1QPqnnI4a93RdUkYkNt/X01obVcH94zKUew8GVXsoqiZ0op1G57oSi4Z0pxF2VshcGoU65DPQaVlyA5RdErNKL8UFYJEuOekBVbnaphIIF8y+WJDbnKXNV3gg6RoI1JTGab8UruY7xBNILK5p6RkDHpo+RXcpxbOHy0vuf0ejDFJJuoq9ohKUEjtESNk0/d5i07mKeD02MvFGniq5CSoOdTeK+DJjN2tbXx2nu/fWCh6OAW3EQQdeuTp1WPFoyxOHla9WrhK+UjZlGi5CLGQ1M4Jfdi/sBQPWKRN5/Ce0ggSb5RFVIXIxZcO7PTbp5rO6xddkgmYmPHDHhkcohtC35Y4ATRu1I8hxq4lm0I1SzN6raAhvir1/T0wN/ZQoTnPKn4NNhotr3nu5rTh0LKqcMXPgvczfGduzm+24Xu+9PuleU7tVl1L7fPeNFnTScH8EYOd4//5yBPIuH+tHv17c/qp0WGuM37RHAkFQfnR/53xcH5kUWxqDeTR3HkpBDWqA7K5U3FxeMZgEwOfY7fSqAkSEZbvQdgx4UigGxwiIgQOBI0YpBY/5sNgnJ5hAYthJqSgojxEPxeCrN9gHaIaQPWnYlDoxzkJ95UQmNyyYb+i8czHOtuju9yeZoFewDxO09xcH6El/+OKw1q4yMN5IiVyoDY8JKA3qh6UIi4kCe5l9tn+P3jX9MVt47PRQ7i/rR7tQeQHjKSF9H3eI+rnSM82qy+t/4Dqm3mizZyUet1UK4kS2VINUwq6JavJmlL6FnDkxrUJES0xNxkm0f49ZAaYk37KlFui9t0CijR0d28FbXaqYXEmiPE1FbDCrXG4WqjTORIcnKElgRzq5G7Hcm57WMv1XxWdWTfxdzL7bNaG3mESLua1pZw3zcNL+mYZB9ACIuMHhPyEp8kLpTaKg7NOYg7LWwDPhEW7/FhOTTjIB53pILr8q2lAe3Q1+MzkENhJUc7cg3/iFPwom3USKnHIbHIcmiP2Fax2DZSw+4/FHYVnBldfrUAAAAASUVORK5CYII=",
+    "width": 72,
+    "height": 48,
+    "columns": 3,
+    "rows": 2,
+    "frames": 6
+  }
+]
