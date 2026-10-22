@@ -92,8 +92,12 @@ async function compose(
   }
   const sources = panels.map((p) => bitmapCanvas(p.bitmap));
   let scale = o.scale ?? (o.view === "frame" ? 3 : 2);
+  const columnWidth = () => Math.max(150, crop.width * scale) + 48;
   const dimensions = () => ({
-    width: Math.ceil(cols * (crop.width * scale + 48) + legend + 16),
+    width: Math.max(
+      240 + legend,
+      Math.ceil(cols * columnWidth() + legend + 16),
+    ),
     height: Math.ceil(
       Math.max(
         rows * (crop.height * scale + 52),
@@ -130,7 +134,7 @@ async function compose(
     );
     const tiles: ObservationTile[] = [];
     for (const [i, panel] of panels.entries()) {
-      const x = 8 + (i % cols) * (crop.width * scale + 48),
+      const x = 8 + (i % cols) * columnWidth(),
         y = 36 + Math.floor(i / cols) * (crop.height * scale + 52);
       const viewport = {
         x: x + 30,
@@ -148,10 +152,15 @@ async function compose(
       });
       ctx.font = "12px sans-serif";
       ctx.fillStyle = "#e5e0f2";
+      const caption = panel.layer
+        ? `${report.layers.find((l) => l.id === panel.layer)!.order + 1}. ${shorten(panel.layer, 26)} · ${panel.time.toFixed(3)}s`
+        : `${panel.time.toFixed(3)}s · frame ${Math.floor(panel.time * project.fps)}${Math.abs(panel.time - report.time) < 1e-8 ? " · focus" : ""}`;
       ctx.fillText(
-        panel.layer
-          ? `${report.layers.find((l) => l.id === panel.layer)!.order + 1}. ${shorten(panel.layer, 26)} · ${panel.time.toFixed(3)}s`
-          : `${panel.time.toFixed(3)}s · frame ${Math.floor(panel.time * project.fps)}${Math.abs(panel.time - report.time) < 1e-8 ? " · focus" : ""}`,
+        fitText(
+          ctx,
+          caption,
+          cols === 1 ? width - legend - x - 38 : columnWidth() - 36,
+        ),
         x + 30,
         y + 12,
       );

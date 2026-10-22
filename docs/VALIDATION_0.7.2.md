@@ -52,6 +52,8 @@ expired-image errors and CLI operation files outside the checkout. A 512 × 512,
 32-layer, nine-frame observation completes through the SDK within its response
 budget. Large layer sheets disclose all 23 omitted IDs while keeping metadata
 for 32 layers. Annotated sheets obey their side/pixel/PNG-byte limits.
+Single-pixel crops keep a readable draft header and time caption instead of
+shrinking their annotation sheet to the size of the crop.
 
 ```bash
 npm run format:check

@@ -401,6 +401,22 @@ test("observation diagnoses empty, hidden and outside layers, samples visible ti
   });
   expect(crop.scene.warnings.some((w) => w.code === "EMPTY_CROP")).toBe(true);
   expect(crop.scene.tiles[0].crop).toEqual({ x: 0, y: 0, width: 8, height: 8 });
+  const tiny = await page.evaluate(
+    (p) =>
+      window.vfx.observe(
+        p,
+        {
+          time: 0.2,
+          crop: { x: 60, y: 60, width: 1, height: 1 },
+          guides: false,
+        },
+        true,
+      ),
+    p,
+  );
+  expect(
+    PNG.sync.read(Buffer.from(tiny["observation.png"], "base64")).width,
+  ).toBeGreaterThanOrEqual(240);
   const previous = await page.evaluate((p) => window.vfx.preview(p, 0.2), p);
   await observe({ view: "layers", time: 0.2, ids: ["masked"] });
   expect(await page.evaluate((p) => window.vfx.preview(p, 0.2), p)).toBe(
