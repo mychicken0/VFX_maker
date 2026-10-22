@@ -1,4 +1,5 @@
 import { readFile, readdir, mkdir, writeFile } from "node:fs/promises";
+import { createHash } from "node:crypto";
 const lock = JSON.parse(await readFile("package-lock.json", "utf8"));
 const inventory = [],
   texts = [];
@@ -15,6 +16,7 @@ for (const [path, entry] of Object.entries(lock.packages)) {
     /^(licen[sc]e|notice|copying)(\.|$)/i.test(f),
   );
   const licenses = [];
+  let licenseSource;
   for (const f of files) {
     try {
       const t = (await readFile(`${path}/${f}`, "utf8"))
@@ -26,6 +28,30 @@ for (const [path, entry] of Object.entries(lock.packages)) {
       );
     } catch {}
   }
+  if (!licenses.length) {
+    const fallback =
+      name === "@pixi/colord"
+        ? "docs/licenses/colord-LICENSE.txt"
+        : name.startsWith("@esbuild/")
+          ? "node_modules/esbuild/LICENSE.md"
+          : undefined;
+    if (fallback) {
+      const t = (await readFile(fallback, "utf8"))
+        .replace(/\r\n/g, "\n")
+        .replace(/[ \t]+$/gm, "");
+      licenses.push(fallback);
+      texts.push(
+        `\n${"=".repeat(72)}\n${name}@${pkg.version} / ${fallback}\n${"=".repeat(72)}\n${t}\n`,
+      );
+      licenseSource = {
+        source:
+          name === "@pixi/colord"
+            ? "https://github.com/pixijs/colord/blob/5344fbf77b736f81cd33c21050021bc09bc9dd1d/LICENSE.md"
+            : "License from the matching esbuild parent package",
+        sha256: createHash("sha256").update(t).digest("hex"),
+      };
+    }
+  }
   inventory.push({
     name,
     version: pkg.version,
@@ -33,6 +59,7 @@ for (const [path, entry] of Object.entries(lock.packages)) {
     repository: pkg.repository?.url ?? pkg.repository ?? null,
     integrity: entry.integrity,
     licenseFiles: licenses,
+    ...(licenseSource ? { licenseSource } : {}),
   });
 }
 inventory.sort((a, b) => a.name.localeCompare(b.name));
