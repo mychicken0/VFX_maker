@@ -1,6 +1,6 @@
 # Project compatibility
 
-Version 0.7.1 opens 0.4.0, 0.5.0, 0.6.0 and 0.7.0 `.vfx.json` projects and supplies defaults for
+Version 0.7.2 opens 0.4.0, 0.5.0, 0.6.0, 0.7.0 and 0.7.1 `.vfx.json` projects and supplies defaults for
 output settings, groups, editor settings, controls, variants, modifiers and particle trails. Reading does not overwrite the source file. Saving or editing writes
 the current version. Unknown formats and future versions are rejected.
 
@@ -24,5 +24,5 @@ New projects may also use `field` layers, `controls`, `variants`, per-layer
 trails preserve the behavior of existing projects. Component files use a separate
 `vfx-component` wrapper and are imported through **Saved → Import component**,
 not the normal project Open action. Saving a component excludes preview references.
-Version 0.7.1 accepts both saved-library items and portable components from 0.7.0,
-normalizing their wrapper and embedded project to 0.7.1 when read.
+Version 0.7.2 accepts saved-library items and portable components from 0.7.0 and
+0.7.1, normalizing their wrapper and embedded project to 0.7.2 when read.

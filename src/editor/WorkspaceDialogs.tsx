@@ -445,6 +445,12 @@ export function HelpDialog({ onClose }: { onClose: () => void }) {
         <dt>Agents via MCP</dt>
         <dd>
           <code>codex mcp add vfx -- vfx-mcp --root /path/to/effects</code>
+          <p>
+            Ask the agent to observe a storyboard, preview its edits, then
+            verify the saved effect. Observations include images, layer IDs and
+            canvas coordinates. If your AI app hides images, the agent can save
+            a PNG for its image viewer or read the position data.
+          </p>
         </dd>
       </dl>
     </Modal>

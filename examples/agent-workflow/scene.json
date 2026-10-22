@@ -1,0 +1,725 @@
+{
+  "file": "effect.vfx.json",
+  "revision": "13d85c1ee571d0a5d10c18d3784dd5a49afa1de6c9de7425501b92385c775ec5",
+  "draft": false,
+  "scene": {
+    "version": "0.7.2",
+    "name": "Agent crimson sigil",
+    "seed": 42,
+    "canvas": {
+      "width": 128,
+      "height": 128,
+      "pixelArt": true,
+      "background": "#110f19"
+    },
+    "duration": 1.2,
+    "fps": 30,
+    "loop": true,
+    "coordinates": {
+      "origin": "top-left",
+      "x": "right",
+      "y": "down",
+      "units": "canvas pixels before export scaling",
+      "rotation": "clockwise degrees; zero points right",
+      "position": "layer anchor in canvas pixels, before animated motion",
+      "points": "layer-local offsets from the animated anchor",
+      "geometry": "width/radius/handle offsets and masks are layer-local; worldPoints and pixel bounds are canvas coordinates",
+      "normalized": "x * canvas.width, y * canvas.height",
+      "time": "project seconds; keyframe t is normalized within each layer",
+      "layerOrder": "bottom to top; the last layer is in front"
+    },
+    "time": 0.4,
+    "layerCount": 4,
+    "scope": [
+      "cut-a",
+      "cut-b",
+      "shockwave",
+      "sparks"
+    ],
+    "controls": [
+      {
+        "id": "size",
+        "name": "Size",
+        "value": 1,
+        "min": 0.25,
+        "max": 3
+      },
+      {
+        "id": "intensity",
+        "name": "Intensity",
+        "value": 0.8,
+        "min": 0.1,
+        "max": 2
+      },
+      {
+        "id": "hue",
+        "name": "Hue",
+        "value": 0,
+        "min": -180,
+        "max": 180
+      }
+    ],
+    "layers": [
+      {
+        "id": "cut-a",
+        "name": "First slash",
+        "type": "path",
+        "order": 0,
+        "visible": true,
+        "locked": false,
+        "baseTransform": {
+          "position": {
+            "x": 64,
+            "y": 64
+          },
+          "rotation": 0,
+          "scale": 1
+        },
+        "resolvedTransform": {
+          "position": {
+            "x": 64,
+            "y": 64
+          },
+          "rotation": 0,
+          "scale": 1
+        },
+        "transform": {
+          "anchor": {
+            "x": 64,
+            "y": 64
+          },
+          "rotation": 0,
+          "scale": 1,
+          "localTime": 0.34,
+          "progress": 0.5230769230769231,
+          "localToCanvas": [
+            1,
+            0,
+            0,
+            1,
+            64,
+            64
+          ],
+          "canvasToLocal": [
+            1,
+            0,
+            0,
+            1,
+            -64,
+            -64
+          ]
+        },
+        "timing": {
+          "start": 0.06,
+          "end": 0.71,
+          "duration": 0.65,
+          "repeat": false,
+          "active": true
+        },
+        "opacity": 0.9538461538461538,
+        "geometry": {
+          "type": "path",
+          "worldPoints": [
+            {
+              "x": 22,
+              "y": 104
+            },
+            {
+              "x": 64,
+              "y": 64
+            },
+            {
+              "x": 106,
+              "y": 22
+            }
+          ],
+          "localPoints": [
+            {
+              "x": -42,
+              "y": 40
+            },
+            {
+              "x": 0,
+              "y": 0
+            },
+            {
+              "x": 42,
+              "y": -42
+            }
+          ],
+          "closed": false,
+          "width": 3.0523076923076924,
+          "draw": 1,
+          "taper": 0.8
+        },
+        "mask": null,
+        "modifiers": [],
+        "drivenBy": [
+          {
+            "control": "size",
+            "value": 1,
+            "target": "scale",
+            "mode": "multiply",
+            "factor": 1,
+            "offset": 0
+          },
+          {
+            "control": "intensity",
+            "value": 0.8,
+            "target": "width",
+            "mode": "multiply",
+            "factor": 1,
+            "offset": 0
+          },
+          {
+            "control": "hue",
+            "value": 0,
+            "target": "colors.hue",
+            "mode": "set",
+            "factor": 1,
+            "offset": 0
+          }
+        ],
+        "pixels": {
+          "visiblePixels": 2778,
+          "alphaMass": 477.835,
+          "bounds": {
+            "x": 15,
+            "y": 15,
+            "width": 98,
+            "height": 96
+          },
+          "touches": []
+        },
+        "geometryBounds": {
+          "x": 21.78949602122016,
+          "y": 21.784169253210933,
+          "width": 84.4263347255689,
+          "height": 82.4368599245079
+        },
+        "state": "visible",
+        "pickAlpha": 255
+      },
+      {
+        "id": "cut-b",
+        "name": "Second slash",
+        "type": "path",
+        "order": 1,
+        "visible": true,
+        "locked": false,
+        "baseTransform": {
+          "position": {
+            "x": 64,
+            "y": 64
+          },
+          "rotation": 0,
+          "scale": 1
+        },
+        "resolvedTransform": {
+          "position": {
+            "x": 64,
+            "y": 64
+          },
+          "rotation": 0,
+          "scale": 1
+        },
+        "transform": {
+          "anchor": {
+            "x": 64,
+            "y": 64
+          },
+          "rotation": 0,
+          "scale": 1,
+          "localTime": 0.18000000000000002,
+          "progress": 0.27692307692307694,
+          "localToCanvas": [
+            1,
+            0,
+            0,
+            1,
+            64,
+            64
+          ],
+          "canvasToLocal": [
+            1,
+            0,
+            0,
+            1,
+            -64,
+            -64
+          ]
+        },
+        "timing": {
+          "start": 0.22,
+          "end": 0.87,
+          "duration": 0.65,
+          "repeat": false,
+          "active": true
+        },
+        "opacity": 1,
+        "geometry": {
+          "type": "path",
+          "worldPoints": [
+            {
+              "x": 22,
+              "y": 22
+            },
+            {
+              "x": 64,
+              "y": 64
+            },
+            {
+              "x": 106,
+              "y": 104
+            }
+          ],
+          "localPoints": [
+            {
+              "x": -42,
+              "y": -42
+            },
+            {
+              "x": 0,
+              "y": 0
+            },
+            {
+              "x": 42,
+              "y": 40
+            }
+          ],
+          "closed": false,
+          "width": 4.627692307692308,
+          "draw": 1,
+          "taper": 0.8
+        },
+        "mask": null,
+        "modifiers": [],
+        "drivenBy": [
+          {
+            "control": "size",
+            "value": 1,
+            "target": "scale",
+            "mode": "multiply",
+            "factor": 1,
+            "offset": 0
+          },
+          {
+            "control": "intensity",
+            "value": 0.8,
+            "target": "width",
+            "mode": "multiply",
+            "factor": 1,
+            "offset": 0
+          },
+          {
+            "control": "hue",
+            "value": 0,
+            "target": "colors.hue",
+            "mode": "set",
+            "factor": 1,
+            "offset": 0
+          }
+        ],
+        "pixels": {
+          "visiblePixels": 3898,
+          "alphaMass": 732.941,
+          "bounds": {
+            "x": 13,
+            "y": 13,
+            "width": 102,
+            "height": 100
+          },
+          "touches": []
+        },
+        "geometryBounds": {
+          "x": 21.672772738798592,
+          "y": 21.672772738798592,
+          "width": 84.64637845489332,
+          "height": 82.66233601457793
+        },
+        "state": "visible",
+        "pickAlpha": 255
+      },
+      {
+        "id": "shockwave",
+        "name": "Impact ring",
+        "type": "ring",
+        "order": 2,
+        "visible": true,
+        "locked": false,
+        "baseTransform": {
+          "position": {
+            "x": 64,
+            "y": 64
+          },
+          "rotation": 0,
+          "scale": 1
+        },
+        "resolvedTransform": {
+          "position": {
+            "x": 64,
+            "y": 64
+          },
+          "rotation": 0,
+          "scale": 1
+        },
+        "transform": {
+          "anchor": {
+            "x": 64,
+            "y": 64
+          },
+          "rotation": 0,
+          "scale": 1,
+          "localTime": 0.14,
+          "progress": 0.23333333333333336,
+          "localToCanvas": [
+            1,
+            0,
+            0,
+            1,
+            64,
+            64
+          ],
+          "canvasToLocal": [
+            1,
+            0,
+            0,
+            1,
+            -64,
+            -64
+          ]
+        },
+        "timing": {
+          "start": 0.26,
+          "end": 0.86,
+          "duration": 0.6,
+          "repeat": false,
+          "active": true
+        },
+        "opacity": 0.6133333333333333,
+        "geometry": {
+          "type": "ring",
+          "radius": 13.033333333333335,
+          "width": 3.0666666666666664,
+          "arc": 360
+        },
+        "mask": null,
+        "modifiers": [],
+        "drivenBy": [
+          {
+            "control": "size",
+            "value": 1,
+            "target": "scale",
+            "mode": "multiply",
+            "factor": 1,
+            "offset": 0
+          },
+          {
+            "control": "intensity",
+            "value": 0.8,
+            "target": "width",
+            "mode": "multiply",
+            "factor": 1,
+            "offset": 0
+          },
+          {
+            "control": "hue",
+            "value": 0,
+            "target": "colors.hue",
+            "mode": "set",
+            "factor": 1,
+            "offset": 0
+          }
+        ],
+        "pixels": {
+          "visiblePixels": 1594,
+          "alphaMass": 283.612,
+          "bounds": {
+            "x": 43,
+            "y": 43,
+            "width": 42,
+            "height": 42
+          },
+          "touches": []
+        },
+        "geometryBounds": {
+          "x": 49.43333333333333,
+          "y": 49.43333333333333,
+          "width": 29.133333333333333,
+          "height": 29.133333333333333
+        },
+        "state": "visible",
+        "pickAlpha": 0
+      },
+      {
+        "id": "sparks",
+        "name": "Flying sparks",
+        "type": "particles",
+        "order": 3,
+        "visible": true,
+        "locked": false,
+        "baseTransform": {
+          "position": {
+            "x": 64,
+            "y": 64
+          },
+          "rotation": 0,
+          "scale": 1
+        },
+        "resolvedTransform": {
+          "position": {
+            "x": 64,
+            "y": 64
+          },
+          "rotation": 0,
+          "scale": 1
+        },
+        "transform": {
+          "anchor": {
+            "x": 64,
+            "y": 64
+          },
+          "rotation": 0,
+          "scale": 1,
+          "localTime": 0.12,
+          "progress": 0.13333333333333333,
+          "localToCanvas": [
+            1,
+            0,
+            0,
+            1,
+            64,
+            64
+          ],
+          "canvasToLocal": [
+            1,
+            0,
+            0,
+            1,
+            -64,
+            -64
+          ]
+        },
+        "timing": {
+          "start": 0.28,
+          "end": 1.1800000000000002,
+          "duration": 0.9,
+          "repeat": false,
+          "active": true
+        },
+        "opacity": "per-particle age",
+        "geometry": {
+          "type": "particles",
+          "mode": "burst",
+          "alive": 24,
+          "sampleLimit": 12,
+          "samples": [
+            {
+              "id": 0,
+              "x": 68.2429,
+              "y": 59.6595,
+              "size": 0.6106,
+              "alpha": 0.3498,
+              "color": "#ffa7a0"
+            },
+            {
+              "id": 1,
+              "x": 67.8022,
+              "y": 60.6363,
+              "size": 0.7975,
+              "alpha": 0.4569,
+              "color": "#ffd2b9"
+            },
+            {
+              "id": 2,
+              "x": 62.1827,
+              "y": 70.4778,
+              "size": 0.705,
+              "alpha": 0.4039,
+              "color": "#ffbdad"
+            },
+            {
+              "id": 3,
+              "x": 58.8851,
+              "y": 64.113,
+              "size": 0.8019,
+              "alpha": 0.4594,
+              "color": "#ffd3ba"
+            },
+            {
+              "id": 4,
+              "x": 64.8912,
+              "y": 59.732,
+              "size": 0.8012,
+              "alpha": 0.459,
+              "color": "#ffd3ba"
+            },
+            {
+              "id": 5,
+              "x": 69.4609,
+              "y": 67.5926,
+              "size": 0.7741,
+              "alpha": 0.4435,
+              "color": "#ffccb6"
+            },
+            {
+              "id": 6,
+              "x": 58.9671,
+              "y": 66.9473,
+              "size": 0.7193,
+              "alpha": 0.4121,
+              "color": "#ffc0af"
+            },
+            {
+              "id": 7,
+              "x": 67.1394,
+              "y": 59.5041,
+              "size": 0.6965,
+              "alpha": 0.3991,
+              "color": "#ffbbab"
+            },
+            {
+              "id": 8,
+              "x": 62.1462,
+              "y": 68.36,
+              "size": 0.7646,
+              "alpha": 0.438,
+              "color": "#ffcab5"
+            },
+            {
+              "id": 9,
+              "x": 63.6249,
+              "y": 71.2451,
+              "size": 0.636,
+              "alpha": 0.3644,
+              "color": "#ffada3"
+            },
+            {
+              "id": 10,
+              "x": 60.9095,
+              "y": 60.4883,
+              "size": 0.7369,
+              "alpha": 0.4222,
+              "color": "#ffc4b1"
+            },
+            {
+              "id": 11,
+              "x": 67.7755,
+              "y": 59.2784,
+              "size": 0.7831,
+              "alpha": 0.4487,
+              "color": "#ffceb7"
+            }
+          ]
+        },
+        "mask": null,
+        "modifiers": [],
+        "drivenBy": [
+          {
+            "control": "size",
+            "value": 1,
+            "target": "scale",
+            "mode": "multiply",
+            "factor": 1,
+            "offset": 0
+          },
+          {
+            "control": "intensity",
+            "value": 0.8,
+            "target": "size",
+            "mode": "multiply",
+            "factor": 1,
+            "offset": 0
+          },
+          {
+            "control": "hue",
+            "value": 0,
+            "target": "colors.hue",
+            "mode": "set",
+            "factor": 1,
+            "offset": 0
+          }
+        ],
+        "pixels": {
+          "visiblePixels": 490,
+          "alphaMass": 72.035,
+          "bounds": {
+            "x": 52,
+            "y": 53,
+            "width": 24,
+            "height": 24
+          },
+          "touches": []
+        },
+        "geometryBounds": {
+          "x": 56.4792953500423,
+          "y": 57.262562191185786,
+          "width": 15.057648247716735,
+          "height": 15.143325700077916
+        },
+        "state": "visible",
+        "pickAlpha": 26
+      }
+    ],
+    "view": "frame",
+    "draft": false,
+    "frames": [
+      {
+        "time": 0.4,
+        "frameIndex": 12,
+        "visiblePixels": 5955,
+        "alphaMass": 1398.557,
+        "bounds": {
+          "x": 13,
+          "y": 13,
+          "width": 102,
+          "height": 100
+        },
+        "touches": [],
+        "cropPixels": 5955
+      }
+    ],
+    "sampling": {
+      "automatic": false,
+      "times": [
+        0.4
+      ],
+      "basis": "largest rendered alpha mass among sampled times; not an exhaustive proof of visibility"
+    },
+    "reference": {
+      "displayed": false,
+      "excludedFromPixels": true
+    },
+    "point": {
+      "x": 64,
+      "y": 64,
+      "threshold": 8
+    },
+    "hits": [
+      "sparks",
+      "cut-b",
+      "cut-a"
+    ],
+    "warnings": [],
+    "tiles": [
+      {
+        "image": "frame-0.png",
+        "time": 0.4,
+        "viewport": {
+          "x": 38,
+          "y": 56,
+          "width": 384,
+          "height": 384
+        },
+        "crop": {
+          "x": 0,
+          "y": 0,
+          "width": 128,
+          "height": 128
+        },
+        "pixelsPerCanvasPixel": 3
+      }
+    ],
+    "omittedLayerIds": []
+  }
+}

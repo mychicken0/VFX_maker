@@ -1,6 +1,10 @@
 #!/usr/bin/env node
 import { Command } from "commander";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import {
+  McpServer,
+  ResourceTemplate,
+} from "@modelcontextprotocol/sdk/server/mcp.js";
+import { writeFile } from "node:fs/promises";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
@@ -12,6 +16,12 @@ import { VERSION } from "../core/model.js";
 import { pixelOptionsSchema } from "../core/pixel-options.js";
 import { exportOptionsSchema } from "../core/export-options.js";
 import { creativeEditSchema } from "../core/creative.js";
+import { observationSchema } from "../core/observation.js";
+import { editBatchSchema } from "../core/operations.js";
+import { COORDINATES } from "../core/spatial.js";
+import { ImageCache, type CachedImage } from "./image-cache.js";
+import { toolError } from "./tool-errors.js";
+import { AGENT_INSTRUCTIONS, AGENT_GUIDE } from "./agent-guide.js";
 const cli = new Command()
   .name("vfx-mcp")
   .version(VERSION)
@@ -24,13 +34,76 @@ const server = new McpServer(
   { name: "vfx-maker", version: VERSION },
   {
     maxToolInputElements: 50000,
-    instructions:
-      "VFX Maker 0.7 uses editable layers and portable ordered modifiers. Use inspect_creative and edit_creative for macro controls, variants and timing; save_component/insert_component reuse editable parts. Inspect a project to get its revision before changes. Updates merge nested objects and replace arrays. Layer order is bottom to top. Start with get_preset, then update_layer; use curves, Bezier path handles and layer masks for custom shapes. Group and transform selected layers together. Keyframe times are normalized within each layer. Each disk edit backs up the previous file; list_backups and restore_backup recover it. Editor references never render or export. Export uses local Chromium + PixiJS, no network. Files are confined to the selected root and output paths must be unused. Prefer start_export and poll for long renders. TypeScript code execution is available only in the CLI build command for trusted sources.",
+    instructions: AGENT_INSTRUCTIONS,
   },
 );
 const file = z.string().min(1).max(2048),
   revision = z.string().regex(/^[0-9a-f]{64}$/),
   patch = z.record(z.string(), z.unknown());
+const images = new ImageCache();
+const publicImage = ({ png: _png, ...metadata }: CachedImage) => metadata;
+const failure = (error: unknown): CallToolResult => {
+  const value = toolError(error);
+  return {
+    isError: true,
+    content: [{ type: "text", text: JSON.stringify(value) }],
+    structuredContent: value,
+  };
+};
+server.registerResource(
+  "agent-guide",
+  "vfx://guide",
+  {
+    title: "VFX Maker agent workflow",
+    description:
+      "Coordinate conventions, images, safe batches and observe-edit-verify examples.",
+    mimeType: "text/markdown",
+  },
+  async (uri) => ({
+    contents: [{ uri: uri.href, mimeType: "text/markdown", text: AGENT_GUIDE }],
+  }),
+);
+server.registerResource(
+  "preview-images",
+  new ResourceTemplate("vfx://images/{id}", {
+    list: async () => ({ resources: images.list() }),
+  }),
+  { title: "Immutable rendered PNG snapshots", mimeType: "image/png" },
+  async (uri) => {
+    const image = images.get(uri.href);
+    return {
+      contents: [
+        {
+          uri: uri.href,
+          mimeType: "image/png",
+          blob: image.png.toString("base64"),
+        },
+      ],
+    };
+  },
+);
+server.registerPrompt(
+  "effect_workflow",
+  {
+    title: "Create or refine an effect with visual feedback",
+    description: "Plan an observe-edit-verify workflow for an effect task.",
+    argsSchema: {
+      request: z.string().min(1).max(4000),
+      file: z.string().min(1).max(2048),
+    },
+  },
+  async (a) => ({
+    messages: [
+      {
+        role: "user",
+        content: {
+          type: "text",
+          text: `${AGENT_GUIDE}\n\nTask: ${a.request}\nProject file: ${JSON.stringify(a.file)}\nUse actual MCP calls and view returned images when the host supports them. Report edits, resulting files, verification and any image-viewing limitation accurately.`,
+        },
+      },
+    ],
+  }),
+);
 const tool = <S extends z.ZodRawShape>(
   name: string,
   description: string,
@@ -63,12 +136,7 @@ const tool = <S extends z.ZodRawShape>(
           structuredContent: object,
         };
       } catch (e) {
-        return {
-          isError: true,
-          content: [
-            { type: "text", text: e instanceof Error ? e.message : String(e) },
-          ],
-        };
+        return failure(e);
       }
     },
   );
@@ -80,6 +148,17 @@ tool(
   () => ({
     version: VERSION,
     root: s.store.root,
+    coordinates: COORDINATES,
+    agentWorkflow: {
+      observe:
+        "observe_project returns an annotated image, scene positions, isolated pixel bounds, timing, picks and revision. Try view=storyboard before editing.",
+      edit: "apply_edits performs 1..64 atomic operations with one backup. Preview the same edits through observe_project with file/revision/edits; drafts do not write.",
+      visionFallback:
+        "images[].uri can be read through resources/read or saved by save_preview for a host image viewer. If no image viewer is available, use structured scene metadata; do not claim to have seen an image.",
+      guide: "vfx://guide",
+      schemas: ["observation", "edits"],
+      resources: { maxImages: 16, maxBytes: 25165824, sessionLocal: true },
+    },
     layerTypes: ["particles", "path", "ring", "sprite", "field"],
     modifiers: [
       "outline",
@@ -104,6 +183,9 @@ tool(
       pngOutputPixels: 16777216,
       gifOutputPixels: 33554432,
       paletteColors: [2, 256],
+      observationInlinePngBytes: 2097152,
+      observationTimes: 9,
+      editOperations: 64,
     },
     imageProcessing:
       "Local PNG optimization needs no browser. Palette, scale, block and alpha reductions are lossy; default PNG recompression preserves decoded RGBA.",
@@ -139,6 +221,8 @@ tool(
       "creative",
       "modifier",
       "control",
+      "edits",
+      "observation",
     ]),
   },
   (a) => s.schema(a.kind),
@@ -312,13 +396,25 @@ server.registerTool(
   "render_preview",
   {
     description:
-      "Render an actual PixiJS frame and return an inline PNG image.",
-    inputSchema: { file, time: z.number().min(0).max(10).default(0.35) },
+      "Return a clean inline PNG, actual pixel bounds, coordinates, revision and a reusable image URI. Omit time to sample a visible frame. Prefer observe_project for annotated views and layer positions.",
+    inputSchema: { file, time: z.number().min(0).max(10).optional() },
     annotations: { readOnlyHint: true, openWorldHint: false },
   },
   async (a) => {
     try {
       const result = await s.preview(a.file, a.time);
+      const image = images.put({
+        name: "preview.png",
+        file: a.file,
+        revision: result.revision,
+        draft: false,
+        role: "frame",
+        width: result.metadata.canvas.width,
+        height: result.metadata.canvas.height,
+        time: result.metadata.time,
+        png: result.png,
+      });
+      const metadata = { ...result.metadata, images: [publicImage(image)] };
       return {
         content: [
           {
@@ -328,12 +424,166 @@ server.registerTool(
           },
           {
             type: "text",
-            text: JSON.stringify({ revision: result.revision, time: a.time }),
+            text: JSON.stringify(metadata),
+          },
+          {
+            type: "resource_link",
+            uri: image.uri,
+            name: image.name,
+            mimeType: image.mimeType,
+            size: image.bytes,
           },
         ],
+        structuredContent: metadata,
       };
     } catch (e) {
-      return { isError: true, content: [{ type: "text", text: String(e) }] };
+      return failure(e);
+    }
+  },
+);
+const observeShape = {
+  file,
+  revision: revision.optional(),
+  edits: editBatchSchema.optional(),
+  includeImage: z.boolean().default(true),
+  ...observationSchema.shape,
+};
+server.registerTool(
+  "observe_project",
+  {
+    description:
+      "Preferred visual inspection: a real annotated PNG plus compact scene coordinates, layer IDs, isolated rendered bounds, picks, controls and timing. view is frame, storyboard or layers. Omit time to find a representative visible moment. Optional revision+edits previews an uncommitted DRAFT. Clean PNGs are resource URIs; includeImage:false supports text-only hosts. No project writes.",
+    inputSchema: observeShape,
+    annotations: {
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: false,
+    },
+  },
+  async (args) => {
+    try {
+      const { file, revision, edits, includeImage, ...options } = z
+        .object(observeShape)
+        .strict()
+        .parse(args);
+      const result = await s.observe(file, options, revision, edits);
+      const cached = result.report.images.map((info) =>
+        images.put({
+          ...info,
+          file,
+          revision: result.revision,
+          draft: result.draft,
+          png: result.files[info.name],
+        }),
+      );
+      const annotated = cached.find((i) => i.role === "annotated")!;
+      const { images: _images, ...scene } = result.report;
+      const metadata = {
+        file,
+        revision: result.revision,
+        draft: result.draft,
+        ...(result.draft
+          ? {
+              proposedRevision: result.proposedRevision,
+              changes: result.changes,
+              nextAction:
+                "This is a draft. Commit the same edits with apply_edits using this source revision, then observe the saved result.",
+            }
+          : {}),
+        scene,
+        images: cached.map(publicImage),
+      };
+      const content: CallToolResult["content"] = [];
+      const inlineBytes =
+        Math.ceil(annotated.bytes / 3) * 4 +
+        Buffer.byteLength(JSON.stringify(metadata)) * 2 +
+        32768;
+      const payload = {
+        ...metadata,
+        imageDelivery: {
+          inline: includeImage && inlineBytes <= 3.75 * 1024 * 1024,
+          reason: !includeImage
+            ? "requested-text-only"
+            : inlineBytes > 3.75 * 1024 * 1024
+              ? "response-budget; read an image URI or save_preview instead"
+              : "inline-and-resources",
+        },
+      };
+      if (includeImage && inlineBytes <= 3.75 * 1024 * 1024)
+        content.push({
+          type: "image",
+          mimeType: "image/png",
+          data: annotated.png.toString("base64"),
+        });
+      content.push({ type: "text", text: JSON.stringify(payload) });
+      for (const image of cached)
+        content.push({
+          type: "resource_link",
+          uri: image.uri,
+          name: image.name,
+          mimeType: image.mimeType,
+          size: image.bytes,
+        });
+      return { content, structuredContent: payload };
+    } catch (e) {
+      return failure(e);
+    }
+  },
+);
+tool(
+  "apply_edits",
+  "Apply 1..64 validated operations atomically with one revision check and one backup. A failed operation writes nothing. Use get_schema edits. set_path_points supports canvas/normalized coordinates at a project time; creative wraps existing modifier/control/timing operations. dryRun validates without writing; observe_project with the same edits renders a draft.",
+  {
+    file,
+    revision,
+    edits: editBatchSchema,
+    dryRun: z.boolean().default(false),
+  },
+  (a) => s.apply(a.file, a.revision, a.edits, a.dryRun),
+);
+server.registerTool(
+  "save_preview",
+  {
+    description:
+      "Save a cached PNG URI returned by observe_project/render_preview to a fresh .png inside --root. Returns an absolute server path for a local host's image viewer, dimensions, hash and source revision. Existing paths are never overwritten.",
+    inputSchema: {
+      uri: z.string().regex(/^vfx:\/\/images\/[a-f0-9]{64}$/),
+      out: file,
+    },
+    annotations: {
+      readOnlyHint: false,
+      destructiveHint: false,
+      idempotentHint: false,
+      openWorldHint: false,
+    },
+  },
+  async (a) => {
+    try {
+      if (!/\.png$/i.test(a.out))
+        throw Error("Preview output must be a .png file");
+      const image = images.get(a.uri),
+        path = await s.store.path(a.out, false);
+      await writeFile(path, image.png, { flag: "wx" });
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify({
+              ...publicImage(image),
+              out: a.out,
+              absolutePath: path,
+            }),
+          },
+        ],
+        structuredContent: {
+          ...publicImage(image),
+          out: a.out,
+          absolutePath: path,
+        },
+      };
+    } catch (e) {
+      return failure(e);
     }
   },
 );

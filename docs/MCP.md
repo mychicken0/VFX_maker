@@ -4,37 +4,190 @@ The stdio server is `vfx-mcp --root /absolute/path/to/effects`. The host launche
 it; no persistent HTTP service is needed. Chrome/Chromium must be discoverable
 for rendering. File editing and schemas do not require a running browser.
 
-1. Call `list_presets`, then `get_preset` or `get_schema` to discover data.
-2. `new_project` creates a portable project from a preset or a supplied project.
-3. `inspect_project` returns `{project, revision}`. The revision is the SHA-256
-   of the actual disk bytes, not a counter. Every edit of an existing project requires it.
-4. `update_layer` takes `file`, `revision`, `id` and `patch`. For example,
-   `{"count":90,"gravity":{"y":0},"colors":[{"t":0,"color":"#ff2244"}]}`.
-   Nested objects merge. Arrays, including curves/points, replace the old array.
-5. `render_preview` returns an inline PNG image and source revision.
-6. `export`, or `start_export` + `get_export_job`, writes a new output folder.
+## Host setup
 
-| Tool                                              | Purpose                                                 |
-| ------------------------------------------------- | ------------------------------------------------------- |
-| capabilities                                      | Version, root, formats and budgets                      |
-| list_presets / get_preset                         | Editable example discovery                              |
-| get_schema                                        | Project/layer/asset schema and defaults                 |
-| new_project / inspect_project                     | Create or read a project                                |
-| update_project                                    | Merge project fields or replace layer/asset arrays      |
-| add_layer / update_layer / remove_layer           | Direct layer authoring                                  |
-| reorder_layers                                    | Supply all IDs in bottom-to-top order                   |
-| group_layers                                      | Named selection groups; preserves compositing order     |
-| transform_layers                                  | Translate, rotate and uniformly scale selected layers   |
-| put_keyframe                                      | Insert/replace a normalized curve key                   |
-| list_backups / restore_backup                     | Retained disk versions and revision-checked restoration |
-| import_asset                                      | Embed a root-scoped static PNG / sheet                  |
-| optimize_png                                      | PNG to a fresh file, with byte/pixel stats and hash     |
-| optimize_asset                                    | Revision-checked PNG replacement; keeps grid            |
-| resize_project                                    | Uniform composition resize or canvas bounds             |
-| recolor_project                                   | All/selected gradient and tint hue rotation             |
-| render_preview                                    | Actual PixiJS image, no file creation                   |
-| export                                            | Synchronous export with expected revision               |
-| start_export / get_export_job / cancel_export_job | Managed exports                                         |
+Use the installed executable's absolute path so the host works from any folder.
+The effect folder must already exist. Restart/reconnect the host after upgrading
+the package so it discovers the new tools and server instructions.
+
+```bash
+codex mcp add vfx -- /absolute/path/to/vfx-mcp --root /path/to/effects
+claude mcp add --transport stdio vfx -- /absolute/path/to/vfx-mcp --root /path/to/effects
+```
+
+For hosts using a JSON `mcpServers` configuration:
+
+```json
+{
+  "mcpServers": {
+    "vfx": {
+      "command": "/absolute/path/to/vfx-mcp",
+      "args": ["--root", "/path/to/effects"]
+    }
+  }
+}
+```
+
+If Chromium is not discoverable, add `VFX_CHROMIUM_PATH` to the host entry's `env`
+or install it with `vfx browser install`. `vfx doctor` reports browser discovery.
+A useful first task is: “Observe a storyboard, inspect layer positions, preview
+your edits as a draft, commit them and verify the final image. If images are
+hidden, save a PNG for your image viewer and explain any remaining limitation.”
+
+## Preferred workflow
+
+1. Start with `capabilities` and `list_presets`, then `new_project` from a preset or validated project.
+2. Prefer `observe_project {file, view: "storyboard"}` to inspect motion. It returns
+   a real annotated PNG, `structuredContent`, text JSON and image resource links.
+   `scene` includes IDs, coordinates, actual pixel bounds, controls and timing.
+3. View the returned image when your host supports vision. If it hides images,
+   read an `images[].uri` through MCP resources, or call `save_preview` to a fresh
+   PNG and use the host's image viewer. A server path is local to the server;
+   remote clients may need resource bytes. Text-only models can use coordinates
+   and bounds but should not claim to have viewed an image.
+4. Preview changes with `observe_project {file, revision, edits: [...]}`. This
+   renders a visibly marked **DRAFT**, without writing or making a backup.
+5. Commit the same sequence with `apply_edits {file, revision, edits: [...]}`.
+   It validates all operations, locks the file, writes once and creates one backup.
+   A failed sequence leaves the project unchanged. `dryRun: true` validates without
+   rendering or writing. The proposed hash is separate from the current revision.
+6. Observe the saved result and export. Use `start_export` / `get_export_job` for
+   a long export; wait for success before using the output.
+
+Read the live `vfx://guide` resource or use the `effect_workflow` prompt with
+`{request, file}`. These describe the installed version's workflow to the host.
+The revision is SHA-256 of actual disk bytes. Existing-project mutations require
+it; read again after conflicts. `inspect_project` remains available for full
+editable source, including embedded PNGs, when compact scene data is insufficient.
+
+## Observe positions and motion
+
+`observe_project` accepts `file`, optional `revision`, optional draft `edits`,
+and the following inspection options. Discover exact limits/defaults with
+`get_schema {kind: "observation"}`.
+
+| Option                               | Behavior                                                                              |
+| ------------------------------------ | ------------------------------------------------------------------------------------- |
+| `view: "frame"`                      | One annotated frame; default view                                                     |
+| `view: "storyboard"`                 | Six representative timeline samples by default; `times` accepts 1..9 explicit seconds |
+| `view: "layers"`                     | Isolated layer sheet at one time; top nine scoped layers, with omitted IDs reported   |
+| `time`                               | Explicit seconds for frame/layers; omit to sample a visible representative moment     |
+| `ids`                                | Scope rendering and metadata to 1..32 existing stable layer IDs                       |
+| `point: {x,y,threshold?}`            | Pick actual isolated alpha at a canvas point; hits ordered front to back              |
+| `crop: {x,y,width,height}`           | Annotated tile crop in original canvas pixels; clean PNGs keep full dimensions        |
+| `grid`, `guides`, `includeReference` | Defaults true; reference context never changes effect metrics or clean images         |
+| `background`                         | `checker` (default), `dark` or `transparent` for annotated tiles                      |
+| `scale`                              | Requested annotation scale, fitted to image budgets                                   |
+| `includeImage`                       | MCP-only; false omits the inline image while retaining metadata/resources             |
+
+Automatic selection measures alpha mass at at most 20 candidate times. It helps
+avoid an empty opening/tail, but does not prove the entire animation is visible.
+Explicit times are respected, including empty frames. `EMPTY_FRAME`, `EMPTY_CROP`,
+`OUTSIDE_CANVAS` and `TOUCHES_EDGE` explain possible framing/timing problems.
+Edge contact alone is not proof of clipping. Sampling considers the selected IDs.
+
+- Canvas origin is top-left, +X right, +Y down, clockwise degrees, before export scaling.
+- An anchor is separate from visible bounds. `layers[].pixels.bounds` measures
+  rendered isolated alpha, including masks/modifiers, before occlusion. A masked
+  hole does not pick. Multiple overlapping layers can hit, even when obscured.
+- `geometryBounds` is unfiltered renderer geometry; `geometry.worldPoints` and
+  path `localPoints` expose both coordinate spaces. `transform` includes animated
+  anchor, rotation, scale and forward/inverse `[a,b,c,d,tx,ty]` matrices.
+- Compare `baseTransform`, `resolvedTransform` and `drivenBy` before editing a
+  macro-controlled property. A `set` binding can override a changed base value.
+- Particle samples use world positions; particle opacity is evaluated by particle age.
+- Layer states distinguish hidden, not-started, ended, outside-canvas and no visible pixels.
+- Annotation bounds/IDs belong to the captioned **focus** time. Tile metadata
+  records the mapping: `canvasX = crop.x + (imageX - viewport.x) / pixelsPerCanvasPixel`.
+  Storyboards show bounds on that focus tile, rather than reusing them on other times.
+- Times are project seconds; keyframe times remain normalized within their layer.
+
+Clean PNG resources contain original-size straight RGBA, without guides or
+references, and match the same export renderer. `images` records dimensions,
+SHA-256, source revision and draft status. Resources are immutable snapshots,
+retained up to **16 images / 24 MiB** per server session. Re-observe after expiry
+or restart. `save_preview {uri, out: "inspection.png"}` refuses overwrite and
+returns an absolute server path. Resource discovery includes cached images.
+
+Annotated PNGs fit within 1,536 px per side, 1,048,576 pixels and 2 MiB. A large
+MCP response can omit the inline image; `imageDelivery` explains this and resource
+links remain available. Metadata is provided as text and structured content for
+hosts supporting either. The host still determines whether images/resources are
+exposed to its model; the server cannot make a nonvision model see them.
+
+## Atomic authoring example
+
+First observe and copy its revision. Replace `REVISION` below with that value.
+Discover IDs from the scene; this example uses the Crimson cross template.
+
+```json
+{
+  "file": "slash.vfx.json",
+  "revision": "REVISION",
+  "edits": [
+    {
+      "action": "set_path_points",
+      "id": "cut-a",
+      "space": "canvas",
+      "time": 0.4,
+      "points": [
+        { "x": 22, "y": 104 },
+        { "x": 64, "y": 64 },
+        { "x": 106, "y": 22 }
+      ]
+    },
+    { "action": "update_layer", "id": "sparks", "patch": { "count": 24 } },
+    {
+      "action": "creative",
+      "operation": { "action": "set_control", "id": "intensity", "value": 0.8 }
+    }
+  ]
+}
+```
+
+Send this object to `observe_project` to preview, then `apply_edits` to commit.
+The observed revision stays the source revision until a successful commit.
+Nested objects merge, arrays replace, and layer locks/composition budgets apply.
+`set_path_points` accepts `local`, `canvas` or `normalized` coordinates and optional
+Bezier handles. Normalized (0,0) is top-left and (1,1) the bottom-right canvas edge.
+Handles are offset vectors in the chosen space. Conversion uses the resolved
+animated transform at `time`. Replacing points without handles clears old handles.
+
+`get_schema {kind: "edits"}` lists 1..64-operation batches: update_project,
+add/update/remove_layer, reorder_layers, group_layers, transform_layers,
+put_keyframe, set_path_points and creative operations. New batches use the existing
+validated core functions. They do not execute arbitrary scripts.
+Domain failures inside an operation include its index/number/action, error code
+and recovery hint. Validation errors include issue paths where available. The
+SDK can reject malformed tool inputs before these handlers run.
+
+[Real MCP example, editable result and reproducible recipe](../examples/agent-workflow/README.md).
+
+## Available tools
+
+34 tools are available. Existing direct tools remain supported.
+
+| Tool                                                       | Purpose                                                                               |
+| ---------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| capabilities                                               | Installed version, root, coordinates, workflows and budgets                           |
+| list_presets / get_preset                                  | Editable example discovery                                                            |
+| get_schema                                                 | Project/layer/asset/pixels/export/creative/modifier/control/edits/observation schemas |
+| new_project / inspect_project                              | Create or read full source                                                            |
+| observe_project                                            | Annotated images, scene coordinates, layer states, bounds and draft inspection        |
+| apply_edits                                                | Revision-checked atomic sequence or validation-only dry run                           |
+| save_preview                                               | Cached PNG to a fresh file for host image viewers                                     |
+| update_project                                             | Merge project fields or replace arrays                                                |
+| add_layer / update_layer / remove_layer                    | Direct layer authoring                                                                |
+| reorder_layers / group_layers / transform_layers           | Layer order and selection editing                                                     |
+| put_keyframe                                               | Insert/replace a normalized key                                                       |
+| list_backups / restore_backup                              | Disk versions and revision-checked restoration                                        |
+| import_asset / optimize_asset / optimize_png               | Embedded textures and PNG processing                                                  |
+| resize_project / recolor_project                           | Canvas size and selected/all gradient color                                           |
+| render_preview                                             | Clean inline PNG, pixel bounds and resource fallback                                  |
+| inspect_creative / edit_creative                           | Discover/edit controls, modifiers, looks and timing                                   |
+| save_component / insert_component                          | Portable editable parts                                                               |
+| export / start_export / get_export_job / cancel_export_job | Synchronous or managed exports                                                        |
+| start_variant_export                                       | Managed export of saved variants                                                      |
 
 Jobs pin an immutable project snapshot when submitted, after checking revision.
 They use one worker, hold at most 16 states, and evict completed states first.
@@ -59,8 +212,6 @@ Stdout is protocol-only; errors return tool errors. JavaScript execution is not
 an MCP tool. External Codex/Claude GUI sessions must be configured by the user;
 the SDK protocol client is tested automatically.
 
-31 tools are available. `get_schema` also accepts `pixels`, `export`, `creative`,
-`modifier` and `control`.
 `optimize_png` takes `{png, out, options}`; defaults preserve decoded RGBA.
 `options` can set `scale`, `colors`, `dither`, `pixelSize` and `alphaLevels`.
 It writes a new file and returns `{file, stats, sha256}` without Chromium.

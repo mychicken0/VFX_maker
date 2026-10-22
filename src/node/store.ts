@@ -217,17 +217,4 @@ export class Store {
     }
   }
 }
-/** Nested object updates replace arrays and reject unknown fields at final validation. */
-export function merge<T>(base: T, patch: unknown): T {
-  if (!patch || typeof patch !== "object" || Array.isArray(patch))
-    return patch as T;
-  if (!base || typeof base !== "object" || Array.isArray(base))
-    return patch as T;
-  const out = { ...base } as Record<string, unknown>;
-  for (const [k, v] of Object.entries(patch)) {
-    if (["__proto__", "constructor", "prototype"].includes(k))
-      throw new Error("Invalid property name");
-    out[k] = merge(out[k], v);
-  }
-  return out as T;
-}
+export { merge } from "../core/operations.js";

@@ -1,0 +1,99 @@
+{
+  "preset": "red_magic_cross",
+  "time": 0.4,
+  "edits": [
+    {
+      "action": "update_project",
+      "patch": {
+        "name": "Agent crimson sigil"
+      }
+    },
+    {
+      "action": "set_path_points",
+      "id": "cut-a",
+      "space": "canvas",
+      "time": 0.4,
+      "points": [
+        {
+          "x": 22,
+          "y": 104
+        },
+        {
+          "x": 64,
+          "y": 64
+        },
+        {
+          "x": 106,
+          "y": 22
+        }
+      ]
+    },
+    {
+      "action": "set_path_points",
+      "id": "cut-b",
+      "space": "canvas",
+      "time": 0.4,
+      "points": [
+        {
+          "x": 22,
+          "y": 22
+        },
+        {
+          "x": 64,
+          "y": 64
+        },
+        {
+          "x": 106,
+          "y": 104
+        }
+      ]
+    },
+    {
+      "action": "update_layer",
+      "id": "sparks",
+      "patch": {
+        "count": 24,
+        "speed": [
+          35,
+          65
+        ],
+        "glow": {
+          "strength": 0.6,
+          "blur": 2
+        },
+        "opacity": [
+          {
+            "t": 0,
+            "value": 0.55,
+            "ease": "linear"
+          },
+          {
+            "t": 1,
+            "value": 0,
+            "ease": "linear"
+          }
+        ],
+        "size": [
+          {
+            "t": 0,
+            "value": 1.2,
+            "ease": "linear"
+          },
+          {
+            "t": 1,
+            "value": 0,
+            "ease": "linear"
+          }
+        ]
+      }
+    },
+    {
+      "action": "creative",
+      "operation": {
+        "action": "set_control",
+        "id": "intensity",
+        "value": 0.8
+      }
+    }
+  ]
+}

@@ -48,6 +48,17 @@ same browser functions, then closes the browser/server. SwiftShader enables
 rendering without hardware GPU or display; real browser rendering is still
 required. The official MCP SDK handles protocol framing and schema discovery.
 
+`core/spatial.ts` supplies the animated transform used by both Pixi and agent
+coordinate conversion. `operations.ts` validates atomic edit sequences on a
+clone before a single store transaction. `observation.ts` describes resolved
+geometry and macro bindings without embedding texture data. `render/observation.ts`
+measures actual composite/isolated alpha, samples bounded representative times
+and composes annotated inspection sheets. References appear only in that separate
+annotation pass. Clean frame resources use the same straight RGBA encoding as
+exports. MCP attaches source revisions, drafts and hashes, with a bounded immutable
+image cache, resource/file fallbacks, live guide and workflow prompt. It does not
+assume that a host showed its image to a model.
+
 `dist` contains the built browser app, Node executables, public API bundles and
 TypeScript declarations. npm packaging includes runtime dependencies by pinned
 version/lock, examples and docs.

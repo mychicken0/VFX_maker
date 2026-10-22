@@ -1,0 +1,46 @@
+{
+  "version": "0.7.2",
+  "protocol": "official MCP SDK over stdio",
+  "tools": 34,
+  "revision": "13d85c1ee571d0a5d10c18d3784dd5a49afa1de6c9de7425501b92385c775ec5",
+  "checks": {
+    "draftDidNotWrite": true,
+    "dryRunRevisionMatches": true,
+    "oneBackup": true,
+    "resourceHashMatches": true,
+    "draftAndCommittedPixelsMatch": true,
+    "textOnlyFallback": true,
+    "macroBindingsReported": true,
+    "gifJobSucceeded": true
+  },
+  "artifacts": {
+    "effect.vfx.json": {
+      "sha256": "13d85c1ee571d0a5d10c18d3784dd5a49afa1de6c9de7425501b92385c775ec5",
+      "bytes": 13107
+    },
+    "before.png": {
+      "sha256": "771e0f7975f9e6bfcf4fd8c403e81fd61610cc3d64bde25f1392896f3ba8404e",
+      "bytes": 85126
+    },
+    "draft.png": {
+      "sha256": "5441dd8b9ec3200c5a786c34fb28968ad6ad627ed126d092211d2e8f11f9500e",
+      "bytes": 40683
+    },
+    "final.png": {
+      "sha256": "71e02eff84921722ab2af48ccfc8a2e1da230dc5d6319f46a307529b03e0580b",
+      "bytes": 40291
+    },
+    "clean.png": {
+      "sha256": "f5e9210681e15867ee1c854f0f55eaa7be574c3f6e731ce822fb8d08a4047c70",
+      "bytes": 11211
+    },
+    "storyboard.png": {
+      "sha256": "49bb78f04dd07819345b5dc1e1cbe294efc39dd1f4adac6c5ea07f812e22e922",
+      "bytes": 86647
+    },
+    "gif/animation.gif": {
+      "sha256": "568cf8caaf31345bbc619a2e9236a42531067f4c671ca52f8628fd97be4b67fc",
+      "bytes": 200704
+    }
+  }
+}

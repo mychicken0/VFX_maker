@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { Command } from "commander";
 import { spawn } from "node:child_process";
-import { writeFile } from "node:fs/promises";
+import { writeFile, readFile, stat } from "node:fs/promises";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { build } from "esbuild";
@@ -28,7 +28,7 @@ cli
   .command("schema")
   .argument(
     "[kind]",
-    "project, layer, asset, pixels, export, creative, modifier or control",
+    "project, layer, asset, pixels, export, creative, modifier, control, edits or observation",
     "project",
   )
   .action(async (kind) => {
@@ -42,6 +42,8 @@ cli
         "creative",
         "modifier",
         "control",
+        "edits",
+        "observation",
       ].includes(kind)
     )
       throw new Error("Unknown schema kind");
@@ -141,14 +143,142 @@ cli
   });
 cli
   .command("preview <file>")
-  .option("--time <seconds>", "Frame time", Number, 0.35)
+  .option(
+    "--time <seconds>",
+    "Frame time; omit to sample a visible moment",
+    Number,
+  )
   .requiredOption("--out <file>", "New PNG file")
   .action(async (file, o) => {
     const s = await service(),
       dest = await s.store.path(o.out, false),
       result = await s.preview(file, o.time);
     await writeFile(dest, result.png, { flag: "wx" });
-    output({ file: dest, revision: result.revision });
+    output({ ...result.metadata, file: dest, sourceFile: file });
+  });
+async function readEdits(
+  s: Service,
+  options: { edits?: string; editsFile?: string },
+) {
+  if (options.edits && options.editsFile)
+    throw Error("Choose --edits or --edits-file, not both");
+  if (options.edits) return JSON.parse(options.edits) as unknown;
+  if (options.editsFile) {
+    const path = await s.store.path(options.editsFile);
+    if ((await stat(path)).size > 4194304)
+      throw Error("Edits file exceeds 4 MiB");
+    return JSON.parse(await readFile(path, "utf8")) as unknown;
+  }
+  return undefined;
+}
+cli
+  .command("edit <file>")
+  .alias("apply-edits")
+  .description(
+    "Apply a validated JSON operation array atomically with one backup",
+  )
+  .option("--edits <json>", "Operation array; discover with vfx schema edits")
+  .option(
+    "--edits-file <file>",
+    "Root-scoped JSON file containing the operation array",
+  )
+  .option("--if-match <revision>", "Expected disk revision")
+  .option("--dry-run", "Validate without writing")
+  .action(async (file, options) => {
+    const s = await service(),
+      edits = await readEdits(s, options);
+    if (edits === undefined) throw Error("Supply --edits or --edits-file");
+    output(
+      await s.apply(
+        file,
+        options.ifMatch ?? (await s.store.read(file)).revision,
+        edits,
+        !!options.dryRun,
+      ),
+    );
+  });
+cli
+  .command("observe <file>")
+  .description(
+    "Render annotated inspection sheets, clean PNGs and scene coordinates to a fresh directory",
+  )
+  .requiredOption("--out <directory>", "New inspection directory inside --root")
+  .option("--view <view>", "frame, storyboard or layers", "frame")
+  .option(
+    "--time <seconds>",
+    "Explicit project time; omit for automatic visible-frame sampling",
+    Number,
+  )
+  .option("--times <seconds>", "Comma-separated storyboard times")
+  .option("--ids <ids>", "Comma-separated layer IDs to isolate")
+  .option("--crop <json>", "Canvas-pixel crop: x, y, width, height")
+  .option(
+    "--scale <number>",
+    "Requested inspection scale (automatically fits image budgets)",
+    Number,
+  )
+  .option(
+    "--background <background>",
+    "checker, dark or transparent",
+    "checker",
+  )
+  .option("--no-grid", "Hide the canvas grid")
+  .option("--no-guides", "Hide rendered bounds and the layer legend")
+  .option(
+    "--no-reference",
+    "Exclude reference context from the annotated sheet",
+  )
+  .option(
+    "--point <json>",
+    "Pick layers at a canvas point: x, y, optional threshold",
+  )
+  .option(
+    "--edits <json>",
+    "Preview proposed edits without writing the project",
+  )
+  .option("--edits-file <file>", "Root-scoped JSON operation array to preview")
+  .option("--if-match <revision>", "Required when previewing edits")
+  .action(async (file, o) => {
+    const s = await service();
+    await s.store.path(o.out, false);
+    const result = await s.observe(
+      file,
+      {
+        view: o.view,
+        time: o.time,
+        times: o.times?.split(",").map(Number),
+        ids: o.ids?.split(",").map((id: string) => id.trim()),
+        crop: o.crop ? JSON.parse(o.crop) : undefined,
+        scale: o.scale,
+        background: o.background,
+        grid: o.grid,
+        guides: o.guides,
+        includeReference: o.reference,
+        point: o.point ? JSON.parse(o.point) : undefined,
+      },
+      o.ifMatch,
+      await readEdits(s, o),
+    );
+    const metadata = {
+      file,
+      revision: result.revision,
+      draft: result.draft,
+      ...(result.draft
+        ? { proposedRevision: result.proposedRevision, changes: result.changes }
+        : {}),
+      scene: result.report,
+    };
+    const published = await s.store.publish(o.out, {
+      ...result.files,
+      "scene.json": Buffer.from(JSON.stringify(metadata, null, 2) + "\n"),
+    });
+    output({
+      ...published,
+      revision: result.revision,
+      draft: result.draft,
+      time: result.report.time,
+      warnings: result.report.warnings,
+    });
   });
 cli
   .command("export <file>")

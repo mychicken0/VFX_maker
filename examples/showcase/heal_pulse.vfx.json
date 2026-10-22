@@ -1,6 +1,6 @@
 {
   "format": "vfx-maker",
-  "version": "0.7.1",
+  "version": "0.7.2",
   "name": "Healing pulse",
   "seed": 42,
   "canvas": {

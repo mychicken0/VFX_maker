@@ -201,6 +201,13 @@ describe("portable creative authoring", () => {
     expect(parseComponent(previous)).toEqual(component);
     expect(
       parseComponent({
+        ...component,
+        version: "0.7.1",
+        project: { ...component.project, version: "0.7.1" },
+      }),
+    ).toEqual(component);
+    expect(
+      parseComponent({
         ...previous,
         project: JSON.stringify(previous.project),
       }),
@@ -328,7 +335,7 @@ describe("portable creative authoring", () => {
         controls: undefined,
         variants: undefined,
       }).version,
-    ).toBe("0.7.1");
+    ).toBe("0.7.2");
     const l = field({ id: "cloud", name: "Cloud" });
     expect(parameterTargets(l).some((t) => t.path === "cutoff")).toBe(true);
     expect(() =>

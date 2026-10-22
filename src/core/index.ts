@@ -16,3 +16,6 @@ export * from "./pixels.js";
 export * from "./authoring.js";
 export * from "./geometry.js";
 export * from "./editing.js";
+export * from "./spatial.js";
+export * from "./operations.js";
+export * from "./observation.js";

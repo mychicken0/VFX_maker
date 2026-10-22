@@ -1,0 +1,41 @@
+import { VERSION } from "../core/model.js";
+export const AGENT_INSTRUCTIONS = `VFX Maker ${VERSION}: start with capabilities, then new_project or observe_project. Prefer observe_project over raw inspect_project when drawing: it returns a real annotated PNG plus canvas coordinates, rendered bounds, layer IDs, hit picks and timing. Omit time to sample a visible moment; use view=storyboard to inspect motion and view=layers to isolate parts. Positions use top-left canvas pixels (+X right, +Y down), clockwise degrees; path points are layer-local unless apply_edits/set_path_points explicitly uses canvas or normalized space. Edit using the observed revision. apply_edits validates 1..64 operations atomically, creates one backup, and returns a new revision. Preview uncommitted edits with observe_project {file,revision,edits}; those images are drafts. If the host drops inline images, use images[].uri through resources/read, or save_preview to a new PNG then a host image viewer. Text metadata remains usable without vision. Read vfx://guide for examples. Never infer that an image was viewed merely because a tool returned it. Exports are effect-only; reference images are inspection context. No arbitrary code execution is exposed through MCP.`;
+export const AGENT_GUIDE = `# VFX Maker ${VERSION}: observe, edit, verify
+
+1. Discover capabilities and list_presets. new_project takes a preset ID or a minimal validated project.
+2. observe_project {file,view:"storyboard"} returns a rendered image, original canvas coordinates, a revision, IDs, timing, controls and layer states. The default samples for a visible representative time. Sampling is bounded, not an exhaustive animation scan.
+3. View the image using the host's image support. Do not claim to have seen it if the host omitted it. If necessary read images[].uri with resources/read. For a local stdio host, save_preview {uri,out:"inspection.png"} writes a fresh PNG on the server machine; use the host's image viewer on its absolute path. A remote server path is not necessarily on the client's filesystem. Text-only hosts can use scene.layers[].transform, pixels.bounds, state, geometry.worldPoints and hits.
+4. Plan edits using stable IDs, not layer names or guessed indices. apply_edits {file,revision,edits:[...]} validates the sequence and writes once. Failure writes none of the operations. Nested objects merge; arrays replace. Locks and project budgets still apply. Each edit has its own operation index in an error.
+5. Before saving, observe_project {file,revision,edits:[...],time:...} renders the proposed sequence without changing disk. It is visibly marked DRAFT and still carries the source revision. apply_edits with the same revision/edits commits it; stale revisions fail instead of overwriting newer work.
+6. Observe the committed result again. Check the storyboard, edge warnings and an export before delivery. Long exports use start_export plus get_export_job.
+
+## Coordinates and time
+
+- Origin is the top-left canvas edge. X grows right; Y grows down. Position is in original canvas pixels, before export scale and animated motion. Rotation is clockwise degrees; zero direction is right.
+- Path points and Bezier handle offsets are normally layer-local. apply_edits/set_path_points accepts space:"canvas" or "normalized", converting through the resolved animated transform at project time. Normalized (0,0) is top-left; (1,1) is the bottom-right canvas edge. Picking requires a point strictly inside that edge. Handles are vectors in the selected space. Replacing points without handles clears old handles.
+- A layer's anchor is not its visible bounding box. scene.layers[].pixels.bounds comes from isolated rendered alpha, before occlusion by other layers. geometryBounds describes unfiltered renderer geometry and may differ from filtered pixel bounds. Zero-alpha pixels do not count. Edge contact is a framing hint, not proof of clipping.
+- transform.localToCanvas and canvasToLocal use [a,b,c,d,tx,ty]: x'=a*x+c*y+tx; y'=b*x+d*y+ty. A zero animated scale has no inverse; choose another time for canvas-space edits.
+- time/times are project seconds. put_keyframe.time is 0..1 within the layer. Layer state distinguishes hidden, not-started, ended, outside-canvas and no-visible-pixels-at-this-time.
+- Controls act on base fields. Compare baseTransform, resolvedTransform and drivenBy before editing a property. Changing a base value controlled with mode=set may have no visible effect; edit the control through a creative operation instead.
+- Layers are ordered bottom to top. hits is ordered front to back and uses actual isolated alpha at the point. A masked hole does not hit; overlapping translucent layers can yield multiple hits.
+- Annotated tiles include viewport/crop/pixelsPerCanvasPixel. Convert an image point back to canvas: x=crop.x+(imageX-viewport.x)/pixelsPerCanvasPixel, likewise Y. Clean resources retain original canvas dimensions and straight RGBA.
+
+## Examples
+
+Move two parts together:
+apply_edits {file,revision,edits:[{action:"transform_layers",ids:["blade","halo"],x:12,y:-8}]}
+
+Set a stroke in canvas coordinates at 0.3 seconds:
+apply_edits {file,revision,edits:[{action:"set_path_points",id:"blade",space:"canvas",time:0.3,points:[{x:20,y:104},{x:64,y:64},{x:108,y:24}]}]}
+
+Adjust a macro and add a modifier atomically:
+apply_edits {file,revision,edits:[{action:"creative",operation:{action:"set_control",id:"intensity",value:1.2}},{action:"creative",operation:{action:"put_modifier",layer:"blade",modifier:{id:"edge",type:"outline"}}}]}
+
+get_schema {kind:"edits"} lists operations; get_schema {kind:"observation"} lists views/crops/picking. dryRun:true on apply_edits validates without writing and returns proposedRevision, never a fake current revision.
+
+## Image resources and files
+
+observe_project returns one annotated inline image by default. includeImage:false returns the same coordinates and resource links without the inline payload. A large response may omit the inline image to stay within the transport budget; imageDelivery explains which path was used. images contains clean frames as well as the annotated sheet, with hashes and immutable vfx://images/... URIs. The cache retains up to 16 images / 24 MiB and is session-local. If a URI expires or the server restarts, observe again. save_preview refuses overwriting and only writes PNGs inside --root. References may appear in annotated inspection images; clean resources and exports exclude them.
+
+inspect_project returns full editable source, including embedded PNG data, so prefer compact observations until raw data is needed. inspect_creative discovers binding targets. get_schema lists actual defaults; do not invent parameter names. Errors handled by the tools include a code, recovery action and validation issue paths where available. The SDK may reject malformed protocol inputs before a tool runs. Domain failures inside a batch identify the failing operation. Re-inspect after conflicts or uncertain I/O failures before retrying.
+`;

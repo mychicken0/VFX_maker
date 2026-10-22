@@ -5,9 +5,22 @@ import type { ExportOptions } from "./export.js";
 import { VfxRenderer } from "./pixi.js";
 import { z } from "zod";
 import { exportVariants } from "./variants.js";
+import { observe } from "./observation.js";
+import type { ObservationInput } from "../core/observation.js";
 const renderer = await VfxRenderer.create();
 document.body.append(renderer.canvas);
 const bridge = {
+  async observe(value: unknown, options: ObservationInput, draft = false) {
+    const result = await observe(renderer, parseProject(value), options, draft);
+    return Object.fromEntries(
+      Object.entries({
+        ...result.files,
+        "observation.json": new TextEncoder().encode(
+          JSON.stringify(result.report),
+        ),
+      }).map(([name, bytes]) => [name, toBase64(bytes)]),
+    );
+  },
   async preview(value: unknown, time: number) {
     const p = parseProject(value);
     await renderer.setProject(p);

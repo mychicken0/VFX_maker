@@ -1,11 +1,6 @@
 import * as fs from "node:fs/promises";
 import { z } from "zod";
-import {
-  cleanupGroups,
-  groupLayers,
-  transformLayers,
-  putKeyframe,
-} from "../core/editing.js";
+import { groupLayers, transformLayers, putKeyframe } from "../core/editing.js";
 import { getPreset, PRESETS } from "../core/presets.js";
 import {
   assetSchema,
@@ -15,7 +10,7 @@ import {
   type Project,
 } from "../core/model.js";
 import type { ExportOptions } from "../render/export.js";
-import { optimizePng, inspectPng } from "../core/pixels.js";
+import { optimizePng, inspectPng, decodePng } from "../core/pixels.js";
 import { pixelOptionsSchema, type PixelInput } from "../core/pixel-options.js";
 import { exportOptionsSchema, exportPlan } from "../core/export-options.js";
 import {
@@ -23,7 +18,7 @@ import {
   replaceAssetPng,
   resizeProject,
 } from "../core/authoring.js";
-import { Store, merge, revision as hash } from "./store.js";
+import { Store, revision as hash } from "./store.js";
 import { render } from "./driver.js";
 import {
   editCreative,
@@ -34,6 +29,23 @@ import {
 import { modifierSchema, controlSchema } from "../core/creative-schema.js";
 import { makeComponent, insertComponent } from "../core/components.js";
 import { variantPlan } from "../core/variants.js";
+import {
+  applyEdits,
+  editBatchSchema,
+  summarizeChanges,
+  updateLayerData,
+  updateProjectData,
+  removeLayerData,
+  reorderLayerData,
+} from "../core/operations.js";
+import {
+  observationSchema,
+  pixelMetrics,
+  type ObservationInput,
+  type ObservationReport,
+} from "../core/observation.js";
+import { COORDINATES } from "../core/spatial.js";
+import { serialize } from "../core/api.js";
 export class Service {
   constructor(readonly store: Store) {}
   presets() {
@@ -53,7 +65,9 @@ export class Service {
       | "export"
       | "creative"
       | "modifier"
-      | "control",
+      | "control"
+      | "edits"
+      | "observation",
   ) {
     return z.toJSONSchema(
       {
@@ -65,6 +79,8 @@ export class Service {
         creative: creativeEditSchema,
         modifier: modifierSchema,
         control: controlSchema,
+        edits: editBatchSchema,
+        observation: observationSchema,
       }[kind],
     );
   }
@@ -144,7 +160,7 @@ export class Service {
     return { ...(await this.store.publish(out, files, signal)), revision };
   }
   update(file: string, revision: string, patch: unknown) {
-    return this.store.edit(file, revision, (p) => merge(p, patch));
+    return this.store.edit(file, revision, (p) => updateProjectData(p, patch));
   }
   group(
     file: string,
@@ -181,23 +197,9 @@ export class Service {
     );
   }
   updateLayer(file: string, revision: string, id: string, patch: unknown) {
-    return this.store.edit(file, revision, (p) => {
-      const i = p.layers.findIndex((l) => l.id === id);
-      if (i < 0) throw new Error(`Unknown layer ${id}`);
-      if (
-        p.layers[i].locked &&
-        !(
-          patch &&
-          typeof patch === "object" &&
-          Object.keys(patch).length === 1 &&
-          "locked" in patch &&
-          patch.locked === false
-        )
-      )
-        throw new Error("Unlock the layer before editing");
-      p.layers[i] = layerSchema.parse(merge(p.layers[i], patch));
-      return p;
-    });
+    return this.store.edit(file, revision, (p) =>
+      updateLayerData(p, id, patch),
+    );
   }
   addLayer(file: string, revision: string, layer: unknown) {
     return this.store.edit(file, revision, (p) => ({
@@ -206,31 +208,10 @@ export class Service {
     }));
   }
   removeLayer(file: string, revision: string, id: string) {
-    return this.store.edit(file, revision, (p) => {
-      const l = p.layers.find((l) => l.id === id);
-      if (!l) throw new Error(`Unknown layer ${id}`);
-      if (l.locked) throw new Error("Unlock the layer before removing it");
-      return cleanupGroups({
-        ...p,
-        layers: p.layers.filter((l) => l.id !== id),
-      });
-    });
+    return this.store.edit(file, revision, (p) => removeLayerData(p, id));
   }
   reorder(file: string, revision: string, ids: string[]) {
-    return this.store.edit(file, revision, (p) => {
-      if (
-        ids.length !== p.layers.length ||
-        new Set(ids).size !== ids.length ||
-        ids.some((id) => !p.layers.some((l) => l.id === id))
-      )
-        throw new Error(
-          "Supply each existing layer ID exactly once, bottom to top",
-        );
-      return {
-        ...p,
-        layers: ids.map((id) => p.layers.find((l) => l.id === id)!),
-      };
-    });
+    return this.store.edit(file, revision, (p) => reorderLayerData(p, ids));
   }
   async importAsset(
     file: string,
@@ -315,10 +296,129 @@ export class Service {
       recolorProject(p, hue, includeLocked, ids),
     );
   }
-  async preview(file: string, time = 0.3) {
+  async observe(
+    file: string,
+    options: ObservationInput = {},
+    expected?: string,
+    edits?: unknown,
+  ) {
+    const snapshot = await this.store.read(file);
+    if (expected && snapshot.revision !== expected)
+      throw Error(
+        "Revision conflict: inspect the project again before observing",
+      );
+    if (edits !== undefined && !expected)
+      throw Error("A revision is required to preview uncommitted edits");
+    const project =
+      edits === undefined
+        ? snapshot.project
+        : applyEdits(snapshot.project, edits);
+    const files = await render(project, {
+      observation: observationSchema.parse(options),
+      draft: edits !== undefined,
+    });
+    const report = JSON.parse(
+      files["observation.json"].toString("utf8"),
+    ) as ObservationReport;
+    delete files["observation.json"];
+    return {
+      report,
+      files,
+      file,
+      revision: snapshot.revision,
+      draft: edits !== undefined,
+      ...(edits === undefined
+        ? {}
+        : {
+            changes: summarizeChanges(snapshot.project, project),
+            proposedRevision: hash(serialize(project)),
+          }),
+    };
+  }
+  async apply(file: string, revision: string, edits: unknown, dryRun = false) {
+    const operations = editBatchSchema.parse(edits);
+    if (dryRun) {
+      const before = await this.store.read(file);
+      if (before.revision !== revision)
+        throw Error(
+          "Revision conflict: inspect the project again before editing",
+        );
+      const after = applyEdits(before.project, operations);
+      return {
+        file,
+        revision,
+        dryRun: true,
+        proposedRevision: hash(serialize(after)),
+        operations: operations.length,
+        changes: summarizeChanges(before.project, after),
+      };
+    }
+    let changes: ReturnType<typeof summarizeChanges> | undefined;
+    const after = await this.store.edit(file, revision, (p) => {
+      const next = applyEdits(p, operations);
+      changes = summarizeChanges(p, next);
+      return next;
+    });
+    return {
+      file,
+      revision: after.revision,
+      dryRun: false,
+      operations: operations.length,
+      changes,
+    };
+  }
+  async preview(file: string, time?: number) {
+    if (time === undefined) {
+      const result = await this.observe(file, {
+        view: "frame",
+        grid: false,
+        guides: false,
+        includeReference: false,
+        scale: 1,
+      });
+      const frame = result.report.frames[0];
+      return {
+        png: result.files["frame-0.png"],
+        revision: result.revision,
+        metadata: {
+          file,
+          revision: result.revision,
+          time: frame.time,
+          canvas: result.report.canvas,
+          coordinates: COORDINATES,
+          pixels: frame,
+          automaticTime: true,
+          warnings: result.report.warnings,
+        },
+      };
+    }
     const { project, revision } = await this.store.read(file),
       files = await render(project, { time });
-    return { png: files["preview.png"], revision };
+    const png = files["preview.png"],
+      bitmap = decodePng(png),
+      pixels = pixelMetrics(bitmap.rgba, bitmap.width, bitmap.height);
+    return {
+      png,
+      revision,
+      metadata: {
+        file,
+        revision,
+        time,
+        canvas: project.canvas,
+        coordinates: COORDINATES,
+        pixels,
+        automaticTime: false,
+        warnings: pixels.visiblePixels
+          ? []
+          : [
+              {
+                code: "EMPTY_FRAME",
+                message:
+                  "Requested frame is empty. Use observe_project with automatic time or storyboard view to inspect timing and layer positions.",
+              },
+            ],
+      },
+    };
   }
   async export(
     file: string,

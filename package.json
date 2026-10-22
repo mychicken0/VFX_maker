@@ -1,6 +1,6 @@
 {
   "name": "vfx-maker",
-  "version": "0.7.1",
+  "version": "0.7.2",
   "description": "Visual VFX authoring with React, PixiJS, a standalone CLI and MCP server",
   "type": "module",
   "license": "UNLICENSED",

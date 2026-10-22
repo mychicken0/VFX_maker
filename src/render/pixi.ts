@@ -25,7 +25,8 @@ import {
   pointOnPath,
   hash,
 } from "../core/math.js";
-import { localTime, ParticleSampler } from "../core/simulation.js";
+import { ParticleSampler } from "../core/simulation.js";
+import { layerTransform } from "../core/spatial.js";
 
 interface View {
   root: Container;
@@ -203,25 +204,22 @@ export class VfxRenderer {
         }),
     );
   }
-  render(time: number): void {
+  render(time: number, only?: ReadonlySet<string>): void {
     if (!this.project || this.disposed) return;
     if (!Number.isFinite(time)) throw new Error("Time must be finite");
     for (const l of this.project.layers) {
       const v = this.views.get(l.id)!,
-        t = localTime(l, time);
+        transform = layerTransform(l, time),
+        t = transform.localTime;
       v.graphics.clear();
       v.sprites.forEach((s) => (s.visible = false));
       v.haloSprites.forEach((s) => (s.visible = false));
-      v.root.visible = l.visible && t !== null;
+      v.root.visible = l.visible && t !== null && (!only || only.has(l.id));
       if (!v.root.visible || t === null) continue;
       const u = t / l.duration;
-      v.root.position.set(
-        l.position.x + evaluate(l.motion.x, u),
-        l.position.y + evaluate(l.motion.y, u),
-      );
-      v.root.rotation =
-        ((l.rotation + evaluate(l.motion.rotation, u)) * Math.PI) / 180;
-      v.root.scale.set(l.scale * evaluate(l.motion.scale, u));
+      v.root.position.set(transform.anchor.x, transform.anchor.y);
+      v.root.rotation = (transform.rotation * Math.PI) / 180;
+      v.root.scale.set(transform.scale);
       v.root.alpha = l.type === "particles" ? 1 : clamp(evaluate(l.opacity, u));
       v.modifiers.forEach((m) => m.update(t, v.root));
       if (l.type === "particles") {
@@ -412,6 +410,14 @@ export class VfxRenderer {
     }
   }
   /** Read actual rendered pixels, including filters and alpha. */
+  geometryBounds(id: string) {
+    const view = this.views.get(id);
+    if (!view?.root.visible) return null;
+    const b = view.root.getBounds();
+    return b.width || b.height
+      ? { x: b.x, y: b.y, width: b.width, height: b.height }
+      : null;
+  }
   pixels(): Uint8ClampedArray {
     const { pixels } = this.app.renderer.extract.pixels({
       target: this.app.stage,

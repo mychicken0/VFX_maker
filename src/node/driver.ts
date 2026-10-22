@@ -3,6 +3,11 @@ import { existsSync } from "node:fs";
 import type { Project } from "../core/model.js";
 import type { ExportOptions } from "../render/export.js";
 import { serve } from "./server.js";
+import type { ObservationInput } from "../core/observation.js";
+export type RenderRequest =
+  | { time: number }
+  | { options: ExportOptions; variants?: string[] }
+  | { observation: ObservationInput; draft?: boolean };
 export function browserPath(): string | undefined {
   const env = process.env.VFX_CHROMIUM_PATH;
   if (env) {
@@ -27,7 +32,7 @@ export function browserPath(): string | undefined {
 let activeRenders = 0;
 export async function render(
   project: Project,
-  request: { time: number } | { options: ExportOptions; variants?: string[] },
+  request: RenderRequest,
   signal?: AbortSignal,
   progress?: (completed: number, total: number) => void,
 ): Promise<Record<string, Buffer>> {
@@ -47,7 +52,7 @@ export async function render(
 }
 async function renderInternal(
   project: Project,
-  request: { time: number } | { options: ExportOptions; variants?: string[] },
+  request: RenderRequest,
   signal?: AbortSignal,
   progress?: (completed: number, total: number) => void,
 ): Promise<Record<string, Buffer>> {
@@ -107,11 +112,13 @@ async function renderInternal(
     );
     const encoded = await page.evaluate(
       async ({ project, request }) =>
-        "time" in request
-          ? { "preview.png": await window.vfx.preview(project, request.time) }
-          : request.variants
-            ? window.vfx.variants(project, request.variants, request.options)
-            : window.vfx.export(project, request.options),
+        "observation" in request
+          ? window.vfx.observe(project, request.observation, request.draft)
+          : "time" in request
+            ? { "preview.png": await window.vfx.preview(project, request.time) }
+            : request.variants
+              ? window.vfx.variants(project, request.variants, request.options)
+              : window.vfx.export(project, request.options),
       { project, request },
     );
     signal?.throwIfAborted();
