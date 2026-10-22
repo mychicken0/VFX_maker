@@ -204,7 +204,8 @@ async function compose(
         drawReference();
       const step =
         [1, 2, 4, 8, 16, 32, 64, 128, 256].find(
-          (n) => n >= Math.max(crop.width, crop.height) / 4,
+          (n) =>
+            n >= Math.max(Math.max(crop.width, crop.height) / 4, 24 / scale),
         ) ?? 256;
       if (o.grid) {
         ctx.lineWidth = 1 / scale;
