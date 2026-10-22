@@ -1,9 +1,12 @@
-# VFX Maker 0.7.0
+# VFX Maker 0.7.1
 
 **A visual VFX studio built with TypeScript, PixiJS 8 and React 19.**
 Pick an effect, adjust Size, Intensity and Hue, and export it for your game.
 Open layer settings when you want to reshape a sword slash, add procedural
 textures or build your own modifier stack. The same Pixi renderer powers the browser editor, Terminal and MCP.
+
+**0.7.1:** readable, scrolling effect cards, reachable sidebar controls in small
+windows and playback/keyboard fixes. [Changes and screenshots](docs/RELEASE_0.7.1.md).
 
 ![VFX Maker Studio](examples/studio.png)
 
@@ -36,10 +39,10 @@ npm run build
 node dist/cli.js studio --open
 ```
 
-Or install the prepared `vfx-maker-0.7.0.tgz` once and use it in any folder:
+Or install the prepared `vfx-maker-0.7.1.tgz` once and use it in any folder:
 
 ```bash
-npm install -g /path/to/vfx-maker-0.7.0.tgz
+npm install -g /path/to/vfx-maker-0.7.1.tgz
 cd /path/to/your/game
 vfx studio --open
 ```
@@ -232,7 +235,8 @@ stripped during recompression. PNG optimization does not require Chromium.
 
 See [pixel workflows](docs/PIXEL_WORKFLOWS.md),
 [open source/product references](docs/OPEN_SOURCE_RESEARCH.md),
-[0.7.0 changes](docs/RELEASE_0.7.0.md),
-[validation](docs/VALIDATION_0.7.0.md),
+[0.7.1 fixes](docs/RELEASE_0.7.1.md),
+[0.7.0 features](docs/RELEASE_0.7.0.md),
+[validation](docs/VALIDATION_0.7.1.md),
 [previous authoring release](docs/RELEASE_0.6.0.md), and
 [project compatibility](docs/MIGRATION.md).

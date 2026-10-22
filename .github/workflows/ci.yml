@@ -23,10 +23,10 @@ jobs:
       - run: npm pack --ignore-scripts
       - uses: actions/upload-artifact@v4
         with:
-          name: vfx-maker-0.7.0
-          path: vfx-maker-0.7.0.tgz
+          name: vfx-maker-0.7.1
+          path: vfx-maker-0.7.1.tgz
       - uses: actions/upload-artifact@v4
-        if: failure()
+        if: always()
         with:
-          name: browser-failures
+          name: browser-checks-0.7.1
           path: test-results

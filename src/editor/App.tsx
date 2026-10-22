@@ -148,10 +148,26 @@ export function App() {
     [solo, setSolo] = useState<string>(),
     [pixelSource, setPixelSource] = useState<PixelSource | null>(null),
     [recent, setRecent] = useState<RecentProject[]>([]);
+  const matchingEffects = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    return PRESETS.filter((p) =>
+      `${p.name} ${p.tags.join(" ")}`.toLowerCase().includes(query),
+    );
+  }, [search]);
   const [creativePreview, setCreativePreview] = useState<Project | null>(null);
   const [autoKey, setAutoKey] = useState(false);
   const timeRef = useRef(time);
   timeRef.current = time;
+  const setPlayback = useCallback(
+    (value: boolean) => {
+      const start = project.editor.range?.start ?? 0;
+      const end = project.editor.range?.end ?? project.duration;
+      if (value && (timeRef.current >= end || timeRef.current < start))
+        setTime(start);
+      setPlaying(value);
+    },
+    [project.duration, project.editor.range],
+  );
   useEffect(() => setCreativePreview(null), [project]);
   const [progress, setProgress] = useState<{
     completed: number;
@@ -489,8 +505,11 @@ export function App() {
       )
         return;
       if (e.code === "Space") {
+        // Let native buttons and disclosures activate with Space.
+        if ((e.target as HTMLElement).closest("button,summary,a,[role=button]"))
+          return;
         e.preventDefault();
-        setPlaying((p) => !p);
+        setPlayback(!playing);
       }
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") {
         e.preventDefault();
@@ -539,6 +558,8 @@ export function App() {
     layer,
     update,
     layout.setDrawer,
+    playing,
+    setPlayback,
   ]);
   useEffect(() => {
     let alive = true;
@@ -869,7 +890,15 @@ export function App() {
             setModal("export");
           }}
         >
-          Export ↗
+          Export{" "}
+          <svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true">
+            <path
+              d="M4 12 12 4M4 4h8v8"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+            />
+          </svg>
         </button>
         <div className="file-menu-wrap">
           <button
@@ -1024,398 +1053,414 @@ export function App() {
               </button>
             ))}
           </div>
-          {tab === "layers" && (
-            <>
-              <div className="panel-heading">
-                <span>COMPOSITION</span>
-                <small>{project.layers.length} / 32</small>
-              </div>
-              <div className="search">
-                <input
-                  aria-label="Search layers"
-                  placeholder="Find a layer…"
-                  value={layerSearch}
-                  onChange={(e) => setLayerSearch(e.target.value)}
-                />
-              </div>
-              <div className="group-list">
-                {project.groups.map((g) => (
-                  <button
-                    key={g.id}
-                    className={activeGroup?.id === g.id ? "active" : ""}
-                    aria-label={`Select group ${g.name}`}
-                    onClick={() =>
-                      setSelection(
-                        [...g.ids].sort(
-                          (a, b) =>
-                            Number(
-                              !project.layers.find((l) => l.id === a)!.locked,
-                            ) -
-                            Number(
-                              !project.layers.find((l) => l.id === b)!.locked,
-                            ),
-                        ),
-                      )
-                    }
-                  >
-                    <span>▱ {g.name}</span>
-                    <small>{g.ids.length}</small>
-                  </button>
-                ))}
-              </div>
-              <div className="group-actions">
-                <button disabled={selection.length < 2} onClick={createGroup}>
-                  Group selection
-                </button>
-                <button
-                  disabled={!activeGroup}
-                  onClick={() =>
-                    safeCommit({
-                      ...project,
-                      groups: project.groups.filter(
-                        (g) => g.id !== activeGroup?.id,
-                      ),
-                    })
-                  }
-                >
-                  Ungroup
-                </button>
-                <span>{selection.length} selected</span>
-              </div>
-              <div className="layer-list">
-                {[...project.layers]
-                  .reverse()
-                  .filter((l) =>
-                    l.name.toLowerCase().includes(layerSearch.toLowerCase()),
-                  )
-                  .map((l) => (
-                    <div
-                      key={l.id}
-                      draggable
-                      onDragStart={(e) =>
-                        e.dataTransfer.setData("text/vfx-layer", l.id)
-                      }
-                      onDragOver={(e) => e.preventDefault()}
-                      onDrop={(e) => {
-                        e.preventDefault();
-                        const id = e.dataTransfer.getData("text/vfx-layer");
-                        const layers = [...project.layers],
-                          from = layers.findIndex((x) => x.id === id),
-                          to = layers.indexOf(l);
-                        if (from < 0 || from === to) return;
-                        const moved = layers.splice(from, 1)[0];
-                        layers.splice(to, 0, moved);
-                        safeCommit({ ...project, layers });
-                      }}
-                      className={`layer-row ${selection.includes(l.id) ? "selected" : ""} ${!l.visible ? "muted" : ""}`}
-                    >
-                      <button
-                        className="layer-visibility"
-                        aria-label={`${l.visible ? "Hide" : "Show"} ${l.name}`}
-                        onClick={() =>
-                          safeCommit({
-                            ...project,
-                            layers: project.layers.map((x) =>
-                              x.id === l.id ? { ...x, visible: !x.visible } : x,
-                            ),
-                          })
-                        }
-                      >
-                        {l.visible ? "◉" : "○"}
-                      </button>
-                      <button
-                        className="layer-select"
-                        onClick={(e) => selectLayer(l.id, e)}
-                      >
-                        <span className={`type-dot ${l.type}`} />
-                        <span>
-                          {l.name}
-                          <small>{l.type === "path" ? "stroke" : l.type}</small>
-                        </span>
-                      </button>
-                      <button
-                        className="lock-button"
-                        title={l.locked ? "Unlock layer" : "Lock layer"}
-                        aria-label={`${l.locked ? "Unlock" : "Lock"} ${l.name}`}
-                        onClick={() =>
-                          safeCommit({
-                            ...project,
-                            layers: project.layers.map((x) =>
-                              x.id === l.id ? { ...x, locked: !x.locked } : x,
-                            ),
-                          })
-                        }
-                      >
-                        {l.locked ? "◆" : "◇"}
-                      </button>
-                    </div>
-                  ))}
-              </div>
-              <div className="layer-actions">
-                <button
-                  onClick={duplicate}
-                  disabled={
-                    !layer || project.layers.length + selection.length > 32
-                  }
-                  title="Duplicate selected layer"
-                >
-                  Duplicate
-                </button>
-                <button
-                  disabled={
-                    !project.layers.some(
-                      (l) => selection.includes(l.id) && !l.locked,
-                    )
-                  }
-                  onClick={removeSelected}
-                >
-                  Delete
-                </button>
-                <button
-                  title="Edit project as JSON"
-                  onClick={() => {
-                    setModal("json");
-                  }}
-                >
-                  {"{ }"}
-                </button>
-              </div>
-              <div className="layer-tools">
-                <button
-                  aria-label="Raise layer"
-                  disabled={!layer || project.layers.at(-1)?.id === layer.id}
-                  onClick={() => moveLayer(1)}
-                >
-                  ↑ Raise
-                </button>
-                <button
-                  aria-label="Lower layer"
-                  disabled={!layer || project.layers[0]?.id === layer.id}
-                  onClick={() => moveLayer(-1)}
-                >
-                  ↓ Lower
-                </button>
-                <button
-                  aria-label="Solo selected layer"
-                  aria-pressed={!!solo}
-                  disabled={!layer}
-                  onClick={() =>
-                    setSolo((v) => (v === selected ? undefined : selected))
-                  }
-                >
-                  Solo
-                </button>
-              </div>
-              <div className="add-section">
-                <span className="panel-label">ADD A LAYER</span>
-                <div className="add-grid">
-                  {(
-                    ["particles", "path", "ring", "sprite", "field"] as const
-                  ).map((type) => (
+          <div key={tab} className={`library-body library-body-${tab}`}>
+            {tab === "layers" && (
+              <>
+                <div className="panel-heading">
+                  <span>COMPOSITION</span>
+                  <small>{project.layers.length} / 32</small>
+                </div>
+                <div className="search">
+                  <input
+                    aria-label="Search layers"
+                    placeholder="Find a layer…"
+                    value={layerSearch}
+                    onChange={(e) => setLayerSearch(e.target.value)}
+                  />
+                </div>
+                <div className="group-list">
+                  {project.groups.map((g) => (
                     <button
-                      key={type}
-                      aria-label={`Add ${type === "path" ? "stroke" : type === "field" ? "procedural texture" : type}`}
-                      disabled={project.layers.length >= 32}
-                      onClick={() => add(type)}
+                      key={g.id}
+                      className={activeGroup?.id === g.id ? "active" : ""}
+                      aria-label={`Select group ${g.name}`}
+                      onClick={() =>
+                        setSelection(
+                          [...g.ids].sort(
+                            (a, b) =>
+                              Number(
+                                !project.layers.find((l) => l.id === a)!.locked,
+                              ) -
+                              Number(
+                                !project.layers.find((l) => l.id === b)!.locked,
+                              ),
+                          ),
+                        )
+                      }
                     >
-                      <span className={`add-icon ${type}`}>
-                        {type === "particles"
-                          ? "✦"
-                          : type === "path"
-                            ? "╱"
-                            : type === "ring"
-                              ? "◯"
-                              : "▧"}
-                      </span>
-                      {type === "path"
-                        ? "Stroke"
-                        : type === "field"
-                          ? "Texture"
-                          : type[0].toUpperCase() + type.slice(1)}
+                      <span>▱ {g.name}</span>
+                      <small>{g.ids.length}</small>
                     </button>
                   ))}
                 </div>
-              </div>
-              <div className="library-tip">
-                <span>MAKE IT YOURS</span>
-                <p>
-                  Select a stroke and drag its points. Every effect is a
-                  starting point.
-                </p>
-                <button onClick={() => setTab("effects")}>
-                  Browse {PRESETS.length} effects →
-                </button>
-              </div>
-            </>
-          )}
-          {tab === "effects" && (
-            <>
-              <div className="search">
-                <input
-                  aria-label="Search effects"
-                  placeholder="Search effects…"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                />
-                <small>{PRESETS.length}</small>
-              </div>
-              <div className="preset-list">
-                {PRESETS.filter((p) =>
-                  `${p.name} ${p.tags.join(" ")}`
-                    .toLowerCase()
-                    .includes(search.toLowerCase()),
-                ).map((p, i) => (
+                <div className="group-actions">
+                  <button disabled={selection.length < 2} onClick={createGroup}>
+                    Group selection
+                  </button>
                   <button
-                    key={p.id}
-                    className="preset-card"
+                    disabled={!activeGroup}
+                    onClick={() =>
+                      safeCommit({
+                        ...project,
+                        groups: project.groups.filter(
+                          (g) => g.id !== activeGroup?.id,
+                        ),
+                      })
+                    }
+                  >
+                    Ungroup
+                  </button>
+                  <span>{selection.length} selected</span>
+                </div>
+                <div className="layer-list">
+                  {[...project.layers]
+                    .reverse()
+                    .filter((l) =>
+                      l.name.toLowerCase().includes(layerSearch.toLowerCase()),
+                    )
+                    .map((l) => (
+                      <div
+                        key={l.id}
+                        draggable
+                        onDragStart={(e) =>
+                          e.dataTransfer.setData("text/vfx-layer", l.id)
+                        }
+                        onDragOver={(e) => e.preventDefault()}
+                        onDrop={(e) => {
+                          e.preventDefault();
+                          const id = e.dataTransfer.getData("text/vfx-layer");
+                          const layers = [...project.layers],
+                            from = layers.findIndex((x) => x.id === id),
+                            to = layers.indexOf(l);
+                          if (from < 0 || from === to) return;
+                          const moved = layers.splice(from, 1)[0];
+                          layers.splice(to, 0, moved);
+                          safeCommit({ ...project, layers });
+                        }}
+                        className={`layer-row ${selection.includes(l.id) ? "selected" : ""} ${!l.visible ? "muted" : ""}`}
+                      >
+                        <button
+                          className="layer-visibility"
+                          aria-label={`${l.visible ? "Hide" : "Show"} ${l.name}`}
+                          onClick={() =>
+                            safeCommit({
+                              ...project,
+                              layers: project.layers.map((x) =>
+                                x.id === l.id
+                                  ? { ...x, visible: !x.visible }
+                                  : x,
+                              ),
+                            })
+                          }
+                        >
+                          {l.visible ? "◉" : "○"}
+                        </button>
+                        <button
+                          className="layer-select"
+                          onClick={(e) => selectLayer(l.id, e)}
+                        >
+                          <span className={`type-dot ${l.type}`} />
+                          <span>
+                            {l.name}
+                            <small>
+                              {l.type === "path" ? "stroke" : l.type}
+                            </small>
+                          </span>
+                        </button>
+                        <button
+                          className="lock-button"
+                          title={l.locked ? "Unlock layer" : "Lock layer"}
+                          aria-label={`${l.locked ? "Unlock" : "Lock"} ${l.name}`}
+                          onClick={() =>
+                            safeCommit({
+                              ...project,
+                              layers: project.layers.map((x) =>
+                                x.id === l.id ? { ...x, locked: !x.locked } : x,
+                              ),
+                            })
+                          }
+                        >
+                          {l.locked ? "◆" : "◇"}
+                        </button>
+                      </div>
+                    ))}
+                </div>
+                <div className="layer-actions">
+                  <button
+                    onClick={duplicate}
+                    disabled={
+                      !layer || project.layers.length + selection.length > 32
+                    }
+                    title="Duplicate selected layer"
+                  >
+                    Duplicate
+                  </button>
+                  <button
+                    disabled={
+                      !project.layers.some(
+                        (l) => selection.includes(l.id) && !l.locked,
+                      )
+                    }
+                    onClick={removeSelected}
+                  >
+                    Delete
+                  </button>
+                  <button
+                    title="Edit project as JSON"
                     onClick={() => {
-                      safeCommit(getPreset(p.id));
-                      setTime(0);
-                      setPlaying(true);
-                      setSelected(p.project.layers.at(-1)?.id);
-                      setSolo(undefined);
-                      layout.setDrawer(null);
+                      setModal("json");
                     }}
                   >
-                    <div className={`preset-art art-${i % 6}`}>
-                      <img
-                        src={`${import.meta.env.BASE_URL}thumbnails/${p.id}.png`}
-                        alt={p.name}
-                      />
-                      <small>{p.tags[0]}</small>
-                    </div>
-                    <b>{p.name}</b>
-                    <p>{p.description}</p>
+                    {"{ }"}
                   </button>
-                ))}
-              </div>
-              <div className="library-bottom">
-                Loading an effect can be undone.
-              </div>
-            </>
-          )}
-          {tab === "reference" && (
-            <ReferencePanel
-              project={project}
-              onApply={safeCommit}
-              onError={toast}
-            />
-          )}
-          {tab === "saved" && (
-            <ComponentPanel
-              project={project}
-              selection={selection}
-              time={time}
-              insert={(next, ids) => {
-                safeCommit(next);
-                setSelection(ids);
-                setTab("layers");
-                toast("Component inserted. Edit these layers independently.");
-              }}
-            />
-          )}
-          {tab === "assets" && (
-            <>
-              <div className="panel-heading">
-                <span>EMBEDDED TEXTURES</span>
-                <small>{project.assets.length} / 8</small>
-              </div>
-              <button
-                className="import-asset"
-                onClick={() => assetInput.current?.click()}
-              >
-                + Import PNG / flipbook
-              </button>
-              <div className="asset-list">
-                {project.assets.map((a) => (
-                  <div className="asset-card" key={a.id}>
-                    <div className="asset-preview checker">
-                      <img src={a.data} alt={a.name} />
-                    </div>
-                    <b>{a.name}</b>
-                    <small>
-                      {a.width} × {a.height} · {a.frames} frames
-                    </small>
-                    <div className="two-fields">
-                      <NumberField
-                        label="Columns"
-                        value={a.columns}
-                        min={1}
-                        max={64}
-                        onChange={(columns) =>
-                          safeCommit({
-                            ...project,
-                            assets: project.assets.map((v) =>
-                              v.id === a.id ? { ...v, columns } : v,
-                            ),
-                          })
-                        }
-                      />
-                      <NumberField
-                        label="Rows"
-                        value={a.rows}
-                        min={1}
-                        max={64}
-                        onChange={(rows) =>
-                          safeCommit({
-                            ...project,
-                            assets: project.assets.map((v) =>
-                              v.id === a.id ? { ...v, rows } : v,
-                            ),
-                          })
-                        }
-                      />
-                    </div>
-                    <NumberField
-                      label="Frames"
-                      value={a.frames}
-                      min={1}
-                      max={a.columns * a.rows}
-                      onChange={(frames) =>
-                        safeCommit({
-                          ...project,
-                          assets: project.assets.map((v) =>
-                            v.id === a.id ? { ...v, frames } : v,
-                          ),
-                        })
-                      }
-                    />
+                </div>
+                <div className="layer-tools">
+                  <button
+                    aria-label="Raise layer"
+                    disabled={!layer || project.layers.at(-1)?.id === layer.id}
+                    onClick={() => moveLayer(1)}
+                  >
+                    ↑ Raise
+                  </button>
+                  <button
+                    aria-label="Lower layer"
+                    disabled={!layer || project.layers[0]?.id === layer.id}
+                    onClick={() => moveLayer(-1)}
+                  >
+                    ↓ Lower
+                  </button>
+                  <button
+                    aria-label="Solo selected layer"
+                    aria-pressed={!!solo}
+                    disabled={!layer}
+                    onClick={() =>
+                      setSolo((v) => (v === selected ? undefined : selected))
+                    }
+                  >
+                    Solo
+                  </button>
+                </div>
+                <div className="add-section">
+                  <span className="panel-label">ADD A LAYER</span>
+                  <div className="add-grid">
+                    {(
+                      ["particles", "path", "ring", "sprite", "field"] as const
+                    ).map((type) => (
+                      <button
+                        key={type}
+                        aria-label={`Add ${type === "path" ? "stroke" : type === "field" ? "procedural texture" : type}`}
+                        disabled={project.layers.length >= 32}
+                        onClick={() => add(type)}
+                      >
+                        <span className={`add-icon ${type}`}>
+                          {type === "particles"
+                            ? "✦"
+                            : type === "path"
+                              ? "╱"
+                              : type === "ring"
+                                ? "◯"
+                                : "▧"}
+                        </span>
+                        {type === "path"
+                          ? "Stroke"
+                          : type === "field"
+                            ? "Texture"
+                            : type[0].toUpperCase() + type.slice(1)}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="library-tip">
+                  <span>MAKE IT YOURS</span>
+                  <p>
+                    Select a stroke and drag its points. Every effect is a
+                    starting point.
+                  </p>
+                  <button onClick={() => setTab("effects")}>
+                    Browse {PRESETS.length} effects →
+                  </button>
+                </div>
+              </>
+            )}
+            {tab === "effects" && (
+              <>
+                <div className="search">
+                  <input
+                    aria-label="Search effects"
+                    placeholder="Search effects…"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                  />
+                  <small>{matchingEffects.length}</small>
+                </div>
+                <div className="preset-list">
+                  {matchingEffects.map((p, i) => (
                     <button
+                      key={p.id}
+                      className="preset-card"
+                      aria-label={p.name}
                       onClick={() => {
-                        setPixelSource({
-                          name: a.name,
-                          assetId: a.id,
-                          bytes: Uint8Array.from(
-                            atob(a.data.split(",")[1]),
-                            (c) => c.charCodeAt(0),
-                          ),
-                        });
-                        setModal("pixels");
+                        safeCommit(getPreset(p.id));
+                        setTime(0);
+                        setPlaying(true);
+                        setSelected(p.project.layers.at(-1)?.id);
+                        setSolo(undefined);
+                        layout.setDrawer(null);
                       }}
                     >
-                      Optimize PNG
+                      <div className={`preset-art art-${i % 6}`}>
+                        <img
+                          src={`${import.meta.env.BASE_URL}thumbnails/${p.id}.png`}
+                          alt={p.name}
+                        />
+                        <small>{p.tags[0]}</small>
+                      </div>
+                      <b>{p.name}</b>
+                      <p>{p.description}</p>
                     </button>
-                    <button
-                      onClick={() =>
-                        safeCommit({
-                          ...project,
-                          assets: project.assets.filter((v) => v.id !== a.id),
-                        })
-                      }
-                    >
-                      Remove texture
-                    </button>
-                  </div>
-                ))}
-              </div>
-              <div className="library-tip">
-                <p>
-                  Textures travel inside your project. Set columns, rows and
-                  frame count, then select the texture on a sprite layer.
-                </p>
-              </div>
-            </>
-          )}
+                  ))}
+                  {!matchingEffects.length && (
+                    <div className="empty-state">
+                      <p>No matching effects. Try another name or tag.</p>
+                      <button onClick={() => setSearch("")}>
+                        Clear search
+                      </button>
+                    </div>
+                  )}
+                </div>
+                <div className="library-bottom">
+                  Loading an effect can be undone.
+                </div>
+              </>
+            )}
+            {tab === "reference" && (
+              <ReferencePanel
+                project={project}
+                onApply={safeCommit}
+                onError={toast}
+              />
+            )}
+            {tab === "saved" && (
+              <ComponentPanel
+                project={project}
+                selection={selection}
+                time={time}
+                insert={(next, ids) => {
+                  safeCommit(next);
+                  setSelection(ids);
+                  setTab("layers");
+                  toast("Component inserted. Edit these layers independently.");
+                }}
+              />
+            )}
+            {tab === "assets" && (
+              <>
+                <div className="panel-heading">
+                  <span>EMBEDDED TEXTURES</span>
+                  <small>{project.assets.length} / 8</small>
+                </div>
+                <button
+                  className="import-asset"
+                  onClick={() => assetInput.current?.click()}
+                >
+                  + Import PNG / flipbook
+                </button>
+                <div className="asset-list">
+                  {!project.assets.length && (
+                    <p className="empty-state">
+                      No textures yet. Import a PNG to use it on a sprite layer.
+                    </p>
+                  )}
+                  {project.assets.map((a) => (
+                    <div className="asset-card" key={a.id}>
+                      <div className="asset-preview checker">
+                        <img src={a.data} alt={a.name} />
+                      </div>
+                      <b>{a.name}</b>
+                      <small>
+                        {a.width} × {a.height} · {a.frames} frames
+                      </small>
+                      <div className="two-fields">
+                        <NumberField
+                          label="Columns"
+                          value={a.columns}
+                          min={1}
+                          max={64}
+                          onChange={(columns) =>
+                            safeCommit({
+                              ...project,
+                              assets: project.assets.map((v) =>
+                                v.id === a.id ? { ...v, columns } : v,
+                              ),
+                            })
+                          }
+                        />
+                        <NumberField
+                          label="Rows"
+                          value={a.rows}
+                          min={1}
+                          max={64}
+                          onChange={(rows) =>
+                            safeCommit({
+                              ...project,
+                              assets: project.assets.map((v) =>
+                                v.id === a.id ? { ...v, rows } : v,
+                              ),
+                            })
+                          }
+                        />
+                      </div>
+                      <NumberField
+                        label="Frames"
+                        value={a.frames}
+                        min={1}
+                        max={a.columns * a.rows}
+                        onChange={(frames) =>
+                          safeCommit({
+                            ...project,
+                            assets: project.assets.map((v) =>
+                              v.id === a.id ? { ...v, frames } : v,
+                            ),
+                          })
+                        }
+                      />
+                      <button
+                        onClick={() => {
+                          setPixelSource({
+                            name: a.name,
+                            assetId: a.id,
+                            bytes: Uint8Array.from(
+                              atob(a.data.split(",")[1]),
+                              (c) => c.charCodeAt(0),
+                            ),
+                          });
+                          setModal("pixels");
+                        }}
+                      >
+                        Optimize PNG
+                      </button>
+                      <button
+                        onClick={() =>
+                          safeCommit({
+                            ...project,
+                            assets: project.assets.filter((v) => v.id !== a.id),
+                          })
+                        }
+                      >
+                        Remove texture
+                      </button>
+                    </div>
+                  ))}
+                </div>
+                <div className="library-tip">
+                  <p>
+                    Textures travel inside your project. Set columns, rows and
+                    frame count, then select the texture on a sprite layer.
+                  </p>
+                </div>
+              </>
+            )}
+          </div>
         </aside>{" "}
         {layout.leftVisible && !layout.compact && separator("left")}
         <div className="center-column">
@@ -1456,7 +1501,7 @@ export function App() {
             time={time}
             setTime={setTime}
             playing={playing}
-            setPlaying={setPlaying}
+            setPlaying={setPlayback}
             updateLayer={updateLayer}
             updateProject={safeCommit}
           />
@@ -1495,7 +1540,7 @@ export function App() {
           Ctrl / ⌘ S to save <i>·</i> No account needed
         </span>
         <div className="spacer" />
-        <button onClick={() => setModal("help")}>CLI + MCP ready ↗</button>
+        <button onClick={() => setModal("help")}>CLI + MCP ready</button>
       </footer>
       <input
         ref={openInput}

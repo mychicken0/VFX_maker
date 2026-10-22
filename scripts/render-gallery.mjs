@@ -125,6 +125,7 @@ try {
     .locator(".layer-select")
     .filter({ hasText: "First slash" })
     .click();
+  await studio.getByRole("button", { name: "effects", exact: true }).click();
   await studio.waitForTimeout(300);
   await studio.screenshot({ path: join(out, "studio.png") });
   if (values.thumbnails) {

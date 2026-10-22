@@ -306,6 +306,7 @@ describe("portable creative authoring", () => {
   });
   it("migrates previous projects and validates field/keyframe limits", () => {
     const p = base();
+    expect(parseProject({ ...p, version: "0.7.0" })).toEqual(p);
     expect(
       parseProject({
         ...p,
@@ -313,7 +314,7 @@ describe("portable creative authoring", () => {
         controls: undefined,
         variants: undefined,
       }).version,
-    ).toBe("0.7.0");
+    ).toBe("0.7.1");
     const l = field({ id: "cloud", name: "Cloud" });
     expect(parameterTargets(l).some((t) => t.path === "cutoff")).toBe(true);
     expect(() =>

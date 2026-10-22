@@ -1,6 +1,6 @@
 # Project compatibility
 
-Version 0.7 opens 0.4, 0.5 and 0.6 `.vfx.json` projects and supplies defaults for
+Version 0.7.1 opens 0.4.0, 0.5.0, 0.6.0 and 0.7.0 `.vfx.json` projects and supplies defaults for
 output settings, groups, editor settings, controls, variants, modifiers and particle trails. Reading does not overwrite the source file. Saving or editing writes
 the current version. Unknown formats and future versions are rejected.
 

@@ -185,6 +185,10 @@ i {
   background: #c1a7fb !important;
 }
 .topbar .primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   padding: 8px 15px;
   margin-left: 7px;
 }
@@ -205,6 +209,17 @@ i {
   display: flex;
   flex-direction: column;
   min-height: 0;
+}
+.library-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.library-body-effects {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 .library-tabs {
   display: flex;
@@ -254,8 +269,7 @@ i {
 .layer-list {
   padding: 0 8px;
   overflow: auto;
-  min-height: 70px;
-  max-height: 50%;
+  min-height: 0;
 }
 .layer-row {
   display: flex;
@@ -423,6 +437,11 @@ i {
   padding: 3px 12px 14px;
   overflow: auto;
   display: grid;
+  /* Cards keep their content height; the list scrolls instead of crushing rows. */
+  grid-auto-rows: max-content;
+  align-content: start;
+  flex: 1;
+  min-height: 0;
   gap: 11px;
 }
 .preset-card {
@@ -432,6 +451,7 @@ i {
   text-align: left;
   overflow: hidden;
   flex-shrink: 0;
+  overflow-wrap: anywhere;
 }
 .preset-card:hover {
   border-color: #7c629f;
@@ -495,6 +515,7 @@ i {
   margin: 0;
 }
 .library-bottom {
+  flex-shrink: 0;
   padding: 9px;
   border-top: 1px solid var(--line);
   font-size: 9px;
@@ -512,9 +533,12 @@ i {
   overflow: auto;
   padding: 0 13px;
   display: grid;
+  grid-auto-rows: max-content;
   gap: 12px;
 }
 .asset-card {
+  min-width: 0;
+  overflow-wrap: anywhere;
   padding: 10px;
   border: 1px solid var(--line);
   border-radius: 5px;
@@ -1363,14 +1387,14 @@ button[aria-pressed="true"] {
   flex-shrink: 0;
   margin-top: 4px;
 }
-.library > .add-section {
+.library-body > .add-section {
   padding: 14px 16px;
 }
 .library-tip {
   margin-top: auto;
 }
 .layer-list {
-  min-height: 54px;
+  min-height: 0;
   max-height: none;
   flex: 1;
 }
@@ -2086,7 +2110,9 @@ button[aria-pressed="true"] {
 
 /* Simple controls first; authoring details stay behind disclosure controls. */
 .library-tabs {
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(max-content, 1fr));
+  overflow-x: auto;
+  overflow-y: hidden;
 }
 .field-help,
 .library-description {
@@ -2316,12 +2342,22 @@ button[aria-pressed="true"] {
   outline-offset: -2px;
 }
 .dope-toolbar {
-  display: flex;
+  display: block;
   align-items: center;
   flex-wrap: wrap;
   gap: 7px;
   padding: 10px;
   background: #21222d;
+}
+.dope-toolbar[open] {
+  display: flex;
+}
+.dope-toolbar > summary {
+  flex-basis: 100%;
+  cursor: pointer;
+  color: #c9bfdf;
+  font-size: 11px;
+  padding: 3px 0;
 }
 .dope-toolbar > small {
   flex-basis: 100%;

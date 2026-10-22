@@ -9,7 +9,7 @@ import {
 import { validateControls } from "./parameters.js";
 import { emissionPixels } from "./emission.js";
 
-export const VERSION = "0.7.0" as const;
+export const VERSION = "0.7.1" as const;
 const finite = z.number().finite();
 const bounded = (min: number, max: number) => finite.min(min).max(max);
 export const vecSchema = z
@@ -322,7 +322,7 @@ export const projectSchema = z
     format: z.literal("vfx-maker").default("vfx-maker"),
     version: z
       .literal(VERSION, {
-        error: "Unsupported project version; expected 0.7.0",
+        error: `Unsupported project version; expected ${VERSION}`,
       })
       .default(VERSION),
     name: z.string().min(1).max(100).default("Untitled effect"),
@@ -494,7 +494,7 @@ export function parseProject(value: unknown): Project {
     value &&
     typeof value === "object" &&
     "version" in value &&
-    ["0.4.0", "0.5.0", "0.6.0"].includes(String(value.version))
+    ["0.4.0", "0.5.0", "0.6.0", "0.7.0"].includes(String(value.version))
   )
     value = { ...value, version: VERSION };
   return projectSchema.parse(value);

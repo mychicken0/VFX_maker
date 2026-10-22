@@ -362,6 +362,7 @@ test("multi-channel keys move together and auto-key preserves the base transform
     .getByRole("button", { name: "First slash motion.x key 0", exact: true })
     .click({ modifiers: ["Shift"] });
   await expect(page.locator(".dope-toolbar")).toContainText("2 keys selected");
+  await page.locator(".dope-toolbar > summary").click();
   await button(page, "Move keys").click();
   const moved = await snapshot(page),
     old = before.layers.find((l) => l.id === "cut-a")!,

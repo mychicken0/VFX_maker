@@ -242,9 +242,10 @@ export function DopeSheet({
         }
       }}
     >
-      <div className="dope-toolbar">
+      <details className="dope-toolbar">
+        <summary>Key tools · {selected.length} keys selected</summary>
         <small>
-          {selected.length} keys selected · Shift-click to select more
+          Shift-click keys to select more. Arrow keys move the selection.
         </small>
         <Check label="Snap keys to frames" value={snap} onChange={setSnap} />
         <NumberField
@@ -273,7 +274,7 @@ export function DopeSheet({
         >
           Delete keys
         </button>
-      </div>
+      </details>
       {project.layers
         .filter((l) => ids.includes(l.id))
         .map((l) => (

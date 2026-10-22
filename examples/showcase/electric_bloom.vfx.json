@@ -1,6 +1,6 @@
 {
   "format": "vfx-maker",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "name": "Electric bloom",
   "seed": 42,
   "canvas": {

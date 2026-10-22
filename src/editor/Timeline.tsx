@@ -120,7 +120,34 @@ export function Timeline({
             aria-label={playing ? "Pause" : "Play"}
             onClick={() => setPlaying(!playing)}
           >
-            {playing ? "Ⅱ" : "▶"}
+            <svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true">
+              {playing ? (
+                <path
+                  d="M4 2v12M12 2v12"
+                  stroke="currentColor"
+                  strokeWidth="3"
+                />
+              ) : (
+                <path d="M3 1v14l11-7z" fill="currentColor" />
+              )}
+            </svg>
+          </button>
+          <button
+            aria-label="Restart playback"
+            title="Restart playback from the beginning of the loop range or effect"
+            onClick={() => {
+              setTime(range?.start ?? 0);
+              setPlaying(true);
+            }}
+          >
+            <svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true">
+              <path
+                d="M2 6a6 6 0 1 1 0 5M2 1v5h5"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+              />
+            </svg>
           </button>
           <button
             aria-label="Next frame"

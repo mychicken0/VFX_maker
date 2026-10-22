@@ -162,7 +162,7 @@ describe("portable output and canvas authoring", () => {
     >;
     delete input.output;
     const result = parseProject(input);
-    expect(result.version).toBe("0.7.0");
+    expect(result.version).toBe("0.7.1");
     expect(result.output.scale).toBe(1);
     expect(input.version).toBe("0.4.0");
     expect(input.output).toBeUndefined();
