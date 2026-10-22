@@ -26,10 +26,25 @@ cli
   .action(async () => output((await service()).presets()));
 cli
   .command("schema")
-  .argument("[kind]", "project, layer, asset, pixels or export", "project")
+  .argument(
+    "[kind]",
+    "project, layer, asset, pixels, export, creative, modifier or control",
+    "project",
+  )
   .action(async (kind) => {
-    if (!["project", "layer", "asset", "pixels", "export"].includes(kind))
-      throw new Error("Schema must be project, layer, asset, pixels or export");
+    if (
+      ![
+        "project",
+        "layer",
+        "asset",
+        "pixels",
+        "export",
+        "creative",
+        "modifier",
+        "control",
+      ].includes(kind)
+    )
+      throw new Error("Unknown schema kind");
     output((await service()).schema(kind));
   });
 cli
@@ -62,7 +77,7 @@ cli
   });
 cli
   .command("add <file>")
-  .requiredOption("--type <type>", "particles, path, ring or sprite")
+  .requiredOption("--type <type>", "particles, path, ring, sprite or field")
   .requiredOption("--id <id>", "Unique layer ID")
   .option("--name <name>", "Layer display name")
   .option("--settings <json>", "Layer properties", "{}")
@@ -144,6 +159,8 @@ cli
     "spritesheet",
   )
   .option("--fps <number>", "Override frame rate", Number)
+  .option("--start <seconds>", "Export range start", Number)
+  .option("--end <seconds>", "Export range end", Number)
   .option("--scale <number>", "Nearest-neighbor output scale, 0.125..8", Number)
   .option("--colors <number>", "Visible RGB limit, 0 or 2..256", Number)
   .option("--dither", "Ordered palette dithering")
@@ -169,6 +186,8 @@ cli
           {
             format: o.format,
             fps: o.fps,
+            start: o.start,
+            end: o.end,
             scale: o.scale,
             matte: o.matte,
             colors: o.colors,
@@ -335,6 +354,127 @@ cli
   .command("backups <file>")
   .description("List up to five retained versions before disk edits")
   .action(async (file) => output(await (await service()).store.backups(file)));
+cli
+  .command("controls <file>")
+  .description(
+    "Inspect controls, variants, modifiers and valid binding targets",
+  )
+  .action(async (file) => output(await (await service()).creative(file)));
+cli
+  .command("creative <file>")
+  .description("Apply a validated creative operation; use vfx schema creative")
+  .requiredOption("--set <json>", "Operation JSON")
+  .option("--if-match <revision>")
+  .action(async (file, o) => {
+    const s = await service();
+    output(
+      await s.editCreative(
+        file,
+        o.ifMatch ?? (await s.store.read(file)).revision,
+        JSON.parse(o.set),
+      ),
+    );
+  });
+cli
+  .command("control <file> <id> <value>")
+  .description("Set an exposed effect control without changing its base fields")
+  .option("--if-match <revision>")
+  .action(async (file, id, value, o) => {
+    const s = await service();
+    output(
+      await s.editCreative(
+        file,
+        o.ifMatch ?? (await s.store.read(file)).revision,
+        { action: "set_control", id, value: Number(value) },
+      ),
+    );
+  });
+cli
+  .command("component-save <file>")
+  .description(
+    "Save selected layers and their assets/controls as a portable component",
+  )
+  .requiredOption("--layers <ids>", "Comma-separated layer IDs")
+  .requiredOption("--name <name>")
+  .requiredOption("--out <file>", "New .vfx-component.json file")
+  .option("--if-match <revision>")
+  .action(async (file, o) => {
+    const s = await service();
+    output(
+      await s.saveComponent(
+        file,
+        o.out,
+        o.layers.split(","),
+        o.name,
+        o.ifMatch ?? (await s.store.read(file)).revision,
+      ),
+    );
+  });
+cli
+  .command("component-insert <file> <component>")
+  .description("Insert a component, remapping all IDs and asset references")
+  .option("--x <number>", "Center X", Number)
+  .option("--y <number>", "Center Y", Number)
+  .option("--if-match <revision>")
+  .action(async (file, component, o) => {
+    const s = await service();
+    output(
+      await s.insertComponent(
+        file,
+        o.ifMatch ?? (await s.store.read(file)).revision,
+        component,
+        o.x,
+        o.y,
+      ),
+    );
+  });
+cli
+  .command("export-variants <file>")
+  .description(
+    "Render 1..8 saved variants to a new folder in one browser session",
+  )
+  .requiredOption("--ids <ids>", "Comma-separated variant IDs")
+  .requiredOption("--out <directory>")
+  .option(
+    "--format <format>",
+    "gif, spritesheet, sequence, godot or unity",
+    "gif",
+  )
+  .option("--scale <number>", "Output scale", Number)
+  .option("--colors <number>", "Palette color limit", Number)
+  .option("--if-match <revision>")
+  .option("--progress")
+  .action(async (file, o) => {
+    const s = await service(),
+      snapshot = await s.store.read(file),
+      abort = new AbortController(),
+      stop = () => abort.abort();
+    if (o.ifMatch && o.ifMatch !== snapshot.revision)
+      throw Error("Revision conflict");
+    process.once("SIGINT", stop);
+    process.once("SIGTERM", stop);
+    try {
+      output(
+        await s.exportVariants(
+          snapshot.project,
+          snapshot.revision,
+          o.out,
+          o.ids.split(","),
+          { format: o.format, scale: o.scale, colors: o.colors },
+          abort.signal,
+          o.progress
+            ? (completed, total) =>
+                process.stderr.write(
+                  JSON.stringify({ completed, total }) + "\n",
+                )
+            : undefined,
+        ),
+      );
+    } finally {
+      process.removeListener("SIGINT", stop);
+      process.removeListener("SIGTERM", stop);
+    }
+  });
 cli
   .command("restore <file> <backup>")
   .description("Restore a backup, backing up the current file first")

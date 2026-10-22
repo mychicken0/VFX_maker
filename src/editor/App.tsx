@@ -3,6 +3,7 @@ import {
   cleanupGroups,
   groupLayers,
   transformLayers,
+  autoKeyTransform,
   patchLayers,
   simplifyStroke,
   type Vec,
@@ -30,6 +31,9 @@ import {
 } from "../render/export.js";
 import { ReferencePanel } from "./ReferencePanel.js";
 import { BatchPanel } from "./BatchPanel.js";
+import { ComponentPanel } from "./ComponentPanel.js";
+import { VariantDialog } from "./VariantDialog.js";
+import { TimingDialog } from "./TimingDialog.js";
 import { Inspector } from "./Inspector.js";
 import { Timeline } from "./Timeline.js";
 import { Viewport } from "./Viewport.js";
@@ -133,6 +137,8 @@ export function App() {
       | "save-as"
       | "backups"
       | "recovery"
+      | "variants"
+      | "timing"
       | null
     >(null),
     [saved, setSaved] = useState(() =>
@@ -142,6 +148,11 @@ export function App() {
     [solo, setSolo] = useState<string>(),
     [pixelSource, setPixelSource] = useState<PixelSource | null>(null),
     [recent, setRecent] = useState<RecentProject[]>([]);
+  const [creativePreview, setCreativePreview] = useState<Project | null>(null);
+  const [autoKey, setAutoKey] = useState(false);
+  const timeRef = useRef(time);
+  timeRef.current = time;
+  useEffect(() => setCreativePreview(null), [project]);
   const [progress, setProgress] = useState<{
     completed: number;
     total: number;
@@ -217,12 +228,15 @@ export function App() {
       const layer = project.layers.find((l) => l.id === id);
       if (!layer || layer.locked) return;
       try {
-        safeCommit(patchLayers(project, [id], patch));
+        const keyed = autoKey
+          ? autoKeyTransform(project, id, patch, timeRef.current)
+          : null;
+        safeCommit(keyed ?? patchLayers(project, [id], patch));
       } catch (e) {
         toast(readableError(e));
       }
     },
-    [project, safeCommit],
+    [project, safeCommit, autoKey],
   );
   const update = useCallback(
     (patch: Record<string, unknown>) => {
@@ -231,18 +245,30 @@ export function App() {
         const primary = project.layers.find((l) => l.id === selected)!,
           pos = patch.position as { x: number; y: number };
         try {
-          safeCommit(
-            transformLayers(project, selection, {
-              x: pos.x - primary.position.x,
-              y: pos.y - primary.position.y,
-            }),
-          );
+          const moved = transformLayers(project, selection, {
+            x: pos.x - primary.position.x,
+            y: pos.y - primary.position.y,
+          });
+          if (autoKey) {
+            let next = project;
+            for (const l of moved.layers.filter(
+              (l) => selection.includes(l.id) && !l.locked,
+            ))
+              next =
+                autoKeyTransform(
+                  next,
+                  l.id,
+                  { position: l.position },
+                  timeRef.current,
+                ) ?? next;
+            safeCommit(next);
+          } else safeCommit(moved);
         } catch (e) {
           toast(readableError(e));
         }
       } else updateLayer(selected, patch);
     },
-    [selected, selection, project, updateLayer, safeCommit, toast],
+    [selected, selection, project, updateLayer, safeCommit, toast, autoKey],
   );
   const layer = project.layers.find((l) => l.id === selected);
   useEffect(() => {
@@ -934,6 +960,14 @@ export function App() {
         <button
           onClick={() => {
             setPlaying(false);
+            setModal("variants");
+          }}
+        >
+          Looks
+        </button>
+        <button
+          onClick={() => {
+            setPlaying(false);
             setModal("recolor");
           }}
         >
@@ -980,7 +1014,7 @@ export function App() {
           inert={!layout.leftVisible}
         >
           <div className="library-tabs">
-            {["layers", "effects", "assets", "reference"].map((t) => (
+            {["layers", "effects", "saved", "assets", "reference"].map((t) => (
               <button
                 className={tab === t ? "active" : ""}
                 key={t}
@@ -1175,29 +1209,31 @@ export function App() {
               <div className="add-section">
                 <span className="panel-label">ADD A LAYER</span>
                 <div className="add-grid">
-                  {(["particles", "path", "ring", "sprite"] as const).map(
-                    (type) => (
-                      <button
-                        key={type}
-                        aria-label={`Add ${type === "path" ? "stroke" : type}`}
-                        disabled={project.layers.length >= 32}
-                        onClick={() => add(type)}
-                      >
-                        <span className={`add-icon ${type}`}>
-                          {type === "particles"
-                            ? "✦"
-                            : type === "path"
-                              ? "╱"
-                              : type === "ring"
-                                ? "◯"
-                                : "▧"}
-                        </span>
-                        {type === "path"
-                          ? "Stroke"
+                  {(
+                    ["particles", "path", "ring", "sprite", "field"] as const
+                  ).map((type) => (
+                    <button
+                      key={type}
+                      aria-label={`Add ${type === "path" ? "stroke" : type === "field" ? "procedural texture" : type}`}
+                      disabled={project.layers.length >= 32}
+                      onClick={() => add(type)}
+                    >
+                      <span className={`add-icon ${type}`}>
+                        {type === "particles"
+                          ? "✦"
+                          : type === "path"
+                            ? "╱"
+                            : type === "ring"
+                              ? "◯"
+                              : "▧"}
+                      </span>
+                      {type === "path"
+                        ? "Stroke"
+                        : type === "field"
+                          ? "Texture"
                           : type[0].toUpperCase() + type.slice(1)}
-                      </button>
-                    ),
-                  )}
+                    </button>
+                  ))}
                 </div>
               </div>
               <div className="library-tip">
@@ -1207,7 +1243,7 @@ export function App() {
                   starting point.
                 </p>
                 <button onClick={() => setTab("effects")}>
-                  Browse 18 effects →
+                  Browse {PRESETS.length} effects →
                 </button>
               </div>
             </>
@@ -1263,6 +1299,19 @@ export function App() {
               project={project}
               onApply={safeCommit}
               onError={toast}
+            />
+          )}
+          {tab === "saved" && (
+            <ComponentPanel
+              project={project}
+              selection={selection}
+              time={time}
+              insert={(next, ids) => {
+                safeCommit(next);
+                setSelection(ids);
+                setTab("layers");
+                toast("Component inserted. Edit these layers independently.");
+              }}
             />
           )}
           {tab === "assets" && (
@@ -1371,7 +1420,7 @@ export function App() {
         {layout.leftVisible && !layout.compact && separator("left")}
         <div className="center-column">
           <Viewport
-            project={project}
+            project={creativePreview ?? project}
             layer={layer}
             time={time}
             update={update}
@@ -1384,6 +1433,13 @@ export function App() {
           />
           {layout.layout.timelineOpen && separator("timeline")}
           <Timeline
+            onTiming={() => {
+              setPlaying(false);
+              setModal("timing");
+            }}
+            selection={selection}
+            autoKey={autoKey}
+            setAutoKey={setAutoKey}
             focused={timelineFocus}
             onFocus={() => setTimelineFocus((v) => !v)}
             onKeyframeView={(open) => {
@@ -1418,6 +1474,7 @@ export function App() {
               project={project}
               update={update}
               updateProject={safeCommit}
+              preview={setCreativePreview}
             />
           )}
         </div>
@@ -1543,6 +1600,22 @@ export function App() {
           onClose={closeModal}
           onExport={(options) => void runExport(options)}
           onCancel={() => controller.current?.abort()}
+        />
+      )}
+      {modal === "variants" && (
+        <VariantDialog
+          project={project}
+          time={time}
+          update={safeCommit}
+          onClose={closeModal}
+        />
+      )}
+      {modal === "timing" && (
+        <TimingDialog
+          project={project}
+          ids={selection}
+          apply={commit}
+          onClose={closeModal}
         />
       )}
       {modal === "recolor" && (

@@ -1,8 +1,15 @@
 import { z } from "zod";
 import { inspectPng } from "./pixels.js";
 import { pixelOptionsSchema } from "./pixel-options.js";
+import {
+  modifierSchema,
+  controlSchema,
+  variantSchema,
+} from "./creative-schema.js";
+import { validateControls } from "./parameters.js";
+import { emissionPixels } from "./emission.js";
 
-export const VERSION = "0.6.0" as const;
+export const VERSION = "0.7.0" as const;
 const finite = z.number().finite();
 const bounded = (min: number, max: number) => finite.min(min).max(max);
 export const vecSchema = z
@@ -66,6 +73,7 @@ const common = {
   visible: z.boolean().default(true),
   locked: z.boolean().default(false),
   mask: maskSchema.optional(),
+  modifiers: z.array(modifierSchema).max(8).default([]),
   start: bounded(0, 20).default(0),
   duration: bounded(0.02, 20).default(1),
   repeat: z.boolean().default(false),
@@ -109,13 +117,32 @@ export const particleSchema = z
     spread: bounded(0, 360).default(360),
     spawn: z
       .object({
-        shape: z.enum(["point", "disk", "ring", "box"]).default("point"),
+        shape: z
+          .enum(["point", "disk", "ring", "box", "image"])
+          .default("point"),
+        asset: z.string().max(64).optional(),
+        threshold: bounded(0, 1).default(0.1),
         radius: bounded(0, 512).default(10),
         width: bounded(0, 1024).default(20),
         height: bounded(0, 1024).default(20),
       })
       .strict()
-      .default({ shape: "point", radius: 10, width: 20, height: 20 }),
+      .default({
+        shape: "point",
+        radius: 10,
+        width: 20,
+        height: 20,
+        threshold: 0.1,
+      }),
+    trail: z
+      .object({
+        samples: z.number().int().min(0).max(12).default(0),
+        seconds: bounded(0.01, 2).default(0.12),
+        width: bounded(0.1, 8).default(1),
+        opacity: bounded(0, 1).default(0.5),
+      })
+      .strict()
+      .default({ samples: 0, seconds: 0.12, width: 1, opacity: 0.5 }),
     points: z
       .array(vecSchema)
       .min(2)
@@ -192,11 +219,34 @@ export const spriteSchema = z
     colors: gradientSchema.default([{ t: 0, color: "#ffffff" }]),
   })
   .strict();
+export const fieldSchema = z
+  .object({
+    ...common,
+    type: z.literal("field"),
+    pattern: z
+      .enum(["noise", "cells", "radial", "box", "stripes"])
+      .default("noise"),
+    width: curveSchema.default(curveDefault(64)),
+    height: curveSchema.default(curveDefault(64)),
+    frequency: bounded(0.1, 64).default(6),
+    speed: bounded(0, 20).default(1),
+    octaves: z.number().int().min(1).max(5).default(3),
+    cutoff: curveSchema.default(curveDefault(0.2, 0.85)),
+    softness: bounded(0.001, 1).default(0.2),
+    falloff: bounded(0, 1).default(0),
+    highlight: colorSchema.default("#fff2b5"),
+    colors: gradientSchema.default([
+      { t: 0, color: "#ff3159" },
+      { t: 1, color: "#7e1b70" },
+    ]),
+  })
+  .strict();
 export const layerSchema = z.discriminatedUnion("type", [
   particleSchema,
   pathSchema,
   ringSchema,
   spriteSchema,
+  fieldSchema,
 ]);
 // Retain a small validation cache so dragging a layer does not re-inflate its textures.
 const validatedAssets = new Map<string, ReturnType<typeof inspectPng>>();
@@ -272,7 +322,7 @@ export const projectSchema = z
     format: z.literal("vfx-maker").default("vfx-maker"),
     version: z
       .literal(VERSION, {
-        error: "Unsupported project version; expected 0.6.0",
+        error: "Unsupported project version; expected 0.7.0",
       })
       .default(VERSION),
     name: z.string().min(1).max(100).default("Untitled effect"),
@@ -297,6 +347,8 @@ export const projectSchema = z
     layers: z.array(layerSchema).max(32).default([]),
     assets: z.array(assetSchema).max(8).default([]),
     groups: z.array(groupSchema).max(32).default([]),
+    controls: z.array(controlSchema).max(16).default([]),
+    variants: z.array(variantSchema).max(12).default([]),
     editor: editorSchema.default({}),
     output: pixelOptionsSchema.default({
       scale: 1,
@@ -330,7 +382,38 @@ export const projectSchema = z
     )
       fail("Playback range must have start < end within effect duration");
     const assets = new Set(p.assets.map((a) => a.id));
+    for (const issue of validateControls(p)) fail(issue);
     for (const l of p.layers) {
+      if (
+        l.type === "particles" &&
+        l.mode !== "path" &&
+        l.spawn.shape === "image" &&
+        (!l.spawn.asset || !assets.has(l.spawn.asset))
+      )
+        fail(`${l.id}: image emission needs an existing PNG asset`);
+      if (
+        l.type === "particles" &&
+        l.mode !== "path" &&
+        l.spawn.shape === "image" &&
+        l.spawn.asset &&
+        assets.has(l.spawn.asset)
+      ) {
+        try {
+          emissionPixels(
+            p.assets.find((a) => a.id === l.spawn.asset)!,
+            l.spawn.threshold,
+          );
+        } catch (e) {
+          fail(`${l.id}: ${e instanceof Error ? e.message : String(e)}`);
+        }
+      }
+      if (new Set(l.modifiers.map((m) => m.id)).size !== l.modifiers.length)
+        fail(`${l.id}: modifier IDs must be unique`);
+      if (
+        l.type === "field" &&
+        l.cutoff.some((k) => k.value < 0 || k.value > 1)
+      )
+        fail(`${l.id}.cutoff must stay in 0..1`);
       if (
         l.type === "path" &&
         l.handles &&
@@ -375,6 +458,17 @@ export const projectSchema = z
     );
     if (births > 4000)
       fail("A project supports at most 4000 particle births per cycle");
+    const trailSegments = p.layers.reduce(
+      (n, l) =>
+        n +
+        (l.type === "particles"
+          ? (l.mode === "stream" ? Math.ceil(l.rate * l.duration) : l.count) *
+            l.trail.samples
+          : 0),
+      0,
+    );
+    if (trailSegments > 16000)
+      fail("Particle trails exceed 16000 segments per cycle");
     if (Math.ceil(p.duration * p.fps) > 300)
       fail("A project supports at most 300 frames");
     if (
@@ -400,7 +494,7 @@ export function parseProject(value: unknown): Project {
     value &&
     typeof value === "object" &&
     "version" in value &&
-    ["0.4.0", "0.5.0"].includes(String(value.version))
+    ["0.4.0", "0.5.0", "0.6.0"].includes(String(value.version))
   )
     value = { ...value, version: VERSION };
   return projectSchema.parse(value);

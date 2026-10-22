@@ -1,4 +1,6 @@
 import { MaskPanel } from "./MaskPanel.js";
+import { ModifierPanel } from "./ModifierPanel.js";
+import { EffectControls } from "./EffectControls.js";
 import { defaultHandles } from "../core/geometry.js";
 import { memo } from "react";
 import type { Layer, Project, Vec } from "../core/model.js";
@@ -14,11 +16,13 @@ export const Inspector = memo(function Inspector({
   project: p,
   update,
   updateProject,
+  preview,
 }: {
   layer?: Layer;
   project: Project;
   update: (patch: Record<string, unknown>) => void;
   updateProject: (p: Project) => void;
+  preview: (p: Project | null) => void;
 }) {
   const n = (
     label: string,
@@ -60,8 +64,7 @@ export const Inspector = memo(function Inspector({
         <small>{l ? l.type : "project"}</small>
       </div>
       <div className="inspector-scroll">
-        <details open>
-          <summary>Canvas & playback</summary>
+        <div className="effect-name-field">
           <label className="field">
             <span>Effect name</span>
             <input
@@ -72,6 +75,10 @@ export const Inspector = memo(function Inspector({
               }
             />
           </label>
+        </div>
+        <EffectControls project={p} update={updateProject} preview={preview} />
+        <details>
+          <summary>Canvas & playback</summary>
           <div className="two-fields">
             <NumberField
               label="Canvas width"
@@ -165,7 +172,7 @@ export const Inspector = memo(function Inspector({
                     onChange={(blend) => update({ blend })}
                   />
                 </details>
-                <details open>
+                <details>
                   <summary>Timing</summary>
                   <div className="two-fields">
                     {n("Start", "start", l.start, 0, 10, 0.01, "s")}
@@ -278,9 +285,23 @@ export const Inspector = memo(function Inspector({
                           <Select
                             label="Spawn shape"
                             value={l.spawn.shape}
-                            options={["point", "disk", "ring", "box"]}
+                            options={[
+                              "point",
+                              "disk",
+                              "ring",
+                              "box",
+                              ...(p.assets.length ? ["image"] : []),
+                            ]}
                             onChange={(shape) =>
-                              update({ spawn: { ...l.spawn, shape } })
+                              update({
+                                spawn: {
+                                  ...l.spawn,
+                                  shape,
+                                  ...(shape === "image" && !l.spawn.asset
+                                    ? { asset: p.assets[0]?.id }
+                                    : {}),
+                                },
+                              })
                             }
                           />
                           {["disk", "ring"].includes(l.spawn.shape) && (
@@ -294,7 +315,46 @@ export const Inspector = memo(function Inspector({
                               }
                             />
                           )}
-                          {l.spawn.shape === "box" && (
+                          {l.spawn.shape === "image" && (
+                            <>
+                              <label className="field">
+                                <span>Emission image</span>
+                                <select
+                                  aria-label="Emission image"
+                                  value={l.spawn.asset}
+                                  onChange={(e) =>
+                                    update({
+                                      spawn: {
+                                        ...l.spawn,
+                                        asset: e.target.value,
+                                      },
+                                    })
+                                  }
+                                >
+                                  {p.assets.map((a) => (
+                                    <option value={a.id} key={a.id}>
+                                      {a.name}
+                                    </option>
+                                  ))}
+                                </select>
+                              </label>
+                              <NumberField
+                                label="Emission alpha threshold"
+                                value={l.spawn.threshold}
+                                min={0}
+                                max={1}
+                                step={0.01}
+                                onChange={(threshold) =>
+                                  update({ spawn: { ...l.spawn, threshold } })
+                                }
+                              />
+                              <p className="field-help">
+                                Particles start inside visible pixels of the
+                                first image frame.
+                              </p>
+                            </>
+                          )}
+                          {["box", "image"].includes(l.spawn.shape) && (
                             <div className="two-fields">
                               <NumberField
                                 label="Spawn width"
@@ -369,6 +429,62 @@ export const Inspector = memo(function Inspector({
                         keys={l.size}
                         onChange={(size) => update({ size })}
                       />
+                    </details>
+                    <details>
+                      <summary>Particle trails</summary>
+                      <Check
+                        label="Particle trails enabled"
+                        value={l.trail.samples > 0}
+                        onChange={(enabled) =>
+                          update({
+                            trail: { ...l.trail, samples: enabled ? 6 : 0 },
+                          })
+                        }
+                      />
+                      {l.trail.samples > 0 && (
+                        <>
+                          <NumberField
+                            label="Trail length"
+                            value={l.trail.seconds}
+                            min={0.01}
+                            max={2}
+                            step={0.01}
+                            unit="s"
+                            onChange={(seconds) =>
+                              update({ trail: { ...l.trail, seconds } })
+                            }
+                          />
+                          <NumberField
+                            label="Trail width"
+                            value={l.trail.width}
+                            min={0.1}
+                            max={8}
+                            step={0.1}
+                            onChange={(width) =>
+                              update({ trail: { ...l.trail, width } })
+                            }
+                          />
+                          <NumberField
+                            label="Trail opacity"
+                            value={l.trail.opacity}
+                            min={0}
+                            max={1}
+                            step={0.05}
+                            onChange={(opacity) =>
+                              update({ trail: { ...l.trail, opacity } })
+                            }
+                          />
+                          <NumberField
+                            label="Trail samples"
+                            value={l.trail.samples}
+                            min={1}
+                            max={12}
+                            onChange={(samples) =>
+                              update({ trail: { ...l.trail, samples } })
+                            }
+                          />
+                        </>
+                      )}
                     </details>
                   </>
                 )}
@@ -471,6 +587,59 @@ export const Inspector = memo(function Inspector({
                     )}
                   </details>
                 )}
+                {l.type === "field" && (
+                  <details open>
+                    <summary>Procedural texture</summary>
+                    <Select
+                      label="Texture pattern"
+                      value={l.pattern}
+                      options={["noise", "cells", "radial", "box", "stripes"]}
+                      onChange={(pattern) => update({ pattern })}
+                    />
+                    {n(
+                      "Texture detail",
+                      "frequency",
+                      l.frequency,
+                      0.1,
+                      64,
+                      0.1,
+                    )}
+                    {n("Texture movement", "speed", l.speed, 0, 20, 0.1)}
+                    {n("Edge softness", "softness", l.softness, 0.001, 1, 0.01)}
+                    {n("Edge fade", "falloff", l.falloff, 0, 1, 0.05)}
+                    <label className="field">
+                      <span>Highlight color</span>
+                      <input
+                        type="color"
+                        aria-label="Highlight color"
+                        value={l.highlight}
+                        onChange={(e) => update({ highlight: e.target.value })}
+                      />
+                    </label>
+                    <details>
+                      <summary>Advanced · texture animation</summary>
+                      {n("Noise octaves", "octaves", l.octaves, 1, 5)}
+                      <CurveEditor
+                        label="Texture width"
+                        keys={l.width}
+                        max={512}
+                        onChange={(width) => update({ width })}
+                      />
+                      <CurveEditor
+                        label="Texture height"
+                        keys={l.height}
+                        max={512}
+                        onChange={(height) => update({ height })}
+                      />
+                      <CurveEditor
+                        label="Texture cutoff"
+                        keys={l.cutoff}
+                        max={1}
+                        onChange={(cutoff) => update({ cutoff })}
+                      />
+                    </details>
+                  </details>
+                )}
                 {"points" in l && (l.type === "path" || l.mode === "path") && (
                   <details>
                     <summary>Path points · {l.points.length}</summary>
@@ -515,6 +684,7 @@ export const Inspector = memo(function Inspector({
                   </details>
                 )}
                 <MaskPanel layer={l} update={update} />
+                <ModifierPanel layer={l} project={p} update={updateProject} />
                 <details open>
                   <summary>Color & opacity</summary>
                   <GradientEditor

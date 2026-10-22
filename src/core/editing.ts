@@ -6,9 +6,19 @@ import {
   type Vec,
 } from "./model.js";
 import { evaluate } from "./math.js";
+import { parameterTargets } from "./parameters.js";
 export function cleanupGroups(project: Project): Project {
   return parseProject({
     ...project,
+    controls: project.controls.map((c) => ({
+      ...c,
+      bindings: c.bindings.filter((b) => {
+        const layer = project.layers.find((l) => l.id === b.layer);
+        return (
+          layer && parameterTargets(layer).some((t) => t.path === b.target)
+        );
+      }),
+    })),
     groups: project.groups
       .map((g) => ({
         ...g,
@@ -145,7 +155,9 @@ export function curveChannels(layer: Layer): string[] {
     "motion.y",
     "motion.rotation",
     "motion.scale",
-    ...["size", "width", "height", "radius", "draw"].filter((k) => k in layer),
+    ...["size", "width", "height", "radius", "draw", "cutoff"].filter(
+      (k) => k in layer,
+    ),
   ];
 }
 export function getCurve(layer: Layer, channel: string): Curve {
@@ -227,4 +239,173 @@ export function patchLayers(
       return next;
     }),
   });
+}
+
+/** Stretch time and compensate particle dynamics so a slower effect follows the same paths. */
+export function retimeProject(project: Project, duration: number): Project {
+  const factor = duration / project.duration;
+  return parseProject({
+    ...project,
+    duration,
+    editor: {
+      ...project.editor,
+      ...(project.editor.range
+        ? {
+            range: {
+              start: project.editor.range.start * factor,
+              end: project.editor.range.end * factor,
+            },
+          }
+        : {}),
+    },
+    layers: project.layers.map((l) => ({
+      ...l,
+      start: l.start * factor,
+      duration: l.duration * factor,
+      modifiers: l.modifiers.map((m) =>
+        "speed" in m ? { ...m, speed: m.speed / factor } : m,
+      ),
+      ...(l.type === "field" ? { speed: l.speed / factor } : {}),
+      ...(l.type === "sprite" ? { frameFps: l.frameFps / factor } : {}),
+      ...(l.type === "particles"
+        ? {
+            trail: { ...l.trail, seconds: l.trail.seconds * factor },
+            rate: l.rate / factor,
+            life: l.life.map((n) => n * factor),
+            travel: l.travel * factor,
+            speed: l.speed.map((n) => n / factor),
+            spin: l.spin.map((n) => n / factor),
+            gravity: {
+              x: l.gravity.x / factor ** 2,
+              y: l.gravity.y / factor ** 2,
+            },
+            drag: l.drag / factor,
+            turbulence: l.turbulence / factor ** 2,
+            frequency: l.frequency / factor,
+            frameFps: l.frameFps / factor,
+          }
+        : {}),
+    })),
+  });
+}
+export function staggerLayers(
+  project: Project,
+  ids: string[],
+  seconds: number,
+): Project {
+  if (
+    new Set(ids).size !== ids.length ||
+    ids.some((id) => !project.layers.some((l) => l.id === id))
+  )
+    throw Error("Choose distinct existing layers");
+  const selected = ids.filter(
+    (id) => !project.layers.find((l) => l.id === id)!.locked,
+  );
+  return parseProject({
+    ...project,
+    layers: project.layers.map((l) =>
+      selected.includes(l.id)
+        ? { ...l, start: l.start + selected.indexOf(l.id) * seconds }
+        : l,
+    ),
+  });
+}
+
+export interface KeyRef {
+  layer: string;
+  channel: string;
+  time: number;
+}
+export function shiftKeys(
+  project: Project,
+  refs: KeyRef[],
+  seconds: number,
+  duplicate = false,
+): Project {
+  const next = structuredClone(project);
+  const byChannel = new Map<string, KeyRef[]>();
+  for (const ref of refs) {
+    const key = `${ref.layer}/${ref.channel}`;
+    byChannel.set(key, [...(byChannel.get(key) ?? []), ref]);
+  }
+  for (const group of byChannel.values()) {
+    const l = next.layers.find((l) => l.id === group[0].layer);
+    if (!l || l.locked)
+      throw Error("Unlock selected layers before moving keys");
+    const keys = getCurve(l, group[0].channel),
+      chosen = keys.filter((k) =>
+        group.some((r) => Math.abs(r.time - k.t) < 1e-7),
+      );
+    if (chosen.length !== group.length)
+      throw Error("Selected keys changed; select them again");
+    const moved = chosen.map((k) => ({
+      ...k,
+      t: Math.round((k.t + seconds / l.duration) * 1e7) / 1e7,
+    }));
+    const result = [
+      ...(duplicate ? keys : keys.filter((k) => !chosen.includes(k))),
+      ...moved,
+    ].sort((a, b) => a.t - b.t);
+    const patch = curvePatch(group[0].channel, result);
+    if (patch.motion)
+      l.motion = { ...l.motion, ...(patch.motion as Layer["motion"]) };
+    else Object.assign(l, patch);
+  }
+  return parseProject(next);
+}
+export function deleteKeys(project: Project, refs: KeyRef[]): Project {
+  const next = structuredClone(project);
+  for (const l of next.layers)
+    for (const channel of curveChannels(l)) {
+      const chosen = refs.filter(
+        (r) => r.layer === l.id && r.channel === channel,
+      );
+      if (!chosen.length) continue;
+      if (l.locked) throw Error("Unlock selected layers before deleting keys");
+      const keys = getCurve(l, channel).filter(
+        (k) => !chosen.some((r) => Math.abs(r.time - k.t) < 1e-7),
+      );
+      if (!keys.length) throw Error("Keep at least one key per channel");
+      const patch = curvePatch(channel, keys);
+      if (patch.motion)
+        l.motion = { ...l.motion, ...(patch.motion as Layer["motion"]) };
+      else Object.assign(l, patch);
+    }
+  return parseProject(next);
+}
+export function autoKeyTransform(
+  project: Project,
+  id: string,
+  patch: Record<string, unknown>,
+  time: number,
+): Project | null {
+  const l = project.layers.find((l) => l.id === id);
+  if (!l) throw Error("Unknown layer");
+  const entries: [string, number][] = [];
+  if (patch.position) {
+    const p = patch.position as Vec;
+    entries.push(
+      ["motion.x", p.x - l.position.x],
+      ["motion.y", p.y - l.position.y],
+    );
+  }
+  if (typeof patch.rotation === "number")
+    entries.push(["motion.rotation", patch.rotation - l.rotation]);
+  if (typeof patch.scale === "number")
+    entries.push(["motion.scale", patch.scale / l.scale]);
+  if (!entries.length) return null;
+  let local = time - l.start;
+  if (l.repeat && local >= 0) local %= l.duration;
+  if (local < 0 || local > l.duration)
+    throw Error("Move the playhead inside this layer before using Auto key");
+  let result = project;
+  for (const [channel, value] of entries)
+    result = putKeyframe(
+      result,
+      id,
+      channel,
+      Math.round((local / l.duration) * 1e7) / 1e7,
+      value,
+    );
+  return result;
 }

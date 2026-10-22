@@ -1,4 +1,4 @@
-name: VFX Maker 0.6
+name: VFX Maker 0.7
 on: [push, pull_request]
 jobs:
   studio:
@@ -23,8 +23,8 @@ jobs:
       - run: npm pack --ignore-scripts
       - uses: actions/upload-artifact@v4
         with:
-          name: vfx-maker-0.6.0
-          path: vfx-maker-0.6.0.tgz
+          name: vfx-maker-0.7.0
+          path: vfx-maker-0.7.0.tgz
       - uses: actions/upload-artifact@v4
         if: failure()
         with:

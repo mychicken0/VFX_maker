@@ -25,6 +25,15 @@ import {
 } from "../core/authoring.js";
 import { Store, merge, revision as hash } from "./store.js";
 import { render } from "./driver.js";
+import {
+  editCreative,
+  creativeCapabilities,
+  creativeEditSchema,
+  type CreativeEdit,
+} from "../core/creative.js";
+import { modifierSchema, controlSchema } from "../core/creative-schema.js";
+import { makeComponent, insertComponent } from "../core/components.js";
+import { variantPlan } from "../core/variants.js";
 export class Service {
   constructor(readonly store: Store) {}
   presets() {
@@ -35,7 +44,17 @@ export class Service {
       tags,
     }));
   }
-  schema(kind: "project" | "layer" | "asset" | "pixels" | "export") {
+  schema(
+    kind:
+      | "project"
+      | "layer"
+      | "asset"
+      | "pixels"
+      | "export"
+      | "creative"
+      | "modifier"
+      | "control",
+  ) {
     return z.toJSONSchema(
       {
         project: projectSchema,
@@ -43,6 +62,9 @@ export class Service {
         asset: assetSchema,
         pixels: pixelOptionsSchema,
         export: exportOptionsSchema,
+        creative: creativeEditSchema,
+        modifier: modifierSchema,
+        control: controlSchema,
       }[kind],
     );
   }
@@ -55,6 +77,71 @@ export class Service {
       : getPreset(options.preset);
     if (options.seed !== undefined) project.seed = options.seed;
     return this.store.create(file, project);
+  }
+  async creative(file: string) {
+    const { project, revision } = await this.store.read(file);
+    return { revision, ...creativeCapabilities(project) };
+  }
+  editCreative(file: string, revision: string, operation: CreativeEdit) {
+    return this.store.edit(file, revision, (p) => editCreative(p, operation));
+  }
+  async saveComponent(
+    file: string,
+    out: string,
+    ids: string[],
+    name: string,
+    expected: string,
+  ) {
+    const { project, revision } = await this.store.read(file);
+    if (expected !== revision) throw Error("Revision conflict");
+    const component = makeComponent(project, ids, name),
+      dest = await this.store.path(out, false);
+    const text = JSON.stringify(component, null, 2) + "\n";
+    if (Buffer.byteLength(text) > 4194304)
+      throw Error("Component exceeds 4 MiB");
+    await fs.writeFile(dest, text, { flag: "wx" });
+    return { file: out, revision, layers: ids.length };
+  }
+  async insertComponent(
+    file: string,
+    revision: string,
+    source: string,
+    x?: number,
+    y?: number,
+  ) {
+    const path = await this.store.path(source);
+    if ((await fs.stat(path)).size > 4194304)
+      throw Error("Component exceeds 4 MiB");
+    const component: unknown = JSON.parse(await fs.readFile(path, "utf8"));
+    let ids: string[] = [];
+    const result = await this.store.edit(file, revision, (p) => {
+      const inserted = insertComponent(p, component, {
+        x: x ?? p.canvas.width / 2,
+        y: y ?? p.canvas.height / 2,
+      });
+      ids = inserted.ids;
+      return inserted.project;
+    });
+    return { ...result, ids };
+  }
+  async exportVariants(
+    project: Project,
+    revision: string,
+    out: string,
+    ids: string[],
+    options: ExportOptions,
+    signal?: AbortSignal,
+    progress?: (a: number, b: number) => void,
+  ) {
+    variantPlan(project, ids, options);
+    await this.store.path(out, false);
+    const files = await render(
+      project,
+      { options, variants: ids },
+      signal,
+      progress,
+    );
+    return { ...(await this.store.publish(out, files, signal)), revision };
   }
   update(file: string, revision: string, patch: unknown) {
     return this.store.edit(file, revision, (p) => merge(p, patch));

@@ -11,12 +11,19 @@ import {
 import { pathPolyline } from "../core/geometry.js";
 import type { Vec, Asset, Project } from "../core/model.js";
 import { parseProject } from "../core/model.js";
+import { resolveControls } from "../core/parameters.js";
+import {
+  createModifier,
+  createField,
+  type AnimatedFilter,
+} from "./modifiers.js";
 import {
   clamp,
   colorAt,
   evaluate,
   frameIndex,
   pointOnPath,
+  hash,
 } from "../core/math.js";
 import { localTime, ParticleSampler } from "../core/simulation.js";
 
@@ -28,6 +35,8 @@ interface View {
   path?: Vec[];
   sprites: Sprite[];
   haloSprites: Sprite[];
+  modifiers: AnimatedFilter[];
+  fields: ReturnType<typeof createField>[];
 }
 /** Browser preview and headless export both use this Pixi WebGL renderer. */
 export class VfxRenderer {
@@ -60,7 +69,7 @@ export class VfxRenderer {
     return this.app.canvas as HTMLCanvasElement;
   }
   async setProject(value: Project): Promise<void> {
-    const project = parseProject(value),
+    const project = resolveControls(parseProject(value)),
       generation = ++this.generation;
     // Decode and verify every texture before changing the live scene.
     const images = await Promise.all(
@@ -76,9 +85,10 @@ export class VfxRenderer {
       }),
     );
     if (generation !== this.generation || this.disposed) return;
+    const sampler = new ParticleSampler(project);
     this.clear();
     this.project = project;
-    this.sampler = new ParticleSampler(project);
+    this.sampler = sampler;
     this.app.renderer.resize(project.canvas.width, project.canvas.height);
     project.assets.forEach((a, i) => {
       const base = Texture.from(images[i]);
@@ -105,7 +115,36 @@ export class VfxRenderer {
       halo.blendMode = "add";
       halo.alpha = layer.glow.strength;
       halo.visible = layer.glow.strength > 0;
+      const fields =
+        layer.type === "field"
+          ? [
+              createField(
+                layer,
+                (project.seed ^ hash(layer.id)) % 10000,
+                project.canvas.pixelArt,
+              ),
+              createField(
+                layer,
+                (project.seed ^ hash(layer.id)) % 10000,
+                project.canvas.pixelArt,
+              ),
+            ]
+          : [];
+      if (fields.length) {
+        body.filters = [fields[0].filter];
+        halo.filters = [fields[1].filter, ...(halo.filters ?? [])];
+      }
       root.addChild(halo, body);
+      const modifiers = layer.modifiers
+        .filter((m) => m.enabled)
+        .map((m) =>
+          createModifier(
+            m,
+            (project.seed ^ hash(layer.id + m.id)) % 10000,
+            project.canvas.pixelArt,
+          ),
+        );
+      root.filters = modifiers.map((m) => m.filter);
       if (layer.mask) {
         const mask = new Graphics(),
           m = layer.mask;
@@ -144,6 +183,8 @@ export class VfxRenderer {
         path: layer.type === "path" ? pathPolyline(layer) : undefined,
         sprites: [],
         haloSprites: [],
+        modifiers,
+        fields,
       });
     }
   }
@@ -182,8 +223,36 @@ export class VfxRenderer {
         ((l.rotation + evaluate(l.motion.rotation, u)) * Math.PI) / 180;
       v.root.scale.set(l.scale * evaluate(l.motion.scale, u));
       v.root.alpha = l.type === "particles" ? 1 : clamp(evaluate(l.opacity, u));
+      v.modifiers.forEach((m) => m.update(t, v.root));
       if (l.type === "particles") {
         const particles = this.sampler.sample(l, time);
+        if (l.trail.samples) {
+          let previous = new Map(particles.map((p) => [p.id, p]));
+          for (let step = 1; step <= l.trail.samples; step++) {
+            const older = this.sampler.sample(
+                l,
+                time - (l.trail.seconds * step) / l.trail.samples,
+              ),
+              next = new Map(older.map((p) => [p.id, p]));
+            for (const past of older) {
+              const current = previous.get(past.id);
+              if (!current || past.age >= current.age) continue;
+              v.graphics
+                .moveTo(past.x, past.y)
+                .lineTo(current.x, current.y)
+                .stroke({
+                  width: l.trail.width,
+                  color: current.color,
+                  alpha:
+                    current.alpha *
+                    l.trail.opacity *
+                    (1 - (step - 1) / l.trail.samples),
+                  cap: "round",
+                });
+            }
+            previous = next;
+          }
+        }
         particles.forEach((p, i) => {
           if (p.size <= 0 || p.alpha <= 0) return;
           const x = this.project.canvas.pixelArt ? Math.round(p.x) : p.x,
@@ -284,6 +353,11 @@ export class VfxRenderer {
             join: "round",
           });
         }
+      } else if (l.type === "field") {
+        const width = Math.max(0, evaluate(l.width, u)),
+          height = Math.max(0, evaluate(l.height, u));
+        v.graphics.rect(-width / 2, -height / 2, width, height).fill(0xffffff);
+        v.fields.forEach((f) => f.update(t, u, clamp(evaluate(l.cutoff, u))));
       } else {
         const textures = this.textures.get(l.asset)!;
         this.drawSprite(
@@ -366,6 +440,8 @@ export class VfxRenderer {
   }
   private clear() {
     for (const v of this.views.values()) {
+      for (const f of v.root.filters ?? []) f.destroy();
+      for (const f of v.body.filters ?? []) f.destroy();
       for (const f of v.halo.filters ?? []) f.destroy();
       const context = v.graphics.context;
       v.root.destroy({ children: true });

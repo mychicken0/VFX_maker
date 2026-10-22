@@ -1,0 +1,592 @@
+{
+  "format": "vfx-maker",
+  "version": "0.7.0",
+  "name": "Ember plume",
+  "seed": 42,
+  "canvas": {
+    "width": 128,
+    "height": 128,
+    "pixelArt": true,
+    "background": "#110f19"
+  },
+  "duration": 1.2,
+  "fps": 30,
+  "loop": true,
+  "layers": [
+    {
+      "id": "plume",
+      "name": "Ember cloud",
+      "visible": true,
+      "locked": false,
+      "mask": {
+        "shape": "ellipse",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "width": 96,
+        "height": 112,
+        "points": [
+          {
+            "x": -32,
+            "y": 32
+          },
+          {
+            "x": 0,
+            "y": -32
+          },
+          {
+            "x": 32,
+            "y": 32
+          }
+        ]
+      },
+      "modifiers": [
+        {
+          "id": "flow",
+          "enabled": true,
+          "type": "noise-warp",
+          "strength": 5,
+          "frequency": 5,
+          "speed": 2
+        }
+      ],
+      "start": 0,
+      "duration": 1.2,
+      "repeat": false,
+      "position": {
+        "x": 64,
+        "y": 64
+      },
+      "rotation": 0,
+      "scale": 1,
+      "opacity": [
+        {
+          "t": 0,
+          "value": 0,
+          "ease": "linear"
+        },
+        {
+          "t": 0.3333333333333333,
+          "value": 1,
+          "ease": "linear"
+        },
+        {
+          "t": 0.6666666666666666,
+          "value": 0.85,
+          "ease": "linear"
+        },
+        {
+          "t": 1,
+          "value": 0,
+          "ease": "linear"
+        }
+      ],
+      "motion": {
+        "x": [
+          {
+            "t": 0,
+            "value": 0,
+            "ease": "linear"
+          },
+          {
+            "t": 1,
+            "value": 0,
+            "ease": "linear"
+          }
+        ],
+        "y": [
+          {
+            "t": 0,
+            "value": 0,
+            "ease": "linear"
+          },
+          {
+            "t": 1,
+            "value": 0,
+            "ease": "linear"
+          }
+        ],
+        "rotation": [
+          {
+            "t": 0,
+            "value": 0,
+            "ease": "linear"
+          },
+          {
+            "t": 1,
+            "value": 0,
+            "ease": "linear"
+          }
+        ],
+        "scale": [
+          {
+            "t": 0,
+            "value": 1,
+            "ease": "linear"
+          },
+          {
+            "t": 1,
+            "value": 1,
+            "ease": "linear"
+          }
+        ]
+      },
+      "blend": "normal",
+      "glow": {
+        "strength": 0,
+        "blur": 3
+      },
+      "type": "field",
+      "pattern": "noise",
+      "width": [
+        {
+          "t": 0,
+          "value": 16,
+          "ease": "linear"
+        },
+        {
+          "t": 0.5,
+          "value": 90,
+          "ease": "linear"
+        },
+        {
+          "t": 1,
+          "value": 72,
+          "ease": "linear"
+        }
+      ],
+      "height": [
+        {
+          "t": 0,
+          "value": 22,
+          "ease": "linear"
+        },
+        {
+          "t": 0.5,
+          "value": 104,
+          "ease": "linear"
+        },
+        {
+          "t": 1,
+          "value": 88,
+          "ease": "linear"
+        }
+      ],
+      "frequency": 4,
+      "speed": 2.2,
+      "octaves": 4,
+      "cutoff": [
+        {
+          "t": 0,
+          "value": 0.15,
+          "ease": "linear"
+        },
+        {
+          "t": 0.5,
+          "value": 0.35,
+          "ease": "linear"
+        },
+        {
+          "t": 1,
+          "value": 0.85,
+          "ease": "linear"
+        }
+      ],
+      "softness": 0.18,
+      "falloff": 0.6,
+      "highlight": "#fff4a8",
+      "colors": [
+        {
+          "t": 0,
+          "color": "#ff5819"
+        },
+        {
+          "t": 0.5,
+          "color": "#dc253a"
+        },
+        {
+          "t": 1,
+          "color": "#54133d"
+        }
+      ]
+    },
+    {
+      "id": "embers",
+      "name": "Rising embers",
+      "visible": true,
+      "locked": false,
+      "modifiers": [],
+      "start": 0,
+      "duration": 1.05,
+      "repeat": false,
+      "position": {
+        "x": 64,
+        "y": 90
+      },
+      "rotation": 0,
+      "scale": 1,
+      "opacity": [
+        {
+          "t": 0,
+          "value": 1,
+          "ease": "linear"
+        },
+        {
+          "t": 1,
+          "value": 0,
+          "ease": "linear"
+        }
+      ],
+      "motion": {
+        "x": [
+          {
+            "t": 0,
+            "value": 0,
+            "ease": "linear"
+          },
+          {
+            "t": 1,
+            "value": 0,
+            "ease": "linear"
+          }
+        ],
+        "y": [
+          {
+            "t": 0,
+            "value": 0,
+            "ease": "linear"
+          },
+          {
+            "t": 1,
+            "value": 0,
+            "ease": "linear"
+          }
+        ],
+        "rotation": [
+          {
+            "t": 0,
+            "value": 0,
+            "ease": "linear"
+          },
+          {
+            "t": 1,
+            "value": 0,
+            "ease": "linear"
+          }
+        ],
+        "scale": [
+          {
+            "t": 0,
+            "value": 1,
+            "ease": "linear"
+          },
+          {
+            "t": 1,
+            "value": 1,
+            "ease": "linear"
+          }
+        ]
+      },
+      "blend": "add",
+      "glow": {
+        "strength": 0,
+        "blur": 3
+      },
+      "type": "particles",
+      "mode": "stream",
+      "count": 40,
+      "rate": 50,
+      "life": [
+        0.2,
+        0.5
+      ],
+      "speed": [
+        25,
+        65
+      ],
+      "angle": -90,
+      "spread": 50,
+      "spawn": {
+        "shape": "box",
+        "threshold": 0.1,
+        "radius": 0,
+        "width": 34,
+        "height": 20
+      },
+      "trail": {
+        "samples": 5,
+        "seconds": 0.09,
+        "width": 1,
+        "opacity": 0.5
+      },
+      "points": [
+        {
+          "x": -35,
+          "y": -35
+        },
+        {
+          "x": 35,
+          "y": 35
+        }
+      ],
+      "travel": 0.2,
+      "gravity": {
+        "x": 0,
+        "y": -30
+      },
+      "drag": 0.6,
+      "turbulence": 0,
+      "frequency": 4,
+      "shape": "spark",
+      "size": [
+        {
+          "t": 0,
+          "value": 1.4,
+          "ease": "linear"
+        },
+        {
+          "t": 1,
+          "value": 0,
+          "ease": "linear"
+        }
+      ],
+      "colors": [
+        {
+          "t": 0,
+          "color": "#fff7d0"
+        },
+        {
+          "t": 1,
+          "color": "#ff6d23"
+        }
+      ],
+      "spin": [
+        -180,
+        180
+      ],
+      "stretch": 2,
+      "frameMode": "life",
+      "frameFps": 12
+    },
+    {
+      "id": "core",
+      "name": "Hot core",
+      "visible": true,
+      "locked": false,
+      "modifiers": [],
+      "start": 0,
+      "duration": 0.45,
+      "repeat": false,
+      "position": {
+        "x": 64,
+        "y": 82
+      },
+      "rotation": 0,
+      "scale": 1,
+      "opacity": [
+        {
+          "t": 0,
+          "value": 1,
+          "ease": "linear"
+        },
+        {
+          "t": 1,
+          "value": 0,
+          "ease": "linear"
+        }
+      ],
+      "motion": {
+        "x": [
+          {
+            "t": 0,
+            "value": 0,
+            "ease": "linear"
+          },
+          {
+            "t": 1,
+            "value": 0,
+            "ease": "linear"
+          }
+        ],
+        "y": [
+          {
+            "t": 0,
+            "value": 0,
+            "ease": "linear"
+          },
+          {
+            "t": 1,
+            "value": 0,
+            "ease": "linear"
+          }
+        ],
+        "rotation": [
+          {
+            "t": 0,
+            "value": 0,
+            "ease": "linear"
+          },
+          {
+            "t": 1,
+            "value": 0,
+            "ease": "linear"
+          }
+        ],
+        "scale": [
+          {
+            "t": 0,
+            "value": 1,
+            "ease": "linear"
+          },
+          {
+            "t": 1,
+            "value": 1,
+            "ease": "linear"
+          }
+        ]
+      },
+      "blend": "add",
+      "glow": {
+        "strength": 0.6,
+        "blur": 3
+      },
+      "type": "ring",
+      "radius": [
+        {
+          "t": 0,
+          "value": 2,
+          "ease": "linear"
+        },
+        {
+          "t": 1,
+          "value": 18,
+          "ease": "linear"
+        }
+      ],
+      "width": [
+        {
+          "t": 0,
+          "value": 16,
+          "ease": "linear"
+        },
+        {
+          "t": 1,
+          "value": 0,
+          "ease": "linear"
+        }
+      ],
+      "arc": 360,
+      "segments": 64,
+      "colors": [
+        {
+          "t": 0,
+          "color": "#fffad9"
+        },
+        {
+          "t": 1,
+          "color": "#ff5c19"
+        }
+      ]
+    }
+  ],
+  "assets": [],
+  "groups": [],
+  "controls": [
+    {
+      "id": "size",
+      "name": "Size",
+      "min": 0.25,
+      "max": 3,
+      "value": 1,
+      "step": 0.05,
+      "bindings": [
+        {
+          "layer": "plume",
+          "target": "scale",
+          "mode": "multiply",
+          "factor": 1,
+          "offset": 0
+        },
+        {
+          "layer": "embers",
+          "target": "scale",
+          "mode": "multiply",
+          "factor": 1,
+          "offset": 0
+        },
+        {
+          "layer": "core",
+          "target": "scale",
+          "mode": "multiply",
+          "factor": 1,
+          "offset": 0
+        }
+      ]
+    },
+    {
+      "id": "intensity",
+      "name": "Intensity",
+      "min": 0.1,
+      "max": 2,
+      "value": 1,
+      "step": 0.05,
+      "bindings": [
+        {
+          "layer": "embers",
+          "target": "size",
+          "mode": "multiply",
+          "factor": 1,
+          "offset": 0
+        },
+        {
+          "layer": "core",
+          "target": "width",
+          "mode": "multiply",
+          "factor": 1,
+          "offset": 0
+        }
+      ]
+    },
+    {
+      "id": "hue",
+      "name": "Hue",
+      "min": -180,
+      "max": 180,
+      "value": 0,
+      "step": 1,
+      "bindings": [
+        {
+          "layer": "plume",
+          "target": "colors.hue",
+          "mode": "set",
+          "factor": 1,
+          "offset": 0
+        },
+        {
+          "layer": "embers",
+          "target": "colors.hue",
+          "mode": "set",
+          "factor": 1,
+          "offset": 0
+        },
+        {
+          "layer": "core",
+          "target": "colors.hue",
+          "mode": "set",
+          "factor": 1,
+          "offset": 0
+        }
+      ]
+    }
+  ],
+  "variants": [],
+  "editor": {},
+  "output": {
+    "scale": 1,
+    "colors": 0,
+    "dither": false,
+    "pixelSize": 1,
+    "alphaLevels": 0
+  }
+}

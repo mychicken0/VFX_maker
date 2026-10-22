@@ -109,7 +109,7 @@ describe("portable projects and edits", () => {
   it("imports a portable flipbook and checks asset references on deletion", async () => {
     const p = getPreset("flipbook_burst"),
       a = await s.create("a.json", {
-        project: { ...p, assets: [], layers: [] },
+        project: { ...p, assets: [], layers: [], controls: [] },
       });
     await writeFile(
       join(dir, "sheet.png"),

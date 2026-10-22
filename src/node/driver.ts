@@ -27,7 +27,7 @@ export function browserPath(): string | undefined {
 let activeRenders = 0;
 export async function render(
   project: Project,
-  request: { time: number } | { options: ExportOptions },
+  request: { time: number } | { options: ExportOptions; variants?: string[] },
   signal?: AbortSignal,
   progress?: (completed: number, total: number) => void,
 ): Promise<Record<string, Buffer>> {
@@ -47,7 +47,7 @@ export async function render(
 }
 async function renderInternal(
   project: Project,
-  request: { time: number } | { options: ExportOptions },
+  request: { time: number } | { options: ExportOptions; variants?: string[] },
   signal?: AbortSignal,
   progress?: (completed: number, total: number) => void,
 ): Promise<Record<string, Buffer>> {
@@ -109,7 +109,9 @@ async function renderInternal(
       async ({ project, request }) =>
         "time" in request
           ? { "preview.png": await window.vfx.preview(project, request.time) }
-          : window.vfx.export(project, request.options),
+          : request.variants
+            ? window.vfx.variants(project, request.variants, request.options)
+            : window.vfx.export(project, request.options),
       { project, request },
     );
     signal?.throwIfAborted();

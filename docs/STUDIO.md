@@ -71,7 +71,8 @@ one key and at most 32; pointer cancellation discards drafts.
 
 **Loop range** sets a playback work area. Playback wraps inside it even when
 whole-project looping is off. Scrubbing and frame stepping can still inspect
-the full project. Exports always use the full duration. **Onion** shows the
+the full project. Export normally uses the full duration; **Export only loop range**
+uses this work area and records its interval in metadata. **Onion** shows the
 previous and next project frame in separate translucent canvases; it pauses
 playback and never changes exported pixels.
 

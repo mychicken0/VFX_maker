@@ -1,11 +1,12 @@
 export function openDatabase(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
-    const request = indexedDB.open("vfx-maker-projects", 2);
+    const request = indexedDB.open("vfx-maker-projects", 3);
     request.onupgradeneeded = () => {
       for (const [name, keyPath] of [
         ["recent", "name"],
         ["documents", "id"],
         ["backups", "key"],
+        ["components", "id"],
       ])
         if (!request.result.objectStoreNames.contains(name))
           request.result.createObjectStore(name, { keyPath });

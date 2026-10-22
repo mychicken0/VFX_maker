@@ -35,8 +35,8 @@ describe("authoring API and validation", () => {
     expect(() => atlasLayout(9000, 16, 1)).toThrow("8192");
     expect(() => atlasLayout(16, 16, 1, -1)).toThrow("padding");
   });
-  it("all 18 templates validate, are independent copies and use generic layers", () => {
-    expect(PRESETS).toHaveLength(18);
+  it("all templates validate, are independent copies and use generic layers", () => {
+    expect(PRESETS.length).toBeGreaterThanOrEqual(22);
     for (const p of PRESETS) {
       expect(parseProject(p.project)).toEqual(p.project);
       const copy = getPreset(p.id);

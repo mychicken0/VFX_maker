@@ -1,0 +1,788 @@
+{
+  "format": "vfx-maker",
+  "version": "0.7.0",
+  "name": "Void portal",
+  "seed": 42,
+  "canvas": {
+    "width": 128,
+    "height": 128,
+    "pixelArt": true,
+    "background": "#110f19"
+  },
+  "duration": 1.2,
+  "fps": 30,
+  "loop": true,
+  "layers": [
+    {
+      "id": "rift",
+      "name": "Rift texture",
+      "visible": true,
+      "locked": false,
+      "mask": {
+        "shape": "ellipse",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "width": 76,
+        "height": 76,
+        "points": [
+          {
+            "x": -32,
+            "y": 32
+          },
+          {
+            "x": 0,
+            "y": -32
+          },
+          {
+            "x": 32,
+            "y": 32
+          }
+        ]
+      },
+      "modifiers": [
+        {
+          "id": "warp",
+          "enabled": true,
+          "type": "noise-warp",
+          "strength": 5,
+          "frequency": 4,
+          "speed": 2
+        }
+      ],
+      "start": 0,
+      "duration": 1.2,
+      "repeat": false,
+      "position": {
+        "x": 64,
+        "y": 64
+      },
+      "rotation": 0,
+      "scale": 1,
+      "opacity": [
+        {
+          "t": 0,
+          "value": 0,
+          "ease": "linear"
+        },
+        {
+          "t": 0.3333333333333333,
+          "value": 1,
+          "ease": "linear"
+        },
+        {
+          "t": 0.6666666666666666,
+          "value": 1,
+          "ease": "linear"
+        },
+        {
+          "t": 1,
+          "value": 0,
+          "ease": "linear"
+        }
+      ],
+      "motion": {
+        "x": [
+          {
+            "t": 0,
+            "value": 0,
+            "ease": "linear"
+          },
+          {
+            "t": 1,
+            "value": 0,
+            "ease": "linear"
+          }
+        ],
+        "y": [
+          {
+            "t": 0,
+            "value": 0,
+            "ease": "linear"
+          },
+          {
+            "t": 1,
+            "value": 0,
+            "ease": "linear"
+          }
+        ],
+        "rotation": [
+          {
+            "t": 0,
+            "value": 0,
+            "ease": "linear"
+          },
+          {
+            "t": 1,
+            "value": 0,
+            "ease": "linear"
+          }
+        ],
+        "scale": [
+          {
+            "t": 0,
+            "value": 1,
+            "ease": "linear"
+          },
+          {
+            "t": 1,
+            "value": 1,
+            "ease": "linear"
+          }
+        ]
+      },
+      "blend": "normal",
+      "glow": {
+        "strength": 0,
+        "blur": 3
+      },
+      "type": "field",
+      "pattern": "cells",
+      "width": [
+        {
+          "t": 0,
+          "value": 4,
+          "ease": "linear"
+        },
+        {
+          "t": 0.3333333333333333,
+          "value": 76,
+          "ease": "linear"
+        },
+        {
+          "t": 0.6666666666666666,
+          "value": 76,
+          "ease": "linear"
+        },
+        {
+          "t": 1,
+          "value": 4,
+          "ease": "linear"
+        }
+      ],
+      "height": [
+        {
+          "t": 0,
+          "value": 4,
+          "ease": "linear"
+        },
+        {
+          "t": 0.3333333333333333,
+          "value": 76,
+          "ease": "linear"
+        },
+        {
+          "t": 0.6666666666666666,
+          "value": 76,
+          "ease": "linear"
+        },
+        {
+          "t": 1,
+          "value": 4,
+          "ease": "linear"
+        }
+      ],
+      "frequency": 7,
+      "speed": 2,
+      "octaves": 3,
+      "cutoff": [
+        {
+          "t": 0,
+          "value": 0.25,
+          "ease": "linear"
+        }
+      ],
+      "softness": 0.35,
+      "falloff": 0.2,
+      "highlight": "#86faff",
+      "colors": [
+        {
+          "t": 0,
+          "color": "#5423a5"
+        },
+        {
+          "t": 1,
+          "color": "#53169c"
+        }
+      ]
+    },
+    {
+      "id": "outer-halo",
+      "name": "Outer halo",
+      "visible": true,
+      "locked": false,
+      "modifiers": [],
+      "start": 0,
+      "duration": 1.2,
+      "repeat": false,
+      "position": {
+        "x": 64,
+        "y": 64
+      },
+      "rotation": -70,
+      "scale": 1,
+      "opacity": [
+        {
+          "t": 0,
+          "value": 1,
+          "ease": "linear"
+        },
+        {
+          "t": 1,
+          "value": 0,
+          "ease": "linear"
+        }
+      ],
+      "motion": {
+        "x": [
+          {
+            "t": 0,
+            "value": 0,
+            "ease": "linear"
+          },
+          {
+            "t": 1,
+            "value": 0,
+            "ease": "linear"
+          }
+        ],
+        "y": [
+          {
+            "t": 0,
+            "value": 0,
+            "ease": "linear"
+          },
+          {
+            "t": 1,
+            "value": 0,
+            "ease": "linear"
+          }
+        ],
+        "rotation": [
+          {
+            "t": 0,
+            "value": 0,
+            "ease": "linear"
+          },
+          {
+            "t": 1,
+            "value": 220,
+            "ease": "linear"
+          }
+        ],
+        "scale": [
+          {
+            "t": 0,
+            "value": 1,
+            "ease": "linear"
+          },
+          {
+            "t": 1,
+            "value": 1,
+            "ease": "linear"
+          }
+        ]
+      },
+      "blend": "add",
+      "glow": {
+        "strength": 0.8,
+        "blur": 2
+      },
+      "type": "ring",
+      "radius": [
+        {
+          "t": 0,
+          "value": 4,
+          "ease": "linear"
+        },
+        {
+          "t": 0.3333333333333333,
+          "value": 40,
+          "ease": "linear"
+        },
+        {
+          "t": 0.6666666666666666,
+          "value": 40,
+          "ease": "linear"
+        },
+        {
+          "t": 1,
+          "value": 4,
+          "ease": "linear"
+        }
+      ],
+      "width": [
+        {
+          "t": 0,
+          "value": 0,
+          "ease": "linear"
+        },
+        {
+          "t": 0.3333333333333333,
+          "value": 2.5,
+          "ease": "linear"
+        },
+        {
+          "t": 0.6666666666666666,
+          "value": 2,
+          "ease": "linear"
+        },
+        {
+          "t": 1,
+          "value": 0,
+          "ease": "linear"
+        }
+      ],
+      "arc": 292,
+      "segments": 64,
+      "colors": [
+        {
+          "t": 0,
+          "color": "#d6a8ff"
+        },
+        {
+          "t": 0.5,
+          "color": "#76dcff"
+        },
+        {
+          "t": 1,
+          "color": "#b56aff"
+        }
+      ]
+    },
+    {
+      "id": "inner-halo",
+      "name": "Inner halo",
+      "visible": true,
+      "locked": false,
+      "modifiers": [],
+      "start": 0,
+      "duration": 1.2,
+      "repeat": false,
+      "position": {
+        "x": 64,
+        "y": 64
+      },
+      "rotation": 120,
+      "scale": 1,
+      "opacity": [
+        {
+          "t": 0,
+          "value": 0,
+          "ease": "linear"
+        },
+        {
+          "t": 0.3333333333333333,
+          "value": 0.8,
+          "ease": "linear"
+        },
+        {
+          "t": 0.6666666666666666,
+          "value": 0.8,
+          "ease": "linear"
+        },
+        {
+          "t": 1,
+          "value": 0,
+          "ease": "linear"
+        }
+      ],
+      "motion": {
+        "x": [
+          {
+            "t": 0,
+            "value": 0,
+            "ease": "linear"
+          },
+          {
+            "t": 1,
+            "value": 0,
+            "ease": "linear"
+          }
+        ],
+        "y": [
+          {
+            "t": 0,
+            "value": 0,
+            "ease": "linear"
+          },
+          {
+            "t": 1,
+            "value": 0,
+            "ease": "linear"
+          }
+        ],
+        "rotation": [
+          {
+            "t": 0,
+            "value": 0,
+            "ease": "linear"
+          },
+          {
+            "t": 1,
+            "value": -170,
+            "ease": "linear"
+          }
+        ],
+        "scale": [
+          {
+            "t": 0,
+            "value": 1,
+            "ease": "linear"
+          },
+          {
+            "t": 1,
+            "value": 1,
+            "ease": "linear"
+          }
+        ]
+      },
+      "blend": "add",
+      "glow": {
+        "strength": 0,
+        "blur": 3
+      },
+      "type": "ring",
+      "radius": [
+        {
+          "t": 0,
+          "value": 3,
+          "ease": "linear"
+        },
+        {
+          "t": 0.3333333333333333,
+          "value": 32,
+          "ease": "linear"
+        },
+        {
+          "t": 0.6666666666666666,
+          "value": 32,
+          "ease": "linear"
+        },
+        {
+          "t": 1,
+          "value": 3,
+          "ease": "linear"
+        }
+      ],
+      "width": [
+        {
+          "t": 0,
+          "value": 0,
+          "ease": "linear"
+        },
+        {
+          "t": 0.3333333333333333,
+          "value": 1.5,
+          "ease": "linear"
+        },
+        {
+          "t": 0.6666666666666666,
+          "value": 1,
+          "ease": "linear"
+        },
+        {
+          "t": 1,
+          "value": 0,
+          "ease": "linear"
+        }
+      ],
+      "arc": 248,
+      "segments": 64,
+      "colors": [
+        {
+          "t": 0,
+          "color": "#9e6eff"
+        },
+        {
+          "t": 1,
+          "color": "#6af8f2"
+        }
+      ]
+    },
+    {
+      "id": "motes",
+      "name": "Portal motes",
+      "visible": true,
+      "locked": false,
+      "modifiers": [],
+      "start": 0,
+      "duration": 1.2,
+      "repeat": false,
+      "position": {
+        "x": 64,
+        "y": 64
+      },
+      "rotation": 0,
+      "scale": 1,
+      "opacity": [
+        {
+          "t": 0,
+          "value": 1,
+          "ease": "linear"
+        },
+        {
+          "t": 1,
+          "value": 0,
+          "ease": "linear"
+        }
+      ],
+      "motion": {
+        "x": [
+          {
+            "t": 0,
+            "value": 0,
+            "ease": "linear"
+          },
+          {
+            "t": 1,
+            "value": 0,
+            "ease": "linear"
+          }
+        ],
+        "y": [
+          {
+            "t": 0,
+            "value": 0,
+            "ease": "linear"
+          },
+          {
+            "t": 1,
+            "value": 0,
+            "ease": "linear"
+          }
+        ],
+        "rotation": [
+          {
+            "t": 0,
+            "value": 0,
+            "ease": "linear"
+          },
+          {
+            "t": 1,
+            "value": 0,
+            "ease": "linear"
+          }
+        ],
+        "scale": [
+          {
+            "t": 0,
+            "value": 1,
+            "ease": "linear"
+          },
+          {
+            "t": 1,
+            "value": 1,
+            "ease": "linear"
+          }
+        ]
+      },
+      "blend": "add",
+      "glow": {
+        "strength": 0,
+        "blur": 3
+      },
+      "type": "particles",
+      "mode": "burst",
+      "count": 42,
+      "rate": 60,
+      "life": [
+        0.4,
+        1
+      ],
+      "speed": [
+        0,
+        8
+      ],
+      "angle": -90,
+      "spread": 360,
+      "spawn": {
+        "shape": "ring",
+        "threshold": 0.1,
+        "radius": 39,
+        "width": 20,
+        "height": 20
+      },
+      "trail": {
+        "samples": 0,
+        "seconds": 0.12,
+        "width": 1,
+        "opacity": 0.5
+      },
+      "points": [
+        {
+          "x": -35,
+          "y": -35
+        },
+        {
+          "x": 35,
+          "y": 35
+        }
+      ],
+      "travel": 0.2,
+      "gravity": {
+        "x": 0,
+        "y": 0
+      },
+      "drag": 0.6,
+      "turbulence": 45,
+      "frequency": 9,
+      "shape": "spark",
+      "size": [
+        {
+          "t": 0,
+          "value": 0,
+          "ease": "linear"
+        },
+        {
+          "t": 0.5,
+          "value": 1.5,
+          "ease": "linear"
+        },
+        {
+          "t": 1,
+          "value": 0,
+          "ease": "linear"
+        }
+      ],
+      "colors": [
+        {
+          "t": 0,
+          "color": "#eeceff"
+        },
+        {
+          "t": 1,
+          "color": "#8653e1"
+        }
+      ],
+      "spin": [
+        -180,
+        180
+      ],
+      "stretch": 2,
+      "frameMode": "life",
+      "frameFps": 12
+    }
+  ],
+  "assets": [],
+  "groups": [],
+  "controls": [
+    {
+      "id": "size",
+      "name": "Size",
+      "min": 0.25,
+      "max": 3,
+      "value": 1,
+      "step": 0.05,
+      "bindings": [
+        {
+          "layer": "rift",
+          "target": "scale",
+          "mode": "multiply",
+          "factor": 1,
+          "offset": 0
+        },
+        {
+          "layer": "outer-halo",
+          "target": "scale",
+          "mode": "multiply",
+          "factor": 1,
+          "offset": 0
+        },
+        {
+          "layer": "inner-halo",
+          "target": "scale",
+          "mode": "multiply",
+          "factor": 1,
+          "offset": 0
+        },
+        {
+          "layer": "motes",
+          "target": "scale",
+          "mode": "multiply",
+          "factor": 1,
+          "offset": 0
+        }
+      ]
+    },
+    {
+      "id": "intensity",
+      "name": "Intensity",
+      "min": 0.1,
+      "max": 2,
+      "value": 1,
+      "step": 0.05,
+      "bindings": [
+        {
+          "layer": "outer-halo",
+          "target": "width",
+          "mode": "multiply",
+          "factor": 1,
+          "offset": 0
+        },
+        {
+          "layer": "inner-halo",
+          "target": "width",
+          "mode": "multiply",
+          "factor": 1,
+          "offset": 0
+        },
+        {
+          "layer": "motes",
+          "target": "size",
+          "mode": "multiply",
+          "factor": 1,
+          "offset": 0
+        }
+      ]
+    },
+    {
+      "id": "hue",
+      "name": "Hue",
+      "min": -180,
+      "max": 180,
+      "value": 0,
+      "step": 1,
+      "bindings": [
+        {
+          "layer": "rift",
+          "target": "colors.hue",
+          "mode": "set",
+          "factor": 1,
+          "offset": 0
+        },
+        {
+          "layer": "outer-halo",
+          "target": "colors.hue",
+          "mode": "set",
+          "factor": 1,
+          "offset": 0
+        },
+        {
+          "layer": "inner-halo",
+          "target": "colors.hue",
+          "mode": "set",
+          "factor": 1,
+          "offset": 0
+        },
+        {
+          "layer": "motes",
+          "target": "colors.hue",
+          "mode": "set",
+          "factor": 1,
+          "offset": 0
+        }
+      ]
+    }
+  ],
+  "variants": [],
+  "editor": {},
+  "output": {
+    "scale": 1,
+    "colors": 0,
+    "dither": false,
+    "pixelSize": 1,
+    "alphaLevels": 0
+  }
+}

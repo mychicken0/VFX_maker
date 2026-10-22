@@ -11,6 +11,7 @@ import { getPreset } from "../core/presets.js";
 import { VERSION } from "../core/model.js";
 import { pixelOptionsSchema } from "../core/pixel-options.js";
 import { exportOptionsSchema } from "../core/export-options.js";
+import { creativeEditSchema } from "../core/creative.js";
 const cli = new Command()
   .name("vfx-mcp")
   .version(VERSION)
@@ -24,7 +25,7 @@ const server = new McpServer(
   {
     maxToolInputElements: 50000,
     instructions:
-      "VFX Maker 0.6 uses editable layers. Inspect a project to get its revision before changes. Updates merge nested objects and replace arrays. Layer order is bottom to top. Start with get_preset, then update_layer; use curves, Bezier path handles and layer masks for custom shapes. Group and transform selected layers together. Keyframe times are normalized within each layer. Each disk edit backs up the previous file; list_backups and restore_backup recover it. Editor references never render or export. Export uses local Chromium + PixiJS, no network. Files are confined to the selected root and output paths must be unused. Prefer start_export and poll for long renders. TypeScript code execution is available only in the CLI build command for trusted sources.",
+      "VFX Maker 0.7 uses editable layers and portable ordered modifiers. Use inspect_creative and edit_creative for macro controls, variants and timing; save_component/insert_component reuse editable parts. Inspect a project to get its revision before changes. Updates merge nested objects and replace arrays. Layer order is bottom to top. Start with get_preset, then update_layer; use curves, Bezier path handles and layer masks for custom shapes. Group and transform selected layers together. Keyframe times are normalized within each layer. Each disk edit backs up the previous file; list_backups and restore_backup recover it. Editor references never render or export. Export uses local Chromium + PixiJS, no network. Files are confined to the selected root and output paths must be unused. Prefer start_export and poll for long renders. TypeScript code execution is available only in the CLI build command for trusted sources.",
   },
 );
 const file = z.string().min(1).max(2048),
@@ -79,7 +80,18 @@ tool(
   () => ({
     version: VERSION,
     root: s.store.root,
-    layerTypes: ["particles", "path", "ring", "sprite"],
+    layerTypes: ["particles", "path", "ring", "sprite", "field"],
+    modifiers: [
+      "outline",
+      "pixelate",
+      "color-replace",
+      "ramp",
+      "shockwave",
+      "noise-warp",
+      "dissolve",
+    ],
+    creative:
+      "inspect_creative lists macro controls, variants and valid layer binding targets. edit_creative edits modifiers, controls, variants and timing. save_component and insert_component reuse selected layers across projects. start_variant_export queues a batch of 1..8 variants.",
     formats: ["gif", "spritesheet", "sequence", "godot", "unity"],
     limits: {
       layers: 32,
@@ -117,7 +129,18 @@ tool(
 tool(
   "get_schema",
   "Get schema, defaults and limits for project, layer, asset, pixels or export.",
-  { kind: z.enum(["project", "layer", "asset", "pixels", "export"]) },
+  {
+    kind: z.enum([
+      "project",
+      "layer",
+      "asset",
+      "pixels",
+      "export",
+      "creative",
+      "modifier",
+      "control",
+    ]),
+  },
   (a) => s.schema(a.kind),
   true,
 );
@@ -352,6 +375,70 @@ tool(
   "Request cancellation; poll until terminal state. Completed outputs remain.",
   { id: z.string() },
   (a) => jobs.cancel(a.id),
+);
+tool(
+  "inspect_creative",
+  "Inspect exposed controls, saved variants, modifier order and valid numeric/curve/hue binding targets.",
+  { file },
+  (a) => s.creative(a.file),
+  true,
+);
+tool(
+  "edit_creative",
+  "Apply a validated operation with revision checks: put/remove modifier or control, set control, capture/apply/remove variant, retime or stagger. Controls are evaluated from base fields, in stored order; curve bindings transform every key value. Use get_schema creative.",
+  { file, revision, operation: creativeEditSchema },
+  (a) => s.editCreative(a.file, a.revision, a.operation),
+);
+tool(
+  "save_component",
+  "Save selected editable layers with referenced assets, groups and macro bindings to a new portable .vfx-component.json. Preview references are excluded.",
+  {
+    file,
+    revision,
+    out: file,
+    ids: z.array(z.string()).min(1).max(32),
+    name: z.string().min(1).max(100),
+  },
+  (a) => s.saveComponent(a.file, a.out, a.ids, a.name, a.revision),
+);
+tool(
+  "insert_component",
+  "Insert a portable component, remapping all IDs/references and reusing identical textures. Returns inserted layer IDs. Instances are independent editable copies.",
+  {
+    file,
+    revision,
+    source: file,
+    x: z.number().finite().min(-4096).max(4096).optional(),
+    y: z.number().finite().min(-4096).max(4096).optional(),
+  },
+  (a) => s.insertComponent(a.file, a.revision, a.source, a.x, a.y),
+);
+tool(
+  "start_variant_export",
+  "Queue 1..8 saved variants from an immutable snapshot to a new directory. Uses one browser and supports progress/cancellation via existing job tools.",
+  {
+    file,
+    revision,
+    out: file,
+    ids: z.array(z.string()).min(1).max(8),
+    options: exportOptionsSchema,
+  },
+  async (a) => {
+    await s.store.path(a.out, false);
+    const snapshot = await s.store.read(a.file);
+    if (snapshot.revision !== a.revision) throw Error("Revision conflict");
+    return jobs.start((signal, progress) =>
+      s.exportVariants(
+        snapshot.project,
+        snapshot.revision,
+        a.out,
+        a.ids,
+        a.options,
+        signal,
+        progress,
+      ),
+    );
+  },
 );
 const transport = new StdioServerTransport(process.stdin, process.stdout, {
   maxBufferSize: 4 * 1024 * 1024,

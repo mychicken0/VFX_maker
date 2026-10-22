@@ -1,0 +1,138 @@
+{
+  "reviewedAt": "2026-10-22",
+  "sources": [
+    {
+      "name": "RodZill4/material-maker",
+      "url": "https://github.com/RodZill4/material-maker",
+      "commit": "2917029be0d1832d6add08c255d1d4c96b39af83",
+      "license": "MIT",
+      "usage": "Design reference: exposed controls and reusable generators; original TypeScript operations and shaders.",
+      "evidence": [
+        {
+          "file": "readme.txt",
+          "sha256": "fe4f9eff499f55f1d21fe692921ab2a2d40e6616c249a8734318e10fbbbfad68"
+        },
+        {
+          "file": "license.txt",
+          "sha256": "db17817a68e6c06c3aba6242d50ec34285c02f1ada4fbd8cd7382110f95c09de"
+        },
+        {
+          "file": "source/addons/material_maker/engine/nodes/gen_graph.gd",
+          "sha256": "ef6a530551fc3662ae613053dd8ed21d6dc7b478de7cd5e76fb7bd40861eca89"
+        },
+        {
+          "file": "source/addons/material_maker/engine/nodes/gen_remote.gd",
+          "sha256": "e106e0c17e1e5c12f9cd49bd4bb5f3933582923f29150e61e6dfe4705a9da3b9"
+        },
+        {
+          "file": "source/addons/material_maker/nodes/noise2.mmg",
+          "sha256": "3284a063752fd5a1b6cd0d1224091e3edfa4dde3a4d5b9b7d18462b57b3d7c10"
+        },
+        {
+          "file": "source/addons/material_maker/nodes/sdboolean.mmg",
+          "sha256": "e5c13aead02bb06d1088510986df9dfcdc500464b0328a97ca224f7e2daa0385"
+        }
+      ]
+    },
+    {
+      "name": "alelievr/Mixture",
+      "url": "https://github.com/alelievr/Mixture",
+      "commit": "159ccfd4344396877e3d708bc9c7906381652e17",
+      "license": "MIT",
+      "usage": "Design reference: control/seed variants sharing one effect; no Unity runtime or graph inheritance copied.",
+      "evidence": [
+        {
+          "file": "readme.txt",
+          "sha256": "e8f7fe8018dd8104fc101f3a3885d8831f83b49b0686b76c0a4e8bd09c71679e"
+        },
+        {
+          "file": "license.txt",
+          "sha256": "828b06c7293208a2ffa07af77954cb874949c119646acb905b0e7490bc2d1caf"
+        },
+        {
+          "file": "source/Packages/com.alelievr.mixture/Documentation~/MixtureVariants.md",
+          "sha256": "07feb2467123bf26999e1054d889c3bc1d7a07fe65c17f4c70bcc77f10519d1b"
+        },
+        {
+          "file": "source/Packages/com.alelievr.mixture/Runtime/Graph/MixtureVariant.cs",
+          "sha256": "b1c7565c29037e8f4fc7938f04e1a230606afc75243ee053bdb16bf064652523"
+        }
+      ]
+    },
+    {
+      "name": "tixl3d/tixl",
+      "url": "https://github.com/tixl3d/tixl",
+      "commit": "3655c680cf99523011c5e3d6d990da574c3e7f99",
+      "license": "MIT",
+      "usage": "Design reference: grid of actual rendered variations; no C# code copied.",
+      "evidence": [
+        {
+          "file": "readme.txt",
+          "sha256": "6871f4158344e99e5ab78b7bd7f6c3a3be503afae9fda49cbdf4e8601001b427"
+        },
+        {
+          "file": "license.txt",
+          "sha256": "151fece7a36b05516a1f5c27c52ec11f5dc853d4f32b277c32a8b9a06f839a0e"
+        },
+        {
+          "file": "source/Editor/Gui/Interaction/Variations/Model/Variation.cs",
+          "sha256": "95a67e0f28af9e7bd3985f11f63f0abf69d827f23ff48abcd8fed54ab431a793"
+        },
+        {
+          "file": "source/Editor/Gui/Windows/Exploration/ExploreVariationCanvas.cs",
+          "sha256": "142a932999b28a7b65cb2fae48c4e55888c1936e721a6c9f15792626fc88b47e"
+        }
+      ]
+    },
+    {
+      "name": "pixijs/filters",
+      "url": "https://github.com/pixijs/filters",
+      "commit": "e9d1ca987864f121680bb0d7e9612c05b37748de",
+      "license": "MIT",
+      "usage": "Runtime dependency pixi-filters 6.1.5: outline, pixelate, color replacement and shockwave. Other shaders are original.",
+      "evidence": [
+        {
+          "file": "readme.txt",
+          "sha256": "93404d8d33ab7849121be9e84003490491c77829c0811ead4bcf303881961ef9"
+        },
+        {
+          "file": "license.txt",
+          "sha256": "d554721b2cd409d9bc075d743bb34f960e05ba55de1818a62fa60caf21ca6188"
+        },
+        {
+          "file": "source/package.json",
+          "sha256": "e92ebc7af5e93b3332bbb355c0ed530b95bc65065d6843de13c7f201b58167a1"
+        },
+        {
+          "file": "source/src/color-map/ColorMapFilter.ts",
+          "sha256": "f6ca9baabc880114d214207519f218113ef3ccf56da9066e6e7c915fbec1d6f9"
+        },
+        {
+          "file": "source/src/outline/OutlineFilter.ts",
+          "sha256": "919fe9f20794b280cdb7d622f39fb0cac6c9f1ae76b2d41d0e753fffaec2596d"
+        },
+        {
+          "file": "source/src/shockwave/ShockwaveFilter.ts",
+          "sha256": "110da6b0c0d34bb1efc9717b574a433bb927d6960397c0f200d3a65500504872"
+        }
+      ]
+    },
+    {
+      "name": "ievgennaida/animation-timeline-control",
+      "url": "https://github.com/ievgennaida/animation-timeline-control",
+      "commit": "ecf1a1ec9f7ad4c10d9039c6054b55fc9ee817f9",
+      "license": "MIT",
+      "usage": "README/license reference for multi-key timeline interactions; own dope sheet, package not installed.",
+      "evidence": [
+        {
+          "file": "readme.txt",
+          "sha256": "a3a79b18fa0286ba1a6305d60d5038b1034add4a4feb6c00fa0e736fa78465b6"
+        },
+        {
+          "file": "license.txt",
+          "sha256": "f12452998cefb75d19d3063676cea97798ca05e84bc71fd953ff5124aaa56b4f"
+        }
+      ]
+    }
+  ]
+}

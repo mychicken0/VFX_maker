@@ -1,6 +1,8 @@
 import type { Particles, Project, Vec } from "./model.js";
 import { colorAt, evaluate, hash, lerp, pointOnPath, random } from "./math.js";
+import { emissionPixels } from "./emission.js";
 export interface Particle {
+  id: number;
   x: number;
   y: number;
   size: number;
@@ -40,6 +42,12 @@ export class ParticleSampler {
   private compile(l: Particles): Seed[] {
     const result: Seed[] = [],
       count = l.mode === "stream" ? Math.ceil(l.rate * l.duration) : l.count;
+    let emission: ReturnType<typeof emissionPixels> | undefined;
+    if (l.mode !== "path" && l.spawn.shape === "image") {
+      const a = this.project.assets.find((a) => a.id === l.spawn.asset);
+      if (!a) throw Error(`Layer ${l.id}: missing emission image`);
+      emission = emissionPixels(a, l.spawn.threshold);
+    }
     for (let i = 0; i < count; i++) {
       const rng = random(
         this.project.seed ^ hash(l.id) ^ Math.imul(i + 1, 0x9e3779b9),
@@ -47,7 +55,19 @@ export class ParticleSampler {
       let p: Vec = { x: 0, y: 0 };
       if (l.mode === "path")
         p = pointOnPath(l.points, count === 1 ? 0 : i / (count - 1));
-      else if (l.spawn.shape === "box")
+      else if (emission) {
+        const pixel =
+          emission.pixels[Math.floor(rng() * emission.pixels.length)];
+        p = {
+          x:
+            (((pixel % emission.width) + 0.5) / emission.width - 0.5) *
+            l.spawn.width,
+          y:
+            ((Math.floor(pixel / emission.width) + 0.5) / emission.height -
+              0.5) *
+            l.spawn.height,
+        };
+      } else if (l.spawn.shape === "box")
         p = {
           x: (rng() - 0.5) * l.spawn.width,
           y: (rng() - 0.5) * l.spawn.height,
@@ -81,7 +101,7 @@ export class ParticleSampler {
     const local = localTime(l, time);
     if (local === null) return [];
     const result: Particle[] = [];
-    for (const s of this.seeds.get(l.id) ?? []) {
+    for (const [id, s] of (this.seeds.get(l.id) ?? []).entries()) {
       let age = local - s.birth;
       if (l.repeat && age < 0) age += l.duration;
       if (age < 0 || age >= s.life) continue;
@@ -104,6 +124,7 @@ export class ParticleSampler {
           Math.cos(s.phase) +
           f * age * Math.sin(s.phase));
       result.push({
+        id,
         x: s.x + integrate(s.vx, l.gravity.x) + dx,
         y: s.y + integrate(s.vy, l.gravity.y) + dy,
         age,

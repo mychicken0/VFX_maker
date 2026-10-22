@@ -1,4 +1,31 @@
-# 0.5 reference review
+# Open-source research and adaptations
+
+## 0.7 authoring improvements
+
+Evidence, pinned repository commits and read-file hashes are recorded in
+[adaptations-0.7.json](research/adaptations-0.7.json). Source/documentation review
+is distinct from testing the complete upstream desktop applications.
+
+| Source                                                                                  | License                                | Concrete result in this repository                                                                                                                                                                                                                                 |
+| --------------------------------------------------------------------------------------- | -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| [Material Maker](https://github.com/RodZill4/material-maker)                            | MIT, unless a file specifies otherwise | Studied graph parameters, remote controls and declarative noise/SDF definitions. Added an original bounded binding registry, five procedural field patterns and reusable components. The Godot editor/runtime is not bundled.                                      |
+| [Mixture](https://github.com/alelievr/Mixture)                                          | MIT                                    | Studied exposed-parameter overrides and variant hierarchy. Added control/seed snapshots that share one effect's layers. Our looks do not implement inherited external graph assets. No Unity code is bundled.                                                      |
+| [TiXL](https://github.com/tixl3d/tixl)                                                  | MIT                                    | Studied parameter snapshots and variation-grid exploration. Added actual-rendered look thumbnails and bounded batch export. Our implementation is original React/TypeScript and does not include TiXL's renderer or parameter blending.                            |
+| [PixiJS Filters](https://github.com/pixijs/filters)                                     | MIT                                    | Installed `pixi-filters` 6.1.5, whose peer dependency supports PixiJS 8. Outline, pixelate, color replacement and shockwave are real runtime filters. Ramp, seeded noise warp, dissolve and procedural fields are original shaders. Full npm notices are included. |
+| [animation-timeline-control](https://github.com/ievgennaida/animation-timeline-control) | MIT                                    | Studied multi-key selection, range dragging, snapping and canvas timeline interactions. Added an original dope sheet using the existing curve model, history and React UI; this library is not installed.                                                          |
+
+The resulting authoring operations are shared by Studio, CLI, MCP and the typed
+API. Presets only provide data. No renderer/simulation branch uses a preset name.
+Imported components remain independent editable copies. Pixel Composer remains a
+reference for procedural authoring; this release keeps the existing layer UI and
+does not claim its full graph/simulation feature set.
+
+TextureLab's GPL source was considered during the shortlist, but no code from it
+was incorporated. React Flow and Rete were evaluated as possible graph UI tools;
+neither is installed. The implemented human workflow uses simple effect controls
+with advanced bindings/modifier settings behind disclosures.
+
+## 0.5 reference review
 
 Reviewed on 2026-10-22. Repository commits and evidence are recorded in
 [research/sources.json](research/sources.json). The rows distinguish runtime

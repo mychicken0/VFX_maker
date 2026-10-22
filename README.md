@@ -1,11 +1,30 @@
-# VFX Maker 0.6.0
+# VFX Maker 0.7.0
 
 **A visual VFX studio built with TypeScript, PixiJS 8 and React 19.**
-Shape a sword slash by dragging its points, retime layers in the timeline, edit
-color gradients and animation curves, and export the result. No graph wiring is
-required. The same Pixi renderer powers the browser editor, Terminal and MCP.
+Pick an effect, adjust Size, Intensity and Hue, and export it for your game.
+Open layer settings when you want to reshape a sword slash, add procedural
+textures or build your own modifier stack. The same Pixi renderer powers the browser editor, Terminal and MCP.
 
 ![VFX Maker Studio](examples/studio.png)
+
+## Showcase
+
+Actual GIFs exported by VFX Maker. Each caption opens its editable project.
+
+| Crimson cross                                                 | Void portal                                            | Ember plume                                            |
+| ------------------------------------------------------------- | ------------------------------------------------------ | ------------------------------------------------------ |
+| ![Crimson sword cross](examples/showcase/red_magic_cross.gif) | ![Void portal](examples/showcase/void_portal.gif)      | ![Ember plume](examples/showcase/ember_plume.gif)      |
+| [Edit project](examples/showcase/red_magic_cross.vfx.json)    | [Edit project](examples/showcase/void_portal.vfx.json) | [Edit project](examples/showcase/ember_plume.vfx.json) |
+
+| Electric bloom                                            | Glacial lance                                        | Healing pulse                                         |
+| --------------------------------------------------------- | ---------------------------------------------------- | ----------------------------------------------------- |
+| ![Electric bloom](examples/showcase/electric_bloom.gif)   | ![Glacial lance](examples/showcase/ice_lance.gif)    | ![Healing pulse](examples/showcase/heal_pulse.gif)    |
+| [Edit project](examples/showcase/electric_bloom.vfx.json) | [Edit project](examples/showcase/ice_lance.vfx.json) | [Edit project](examples/showcase/heal_pulse.vfx.json) |
+
+| Lightning                                            | Comet                                            | Stardust                                            |
+| ---------------------------------------------------- | ------------------------------------------------ | --------------------------------------------------- |
+| ![Lightning](examples/showcase/lightning.gif)        | ![Comet](examples/showcase/comet.gif)            | ![Stardust](examples/showcase/stardust.gif)         |
+| [Edit project](examples/showcase/lightning.vfx.json) | [Edit project](examples/showcase/comet.vfx.json) | [Edit project](examples/showcase/stardust.vfx.json) |
 
 ## Run
 
@@ -17,10 +36,10 @@ npm run build
 node dist/cli.js studio --open
 ```
 
-Or install the prepared `vfx-maker-0.6.0.tgz` once and use it in any folder:
+Or install the prepared `vfx-maker-0.7.0.tgz` once and use it in any folder:
 
 ```bash
-npm install -g /path/to/vfx-maker-0.6.0.tgz
+npm install -g /path/to/vfx-maker-0.7.0.tgz
 cd /path/to/your/game
 vfx studio --open
 ```
@@ -39,8 +58,22 @@ tested; macOS, Windows, Firefox and Safari are not verified.
 
 ## Customize visually
 
-- Start with one of **18 editable effects**, or add particles, strokes, rings
-  and sprites. Drag layers to change compositing order; hide, lock or duplicate.
+- Adjust **Size / Intensity / Hue** at the top of the Inspector. Advanced control
+  bindings stay folded away and can drive several layer properties together.
+- Add **Modifiers** to a layer: outline, pixel blocks, color replacement/ramp,
+  shockwave, noise warp or dissolve. Reorder or bypass steps independently.
+- Save selected layers under **Saved**, then insert them into another project.
+  Download/import portable components with their textures and controls.
+- Save **Looks** to compare control/seed variations and export selected looks as
+  a batch. They share the same effect structure.
+- Open **Keyframes → All channels** for multi-key editing, copy/paste and
+  frame-snapped moves. **Auto key** records transform changes at the playhead;
+  **Timing tools** stretches the effect or staggers a selection.
+- Generate noise/cells/shapes without importing a texture, emit particles from
+  visible PNG pixels, or enable sampled particle trails.
+
+- Start with one of **22 editable effects**, or add particles, strokes, rings,
+  sprites and procedural textures. Drag layers to change compositing order; hide, lock or duplicate.
 - Drag the viewport's center handle to move a layer. Drag numbered stroke
   points to reshape it; double-click to add a point.
 - Ctrl/⌘-click or Shift-click to select layers, then group them. Move the
@@ -166,10 +199,11 @@ For clients with `mcpServers`, merge this entry into their settings:
 }
 ```
 
-26 tools cover templates, schemas, portable projects, layer/group transforms,
+31 tools cover templates, schemas, portable projects, layer/group transforms,
 keyframes, backups and restoration, direct layer updates,
 embedded assets, inline image previews, PNG optimization, canvas resizing,
-recoloring, exports and cancellable background jobs. The official MCP SDK is used; stdout carries only the protocol.
+recoloring, ordered modifiers, macro controls, components, variants, exports and
+cancellable background jobs. The official MCP SDK is used; stdout carries only the protocol.
 Read the [agent workflow](docs/MCP.md).
 
 ## Development
@@ -198,7 +232,7 @@ stripped during recompression. PNG optimization does not require Chromium.
 
 See [pixel workflows](docs/PIXEL_WORKFLOWS.md),
 [open source/product references](docs/OPEN_SOURCE_RESEARCH.md),
-[0.6.0 changes](docs/RELEASE_0.6.0.md),
-[validation](docs/VALIDATION_0.6.0.md),
-[previous pixel measurements](docs/VALIDATION_0.5.0.md), and
+[0.7.0 changes](docs/RELEASE_0.7.0.md),
+[validation](docs/VALIDATION_0.7.0.md),
+[previous authoring release](docs/RELEASE_0.6.0.md), and
 [project compatibility](docs/MIGRATION.md).

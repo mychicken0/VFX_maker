@@ -8,9 +8,10 @@ import {
   sprite,
   curve,
   colors,
+  PRESETS,
 } from "../../src/core/index.js";
 import { parseGIF, decompressFrames } from "gifuct-js";
-test("all 18 examples render actual nonblank pixels; scrubbing is reproducible", async ({
+test("all examples render actual nonblank pixels; scrubbing is reproducible", async ({
   page,
 }) => {
   await page.goto("/render.html");
@@ -25,7 +26,7 @@ test("all 18 examples render actual nonblank pixels; scrubbing is reproducible",
     }
     return results;
   });
-  expect(results).toHaveLength(18);
+  expect(results).toHaveLength(PRESETS.length);
   for (const r of results) {
     expect(r.equal, r.id).toBe(true);
     const image = PNG.sync.read(Buffer.from(r.a, "base64"));
@@ -267,7 +268,7 @@ test("pixel export settings preserve output palette and alpha; metadata hashes m
       p,
     ),
     meta = JSON.parse(Buffer.from(files["metadata.json"], "base64").toString());
-  expect(meta.version).toBe("0.6.0");
+  expect(meta.version).toBe("0.7.0");
   expect(meta.canvas.width).toBe(64);
   expect(meta.sourceCanvas.width).toBe(128);
   const palettes = new Set<string>();

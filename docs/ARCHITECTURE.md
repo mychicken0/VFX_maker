@@ -52,6 +52,27 @@ required. The official MCP SDK handles protocol framing and schema discovery.
 TypeScript declarations. npm packaging includes runtime dependencies by pinned
 version/lock, examples and docs.
 
+`creative-schema.ts`, `parameters.ts`, `components.ts` and `creative.ts` own
+ordered modifiers, typed macro bindings, control/seed variants and portable
+components. Bindings resolve against an explicit target registry on cloned source
+layers; validation checks computed limits before writing. Components translate
+position bindings and remap layer/asset/group/control IDs on insertion.
+`emission.ts` caches bounded first-frame alpha masks for image emitters.
+
+`render/modifiers.ts` adapts selected MIT PixiJS Filters and original deterministic
+WebGL shaders. Procedural fields and modifier time derive from seed/layer identity
+and explicit sample time. Particle trails resample earlier local positions instead
+of retaining frame history. `core/variants.ts` validates batch budgets before
+`render/variants.ts` reuses one renderer sequentially. Browser and headless jobs
+call the same export routine. Optional start/end ranges produce zero-based
+animation timestamps and record their source interval.
+
+The editor presents macro controls first and hides binding configuration behind a
+disclosure. Its IndexedDB component store uses schema version 3, checks a 24-item /
+24-MiB cap in a write transaction, and provides portable import/download. Looks
+and timing use focus-trapped dialogs; multi-channel key editing reuses normalized
+curves and atomic project history.
+
 `src/core/pixel-options.ts` defines persistent output settings. `pixels.ts`
 validates PNG chunk lengths, checksums, header and inflate budgets before decode.
 It performs nearest-neighbor sampling, block pixels, RGB palette quantization,

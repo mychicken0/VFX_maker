@@ -1,0 +1,572 @@
+{
+  "format": "vfx-maker",
+  "version": "0.7.0",
+  "name": "Glacial lance",
+  "seed": 42,
+  "canvas": {
+    "width": 128,
+    "height": 128,
+    "pixelArt": true,
+    "background": "#110f19"
+  },
+  "duration": 1.2,
+  "fps": 30,
+  "loop": true,
+  "layers": [
+    {
+      "id": "blade",
+      "name": "Ice blade",
+      "visible": true,
+      "locked": false,
+      "modifiers": [
+        {
+          "id": "frost-edge",
+          "enabled": true,
+          "type": "outline",
+          "thickness": 1,
+          "color": "#59b9ff",
+          "alpha": 0.75
+        }
+      ],
+      "start": 0.04,
+      "duration": 0.85,
+      "repeat": false,
+      "position": {
+        "x": 64,
+        "y": 64
+      },
+      "rotation": 0,
+      "scale": 1,
+      "opacity": [
+        {
+          "t": 0,
+          "value": 1,
+          "ease": "linear"
+        },
+        {
+          "t": 0.5,
+          "value": 1,
+          "ease": "linear"
+        },
+        {
+          "t": 1,
+          "value": 0,
+          "ease": "linear"
+        }
+      ],
+      "motion": {
+        "x": [
+          {
+            "t": 0,
+            "value": 0,
+            "ease": "linear"
+          },
+          {
+            "t": 1,
+            "value": 0,
+            "ease": "linear"
+          }
+        ],
+        "y": [
+          {
+            "t": 0,
+            "value": 0,
+            "ease": "linear"
+          },
+          {
+            "t": 1,
+            "value": 0,
+            "ease": "linear"
+          }
+        ],
+        "rotation": [
+          {
+            "t": 0,
+            "value": 0,
+            "ease": "linear"
+          },
+          {
+            "t": 1,
+            "value": 0,
+            "ease": "linear"
+          }
+        ],
+        "scale": [
+          {
+            "t": 0,
+            "value": 1,
+            "ease": "linear"
+          },
+          {
+            "t": 1,
+            "value": 1,
+            "ease": "linear"
+          }
+        ]
+      },
+      "blend": "add",
+      "glow": {
+        "strength": 0.65,
+        "blur": 2
+      },
+      "type": "path",
+      "points": [
+        {
+          "x": -43,
+          "y": 32
+        },
+        {
+          "x": -10,
+          "y": 2
+        },
+        {
+          "x": 8,
+          "y": -14
+        },
+        {
+          "x": 44,
+          "y": -37
+        }
+      ],
+      "closed": false,
+      "width": [
+        {
+          "t": 0,
+          "value": 2,
+          "ease": "linear"
+        },
+        {
+          "t": 0.3333333333333333,
+          "value": 10,
+          "ease": "linear"
+        },
+        {
+          "t": 0.6666666666666666,
+          "value": 5,
+          "ease": "linear"
+        },
+        {
+          "t": 1,
+          "value": 0,
+          "ease": "linear"
+        }
+      ],
+      "draw": [
+        {
+          "t": 0,
+          "value": 0,
+          "ease": "linear"
+        },
+        {
+          "t": 0.5,
+          "value": 1,
+          "ease": "linear"
+        },
+        {
+          "t": 1,
+          "value": 1,
+          "ease": "linear"
+        }
+      ],
+      "taper": 0.95,
+      "colors": [
+        {
+          "t": 0,
+          "color": "#f4ffff"
+        },
+        {
+          "t": 0.5,
+          "color": "#8ae6ff"
+        },
+        {
+          "t": 1,
+          "color": "#3e70d9"
+        }
+      ]
+    },
+    {
+      "id": "crystals",
+      "name": "Flying crystals",
+      "visible": true,
+      "locked": false,
+      "modifiers": [],
+      "start": 0.1,
+      "duration": 0.95,
+      "repeat": false,
+      "position": {
+        "x": 64,
+        "y": 64
+      },
+      "rotation": 0,
+      "scale": 1,
+      "opacity": [
+        {
+          "t": 0,
+          "value": 1,
+          "ease": "linear"
+        },
+        {
+          "t": 1,
+          "value": 0,
+          "ease": "linear"
+        }
+      ],
+      "motion": {
+        "x": [
+          {
+            "t": 0,
+            "value": 0,
+            "ease": "linear"
+          },
+          {
+            "t": 1,
+            "value": 0,
+            "ease": "linear"
+          }
+        ],
+        "y": [
+          {
+            "t": 0,
+            "value": 0,
+            "ease": "linear"
+          },
+          {
+            "t": 1,
+            "value": 0,
+            "ease": "linear"
+          }
+        ],
+        "rotation": [
+          {
+            "t": 0,
+            "value": 0,
+            "ease": "linear"
+          },
+          {
+            "t": 1,
+            "value": 0,
+            "ease": "linear"
+          }
+        ],
+        "scale": [
+          {
+            "t": 0,
+            "value": 1,
+            "ease": "linear"
+          },
+          {
+            "t": 1,
+            "value": 1,
+            "ease": "linear"
+          }
+        ]
+      },
+      "blend": "add",
+      "glow": {
+        "strength": 0,
+        "blur": 3
+      },
+      "type": "particles",
+      "mode": "path",
+      "count": 42,
+      "rate": 60,
+      "life": [
+        0.2,
+        0.65
+      ],
+      "speed": [
+        15,
+        65
+      ],
+      "angle": -40,
+      "spread": 110,
+      "spawn": {
+        "shape": "point",
+        "threshold": 0.1,
+        "radius": 10,
+        "width": 20,
+        "height": 20
+      },
+      "trail": {
+        "samples": 4,
+        "seconds": 0.12,
+        "width": 0.7,
+        "opacity": 0.45
+      },
+      "points": [
+        {
+          "x": -36,
+          "y": 28
+        },
+        {
+          "x": 36,
+          "y": -30
+        }
+      ],
+      "travel": 0.15,
+      "gravity": {
+        "x": 0,
+        "y": 15
+      },
+      "drag": 0.6,
+      "turbulence": 0,
+      "frequency": 4,
+      "shape": "spark",
+      "size": [
+        {
+          "t": 0,
+          "value": 1.8,
+          "ease": "linear"
+        },
+        {
+          "t": 1,
+          "value": 0,
+          "ease": "linear"
+        }
+      ],
+      "colors": [
+        {
+          "t": 0,
+          "color": "#fff7d0"
+        },
+        {
+          "t": 1,
+          "color": "#70c9ff"
+        }
+      ],
+      "spin": [
+        -180,
+        180
+      ],
+      "stretch": 4,
+      "frameMode": "life",
+      "frameFps": 12
+    },
+    {
+      "id": "ice-impact",
+      "name": "Ice impact",
+      "visible": true,
+      "locked": false,
+      "modifiers": [],
+      "start": 0.17,
+      "duration": 0.55,
+      "repeat": false,
+      "position": {
+        "x": 74,
+        "y": 52
+      },
+      "rotation": -30,
+      "scale": 1,
+      "opacity": [
+        {
+          "t": 0,
+          "value": 0.7,
+          "ease": "linear"
+        },
+        {
+          "t": 1,
+          "value": 0,
+          "ease": "linear"
+        }
+      ],
+      "motion": {
+        "x": [
+          {
+            "t": 0,
+            "value": 0,
+            "ease": "linear"
+          },
+          {
+            "t": 1,
+            "value": 0,
+            "ease": "linear"
+          }
+        ],
+        "y": [
+          {
+            "t": 0,
+            "value": 0,
+            "ease": "linear"
+          },
+          {
+            "t": 1,
+            "value": 0,
+            "ease": "linear"
+          }
+        ],
+        "rotation": [
+          {
+            "t": 0,
+            "value": 0,
+            "ease": "linear"
+          },
+          {
+            "t": 1,
+            "value": 0,
+            "ease": "linear"
+          }
+        ],
+        "scale": [
+          {
+            "t": 0,
+            "value": 1,
+            "ease": "linear"
+          },
+          {
+            "t": 1,
+            "value": 1,
+            "ease": "linear"
+          }
+        ]
+      },
+      "blend": "add",
+      "glow": {
+        "strength": 0,
+        "blur": 3
+      },
+      "type": "ring",
+      "radius": [
+        {
+          "t": 0,
+          "value": 4,
+          "ease": "linear"
+        },
+        {
+          "t": 1,
+          "value": 35,
+          "ease": "linear"
+        }
+      ],
+      "width": [
+        {
+          "t": 0,
+          "value": 3,
+          "ease": "linear"
+        },
+        {
+          "t": 1,
+          "value": 0,
+          "ease": "linear"
+        }
+      ],
+      "arc": 285,
+      "segments": 64,
+      "colors": [
+        {
+          "t": 0,
+          "color": "#e0ffff"
+        },
+        {
+          "t": 1,
+          "color": "#428edb"
+        }
+      ]
+    }
+  ],
+  "assets": [],
+  "groups": [],
+  "controls": [
+    {
+      "id": "size",
+      "name": "Size",
+      "min": 0.25,
+      "max": 3,
+      "value": 1,
+      "step": 0.05,
+      "bindings": [
+        {
+          "layer": "blade",
+          "target": "scale",
+          "mode": "multiply",
+          "factor": 1,
+          "offset": 0
+        },
+        {
+          "layer": "crystals",
+          "target": "scale",
+          "mode": "multiply",
+          "factor": 1,
+          "offset": 0
+        },
+        {
+          "layer": "ice-impact",
+          "target": "scale",
+          "mode": "multiply",
+          "factor": 1,
+          "offset": 0
+        }
+      ]
+    },
+    {
+      "id": "intensity",
+      "name": "Intensity",
+      "min": 0.1,
+      "max": 2,
+      "value": 1,
+      "step": 0.05,
+      "bindings": [
+        {
+          "layer": "blade",
+          "target": "width",
+          "mode": "multiply",
+          "factor": 1,
+          "offset": 0
+        },
+        {
+          "layer": "crystals",
+          "target": "size",
+          "mode": "multiply",
+          "factor": 1,
+          "offset": 0
+        },
+        {
+          "layer": "ice-impact",
+          "target": "width",
+          "mode": "multiply",
+          "factor": 1,
+          "offset": 0
+        }
+      ]
+    },
+    {
+      "id": "hue",
+      "name": "Hue",
+      "min": -180,
+      "max": 180,
+      "value": 0,
+      "step": 1,
+      "bindings": [
+        {
+          "layer": "blade",
+          "target": "colors.hue",
+          "mode": "set",
+          "factor": 1,
+          "offset": 0
+        },
+        {
+          "layer": "crystals",
+          "target": "colors.hue",
+          "mode": "set",
+          "factor": 1,
+          "offset": 0
+        },
+        {
+          "layer": "ice-impact",
+          "target": "colors.hue",
+          "mode": "set",
+          "factor": 1,
+          "offset": 0
+        }
+      ]
+    }
+  ],
+  "variants": [],
+  "editor": {},
+  "output": {
+    "scale": 1,
+    "colors": 0,
+    "dither": false,
+    "pixelSize": 1,
+    "alphaLevels": 0
+  }
+}

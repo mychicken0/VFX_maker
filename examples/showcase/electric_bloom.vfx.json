@@ -1,0 +1,778 @@
+{
+  "format": "vfx-maker",
+  "version": "0.7.0",
+  "name": "Electric bloom",
+  "seed": 42,
+  "canvas": {
+    "width": 128,
+    "height": 128,
+    "pixelArt": true,
+    "background": "#110f19"
+  },
+  "duration": 1.2,
+  "fps": 30,
+  "loop": true,
+  "layers": [
+    {
+      "id": "charge",
+      "name": "Charge field",
+      "visible": true,
+      "locked": false,
+      "mask": {
+        "shape": "ellipse",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "width": 66,
+        "height": 66,
+        "points": [
+          {
+            "x": -32,
+            "y": 32
+          },
+          {
+            "x": 0,
+            "y": -32
+          },
+          {
+            "x": 32,
+            "y": 32
+          }
+        ]
+      },
+      "modifiers": [
+        {
+          "id": "distort",
+          "enabled": true,
+          "type": "noise-warp",
+          "strength": 6,
+          "frequency": 8,
+          "speed": 4
+        }
+      ],
+      "start": 0,
+      "duration": 0.95,
+      "repeat": false,
+      "position": {
+        "x": 64,
+        "y": 64
+      },
+      "rotation": 0,
+      "scale": 1,
+      "opacity": [
+        {
+          "t": 0,
+          "value": 0,
+          "ease": "linear"
+        },
+        {
+          "t": 0.5,
+          "value": 0.85,
+          "ease": "linear"
+        },
+        {
+          "t": 1,
+          "value": 0,
+          "ease": "linear"
+        }
+      ],
+      "motion": {
+        "x": [
+          {
+            "t": 0,
+            "value": 0,
+            "ease": "linear"
+          },
+          {
+            "t": 1,
+            "value": 0,
+            "ease": "linear"
+          }
+        ],
+        "y": [
+          {
+            "t": 0,
+            "value": 0,
+            "ease": "linear"
+          },
+          {
+            "t": 1,
+            "value": 0,
+            "ease": "linear"
+          }
+        ],
+        "rotation": [
+          {
+            "t": 0,
+            "value": 0,
+            "ease": "linear"
+          },
+          {
+            "t": 1,
+            "value": 0,
+            "ease": "linear"
+          }
+        ],
+        "scale": [
+          {
+            "t": 0,
+            "value": 1,
+            "ease": "linear"
+          },
+          {
+            "t": 1,
+            "value": 1,
+            "ease": "linear"
+          }
+        ]
+      },
+      "blend": "add",
+      "glow": {
+        "strength": 0,
+        "blur": 3
+      },
+      "type": "field",
+      "pattern": "cells",
+      "width": [
+        {
+          "t": 0,
+          "value": 8,
+          "ease": "linear"
+        },
+        {
+          "t": 0.5,
+          "value": 66,
+          "ease": "linear"
+        },
+        {
+          "t": 1,
+          "value": 12,
+          "ease": "linear"
+        }
+      ],
+      "height": [
+        {
+          "t": 0,
+          "value": 8,
+          "ease": "linear"
+        },
+        {
+          "t": 0.5,
+          "value": 66,
+          "ease": "linear"
+        },
+        {
+          "t": 1,
+          "value": 12,
+          "ease": "linear"
+        }
+      ],
+      "frequency": 5,
+      "speed": 4,
+      "octaves": 3,
+      "cutoff": [
+        {
+          "t": 0,
+          "value": 0.3,
+          "ease": "linear"
+        },
+        {
+          "t": 0.5,
+          "value": 0.45,
+          "ease": "linear"
+        },
+        {
+          "t": 1,
+          "value": 0.9,
+          "ease": "linear"
+        }
+      ],
+      "softness": 0.1,
+      "falloff": 0.4,
+      "highlight": "#a5fffa",
+      "colors": [
+        {
+          "t": 0,
+          "color": "#084bb5"
+        },
+        {
+          "t": 1,
+          "color": "#3888ff"
+        }
+      ]
+    },
+    {
+      "id": "bolt-a",
+      "name": "Lightning branch",
+      "visible": true,
+      "locked": false,
+      "modifiers": [
+        {
+          "id": "jitter",
+          "enabled": true,
+          "type": "noise-warp",
+          "strength": 3,
+          "frequency": 12,
+          "speed": 8
+        }
+      ],
+      "start": 0,
+      "duration": 0.8,
+      "repeat": false,
+      "position": {
+        "x": 64,
+        "y": 64
+      },
+      "rotation": 0,
+      "scale": 1,
+      "opacity": [
+        {
+          "t": 0,
+          "value": 1,
+          "ease": "linear"
+        },
+        {
+          "t": 1,
+          "value": 0,
+          "ease": "linear"
+        }
+      ],
+      "motion": {
+        "x": [
+          {
+            "t": 0,
+            "value": 0,
+            "ease": "linear"
+          },
+          {
+            "t": 1,
+            "value": 0,
+            "ease": "linear"
+          }
+        ],
+        "y": [
+          {
+            "t": 0,
+            "value": 0,
+            "ease": "linear"
+          },
+          {
+            "t": 1,
+            "value": 0,
+            "ease": "linear"
+          }
+        ],
+        "rotation": [
+          {
+            "t": 0,
+            "value": 0,
+            "ease": "linear"
+          },
+          {
+            "t": 1,
+            "value": 0,
+            "ease": "linear"
+          }
+        ],
+        "scale": [
+          {
+            "t": 0,
+            "value": 1,
+            "ease": "linear"
+          },
+          {
+            "t": 1,
+            "value": 1,
+            "ease": "linear"
+          }
+        ]
+      },
+      "blend": "add",
+      "glow": {
+        "strength": 1.2,
+        "blur": 2
+      },
+      "type": "path",
+      "points": [
+        {
+          "x": -45,
+          "y": -14
+        },
+        {
+          "x": -20,
+          "y": -5
+        },
+        {
+          "x": -26,
+          "y": 6
+        },
+        {
+          "x": 4,
+          "y": -3
+        },
+        {
+          "x": 18,
+          "y": 10
+        },
+        {
+          "x": 42,
+          "y": 2
+        }
+      ],
+      "closed": false,
+      "width": [
+        {
+          "t": 0,
+          "value": 0,
+          "ease": "linear"
+        },
+        {
+          "t": 0.3333333333333333,
+          "value": 3,
+          "ease": "linear"
+        },
+        {
+          "t": 0.6666666666666666,
+          "value": 1,
+          "ease": "linear"
+        },
+        {
+          "t": 1,
+          "value": 0,
+          "ease": "linear"
+        }
+      ],
+      "draw": [
+        {
+          "t": 0,
+          "value": 0,
+          "ease": "linear"
+        },
+        {
+          "t": 0.5,
+          "value": 1,
+          "ease": "linear"
+        },
+        {
+          "t": 1,
+          "value": 1,
+          "ease": "linear"
+        }
+      ],
+      "taper": 0.8,
+      "colors": [
+        {
+          "t": 0,
+          "color": "#f1ffff"
+        },
+        {
+          "t": 0.5,
+          "color": "#50caff"
+        },
+        {
+          "t": 1,
+          "color": "#3265eb"
+        }
+      ]
+    },
+    {
+      "id": "arcs",
+      "name": "Electric sparks",
+      "visible": true,
+      "locked": false,
+      "modifiers": [],
+      "start": 0,
+      "duration": 0.85,
+      "repeat": false,
+      "position": {
+        "x": 64,
+        "y": 64
+      },
+      "rotation": 0,
+      "scale": 1,
+      "opacity": [
+        {
+          "t": 0,
+          "value": 1,
+          "ease": "linear"
+        },
+        {
+          "t": 1,
+          "value": 0,
+          "ease": "linear"
+        }
+      ],
+      "motion": {
+        "x": [
+          {
+            "t": 0,
+            "value": 0,
+            "ease": "linear"
+          },
+          {
+            "t": 1,
+            "value": 0,
+            "ease": "linear"
+          }
+        ],
+        "y": [
+          {
+            "t": 0,
+            "value": 0,
+            "ease": "linear"
+          },
+          {
+            "t": 1,
+            "value": 0,
+            "ease": "linear"
+          }
+        ],
+        "rotation": [
+          {
+            "t": 0,
+            "value": 0,
+            "ease": "linear"
+          },
+          {
+            "t": 1,
+            "value": 0,
+            "ease": "linear"
+          }
+        ],
+        "scale": [
+          {
+            "t": 0,
+            "value": 1,
+            "ease": "linear"
+          },
+          {
+            "t": 1,
+            "value": 1,
+            "ease": "linear"
+          }
+        ]
+      },
+      "blend": "add",
+      "glow": {
+        "strength": 0,
+        "blur": 3
+      },
+      "type": "particles",
+      "mode": "burst",
+      "count": 50,
+      "rate": 60,
+      "life": [
+        0.15,
+        0.65
+      ],
+      "speed": [
+        15,
+        90
+      ],
+      "angle": -90,
+      "spread": 360,
+      "spawn": {
+        "shape": "point",
+        "threshold": 0.1,
+        "radius": 10,
+        "width": 20,
+        "height": 20
+      },
+      "trail": {
+        "samples": 6,
+        "seconds": 0.08,
+        "width": 1,
+        "opacity": 0.65
+      },
+      "points": [
+        {
+          "x": -35,
+          "y": -35
+        },
+        {
+          "x": 35,
+          "y": 35
+        }
+      ],
+      "travel": 0.2,
+      "gravity": {
+        "x": 0,
+        "y": 0
+      },
+      "drag": 0.6,
+      "turbulence": 0,
+      "frequency": 4,
+      "shape": "spark",
+      "size": [
+        {
+          "t": 0,
+          "value": 1.8,
+          "ease": "linear"
+        },
+        {
+          "t": 1,
+          "value": 0,
+          "ease": "linear"
+        }
+      ],
+      "colors": [
+        {
+          "t": 0,
+          "color": "#fff7d0"
+        },
+        {
+          "t": 1,
+          "color": "#4aabff"
+        }
+      ],
+      "spin": [
+        -180,
+        180
+      ],
+      "stretch": 2,
+      "frameMode": "life",
+      "frameFps": 12
+    },
+    {
+      "id": "pulse",
+      "name": "Electric pulse",
+      "visible": true,
+      "locked": false,
+      "modifiers": [],
+      "start": 0.1,
+      "duration": 0.55,
+      "repeat": false,
+      "position": {
+        "x": 64,
+        "y": 64
+      },
+      "rotation": 0,
+      "scale": 1,
+      "opacity": [
+        {
+          "t": 0,
+          "value": 0.8,
+          "ease": "linear"
+        },
+        {
+          "t": 1,
+          "value": 0,
+          "ease": "linear"
+        }
+      ],
+      "motion": {
+        "x": [
+          {
+            "t": 0,
+            "value": 0,
+            "ease": "linear"
+          },
+          {
+            "t": 1,
+            "value": 0,
+            "ease": "linear"
+          }
+        ],
+        "y": [
+          {
+            "t": 0,
+            "value": 0,
+            "ease": "linear"
+          },
+          {
+            "t": 1,
+            "value": 0,
+            "ease": "linear"
+          }
+        ],
+        "rotation": [
+          {
+            "t": 0,
+            "value": 0,
+            "ease": "linear"
+          },
+          {
+            "t": 1,
+            "value": 0,
+            "ease": "linear"
+          }
+        ],
+        "scale": [
+          {
+            "t": 0,
+            "value": 1,
+            "ease": "linear"
+          },
+          {
+            "t": 1,
+            "value": 1,
+            "ease": "linear"
+          }
+        ]
+      },
+      "blend": "add",
+      "glow": {
+        "strength": 0,
+        "blur": 3
+      },
+      "type": "ring",
+      "radius": [
+        {
+          "t": 0,
+          "value": 5,
+          "ease": "linear"
+        },
+        {
+          "t": 1,
+          "value": 47,
+          "ease": "linear"
+        }
+      ],
+      "width": [
+        {
+          "t": 0,
+          "value": 3,
+          "ease": "linear"
+        },
+        {
+          "t": 1,
+          "value": 0,
+          "ease": "linear"
+        }
+      ],
+      "arc": 360,
+      "segments": 64,
+      "colors": [
+        {
+          "t": 0,
+          "color": "#c1ffff"
+        },
+        {
+          "t": 1,
+          "color": "#348bff"
+        }
+      ]
+    }
+  ],
+  "assets": [],
+  "groups": [],
+  "controls": [
+    {
+      "id": "size",
+      "name": "Size",
+      "min": 0.25,
+      "max": 3,
+      "value": 1,
+      "step": 0.05,
+      "bindings": [
+        {
+          "layer": "charge",
+          "target": "scale",
+          "mode": "multiply",
+          "factor": 1,
+          "offset": 0
+        },
+        {
+          "layer": "bolt-a",
+          "target": "scale",
+          "mode": "multiply",
+          "factor": 1,
+          "offset": 0
+        },
+        {
+          "layer": "arcs",
+          "target": "scale",
+          "mode": "multiply",
+          "factor": 1,
+          "offset": 0
+        },
+        {
+          "layer": "pulse",
+          "target": "scale",
+          "mode": "multiply",
+          "factor": 1,
+          "offset": 0
+        }
+      ]
+    },
+    {
+      "id": "intensity",
+      "name": "Intensity",
+      "min": 0.1,
+      "max": 2,
+      "value": 1,
+      "step": 0.05,
+      "bindings": [
+        {
+          "layer": "bolt-a",
+          "target": "width",
+          "mode": "multiply",
+          "factor": 1,
+          "offset": 0
+        },
+        {
+          "layer": "arcs",
+          "target": "size",
+          "mode": "multiply",
+          "factor": 1,
+          "offset": 0
+        },
+        {
+          "layer": "pulse",
+          "target": "width",
+          "mode": "multiply",
+          "factor": 1,
+          "offset": 0
+        }
+      ]
+    },
+    {
+      "id": "hue",
+      "name": "Hue",
+      "min": -180,
+      "max": 180,
+      "value": 0,
+      "step": 1,
+      "bindings": [
+        {
+          "layer": "charge",
+          "target": "colors.hue",
+          "mode": "set",
+          "factor": 1,
+          "offset": 0
+        },
+        {
+          "layer": "bolt-a",
+          "target": "colors.hue",
+          "mode": "set",
+          "factor": 1,
+          "offset": 0
+        },
+        {
+          "layer": "arcs",
+          "target": "colors.hue",
+          "mode": "set",
+          "factor": 1,
+          "offset": 0
+        },
+        {
+          "layer": "pulse",
+          "target": "colors.hue",
+          "mode": "set",
+          "factor": 1,
+          "offset": 0
+        }
+      ]
+    }
+  ],
+  "variants": [],
+  "editor": {},
+  "output": {
+    "scale": 1,
+    "colors": 0,
+    "dither": false,
+    "pixelSize": 1,
+    "alphaLevels": 0
+  }
+}

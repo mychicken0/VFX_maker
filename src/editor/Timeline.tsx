@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
 import { KeyframeTrack } from "./KeyframeTrack.js";
+import { DopeSheet } from "./DopeSheet.js";
 import { NumberField } from "./controls.js";
 import type { Layer, Project } from "../core/model.js";
 export function Timeline({
@@ -15,8 +16,16 @@ export function Timeline({
   focused,
   onFocus,
   onKeyframeView,
+  selection,
+  autoKey,
+  setAutoKey,
+  onTiming,
 }: {
   focused: boolean;
+  selection: string[];
+  autoKey: boolean;
+  setAutoKey: (value: boolean) => void;
+  onTiming: () => void;
   onFocus: () => void;
   onKeyframeView: (open: boolean) => void;
   updateProject: (p: Project) => void;
@@ -34,6 +43,7 @@ export function Timeline({
 }) {
   const trackArea = useRef<HTMLDivElement>(null);
   const [showKeys, setShowKeys] = useState(false);
+  const [allChannels, setAllChannels] = useState(false);
   const active = p.layers.find((l) => l.id === selected),
     range = p.editor.range;
   const drag = (
@@ -142,6 +152,25 @@ export function Timeline({
         >
           Keyframes
         </button>
+        <button
+          aria-pressed={autoKey}
+          title="Record position, rotation and scale edits at the playhead"
+          onClick={() => {
+            setPlaying(false);
+            setAutoKey(!autoKey);
+          }}
+        >
+          Auto key
+        </button>
+        {showKeys && (
+          <button
+            aria-pressed={allChannels}
+            onClick={() => setAllChannels(!allChannels)}
+          >
+            {allChannels ? "Curve view" : "All channels"}
+          </button>
+        )}
+        <button onClick={onTiming}>Timing tools</button>
         {showKeys && (
           <button onClick={onFocus} aria-pressed={focused}>
             {focused ? "Restore canvas" : "Focus timeline"}
@@ -224,7 +253,15 @@ export function Timeline({
         </div>
       </div>
       <div className="timeline-tracks" ref={trackArea}>
-        {showKeys && active && (
+        {showKeys && allChannels && (
+          <DopeSheet
+            project={p}
+            ids={selection}
+            time={time}
+            update={updateProject}
+          />
+        )}
+        {showKeys && !allChannels && active && (
           <KeyframeTrack project={p} layer={active} update={updateLayer} />
         )}
         {[...p.layers].reverse().map((l) => (

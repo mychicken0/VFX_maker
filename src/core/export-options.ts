@@ -7,6 +7,8 @@ export const exportOptionsSchema = z
       .enum(["gif", "spritesheet", "sequence", "godot", "unity"])
       .default("spritesheet"),
     fps: z.number().int().min(1).max(60).optional(),
+    start: z.number().finite().min(0).max(10).optional(),
+    end: z.number().finite().min(0).max(10).optional(),
     scale: pixelOptionsSchema.shape.scale.removeDefault().optional(),
     colors: pixelOptionsSchema.shape.colors.removeDefault().optional(),
     dither: pixelOptionsSchema.shape.dither.removeDefault().optional(),
@@ -68,7 +70,12 @@ export function exportPlan(project: Project, input: ExportOptions = {}) {
     ),
   });
   const fps = options.fps ?? project.fps;
-  const count = Math.ceil(project.duration * fps - 1e-9);
+  const start = options.start ?? 0,
+    end = options.end ?? project.duration,
+    duration = end - start;
+  if (start >= end || end > project.duration)
+    throw Error("Export range must have start < end within effect duration");
+  const count = Math.ceil(duration * fps - 1e-9);
   const source = project.canvas;
   if (count > 300 || count * source.width * source.height > 16777216)
     throw new Error(
@@ -87,5 +94,5 @@ export function exportPlan(project: Project, input: ExportOptions = {}) {
     : atlasLayout(size.width, size.height, count, options.padding);
   if (atlas && atlas.width * atlas.height > 33554432)
     throw new Error("Atlas pixel budget exceeded. Reduce scale or padding.");
-  return { options, pixels, fps, count, ...size, atlas };
+  return { options, pixels, fps, count, start, end, duration, ...size, atlas };
 }

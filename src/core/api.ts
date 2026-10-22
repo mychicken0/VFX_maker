@@ -33,6 +33,8 @@ export const ring = (input: InputOf<"ring">) =>
   layerSchema.parse({ ...input, type: "ring" });
 export const sprite = (input: InputOf<"sprite">) =>
   layerSchema.parse({ ...input, type: "sprite" });
+export const field = (input: InputOf<"field">) =>
+  layerSchema.parse({ ...input, type: "field" });
 export function arcPoints(
   radius: number,
   from = 0,

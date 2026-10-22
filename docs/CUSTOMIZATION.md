@@ -12,6 +12,7 @@ display name or reordering does not change their random sequence.
 | path      | local points, width curve, draw progress, taper, closed shape                                                    | Sword cuts, lightning, magic ribbons       |
 | ring      | radius/width curves, arc, segments                                                                               | Shockwaves, halos, polygonal runes         |
 | sprite    | embedded texture, dimensions, flipbook playback                                                                  | Hand-painted animation or textured effects |
+| field     | noise/cells/radial/box/stripes, dimensions, cutoff, edge fade, evolution                                         | Procedural textures and energy fields      |
 
 All layers support position, rotation, scale, blend, glow, delay, duration and
 repeat. Motion curves add X/Y offsets and rotation in degrees and multiply the
@@ -123,3 +124,45 @@ Project `output` stores `{scale, colors, dither, pixelSize, alphaLevels}`.
 and alpha quantization are separate; a 16-color RGB palette can therefore have
 more than 16 RGBA combinations. `processPixels`, `decodePng`, `encodePng` and
 `optimizePng` are also exported for Node/browser scripts.
+
+## Controls, modifiers and reusable parts
+
+Use **Make it yours** for ordinary effect changes. **Advanced · edit controls**
+lets an author name a control and bind it to supported numeric fields or curves
+on several layers. Curves keep their timing/easing; multiply/add changes every
+value. The layer Inspector shows source values before controls. The renderer
+resolves the controls from those sources each time, so repeated slider changes
+never compound. Bound values must stay inside the normal layer limits.
+
+**Modifiers** are an ordered list on any layer, up to eight steps. New steps have
+safe defaults; expand one to edit it. Outline/pixelate/color replacement/shockwave
+use PixiJS Filters; noise warp, dissolve and luminance color ramp use original
+seeded shaders. Shader time comes from the layer's elapsed time, including repeat.
+
+**Saved** stores a selection with referenced PNGs, curves, masks, modifiers and
+associated controls. Insert remaps IDs and keeps the result editable. Download a
+component for portable storage. **Looks** captures control values and seed, not
+independent layers; later source-layer edits affect all looks. Save multiple looks
+to compare actual rendered previews and export selected looks together.
+
+```bash
+vfx controls effect.vfx.json
+vfx control effect.vfx.json hue 90
+vfx creative effect.vfx.json --set '{"action":"put_modifier","layer":"cut-a","modifier":{"id":"edge","type":"outline","thickness":1,"color":"#a7eeff"}}'
+vfx component-save effect.vfx.json --layers cut-a,cut-b --name Blade --out blade.vfx-component.json
+vfx component-insert another.vfx.json blade.vfx-component.json
+vfx creative effect.vfx.json --set '{"action":"capture_variant","id":"cyan","name":"Cyan"}'
+vfx export-variants effect.vfx.json --ids cyan --format gif --out looks
+```
+
+**Keyframes → All channels** exposes the selected layers' dope sheet. Shift-click
+keys, then move/duplicate/delete together. Copy/paste keeps their relative seconds
+and targets their original channels. **Auto key** records transform edits at the
+playhead into motion curves; turn it off to edit base transforms. **Timing tools**
+retimes the whole effect, compensating particle dynamics, or staggers a selection.
+Export's **Export only loop range** uses the chosen work area; CLI/MCP can specify
+`start` and `end` explicitly.
+
+Image emitters use the first flipbook frame's alpha mask, not its RGB. Empty masks
+are rejected. Trails sample prior particle positions in local emitter space,
+respect a bounded segment budget and reset across particle births/repeat cycles.

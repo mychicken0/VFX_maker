@@ -25,10 +25,21 @@ export function ExportDialog({
     [settings, setSettings] = useState(project.output),
     [padding, setPadding] = useState(2),
     [extrude, setExtrude] = useState(false);
+  const [rangeOnly, setRangeOnly] = useState(false);
+  const range =
+    rangeOnly && project.editor.range
+      ? { start: project.editor.range.start, end: project.editor.range.end }
+      : {};
   let error = "",
     summary = "";
   try {
-    const plan = exportPlan(project, { format, ...settings, padding, extrude });
+    const plan = exportPlan(project, {
+      format,
+      ...settings,
+      padding,
+      extrude,
+      ...range,
+    });
     summary = `${plan.count} frames · ${plan.width} × ${plan.height} · ${plan.fps} fps${plan.atlas ? ` · atlas ${plan.atlas.width} × ${plan.atlas.height}` : ""}`;
   } catch (e) {
     error = readableError(e);
@@ -66,76 +77,86 @@ export function ExportDialog({
             setSettings((s) => ({ ...s, scale: Number(scale) }))
           }
         />
-        <div className="two-fields">
-          <Select
-            label="Export colors"
-            value={String(settings.colors)}
-            options={[
-              ...new Set([
-                "0",
-                "4",
-                "8",
-                "16",
-                "32",
-                "64",
-                "128",
-                "256",
-                String(settings.colors),
-              ]),
-            ]}
-            onChange={(colors) =>
-              setSettings((s) => ({ ...s, colors: Number(colors) }))
-            }
+        {project.editor.range && (
+          <Check
+            label="Export only loop range"
+            value={rangeOnly}
+            onChange={setRangeOnly}
           />
-          <Select
-            label="Export alpha levels"
-            value={String(settings.alphaLevels)}
-            options={[
-              ...new Set([
-                "0",
-                "2",
-                "4",
-                "8",
-                "16",
-                "32",
-                "64",
-                "256",
-                String(settings.alphaLevels),
-              ]),
-            ]}
-            onChange={(alphaLevels) =>
-              setSettings((s) => ({ ...s, alphaLevels: Number(alphaLevels) }))
-            }
-          />
-        </div>
-        <NumberField
-          label="Export pixel block"
-          value={settings.pixelSize}
-          min={1}
-          max={16}
-          onChange={(pixelSize) => setSettings((s) => ({ ...s, pixelSize }))}
-        />
-        <Check
-          label="Export dithering"
-          value={settings.dither}
-          onChange={(dither) => setSettings((s) => ({ ...s, dither }))}
-        />
-        {!["gif", "sequence"].includes(format ?? "gif") && (
+        )}
+        <details className="advanced-export">
+          <summary>Advanced export settings</summary>
           <div className="two-fields">
-            <NumberField
-              label="Atlas padding"
-              value={padding}
-              min={0}
-              max={16}
-              onChange={setPadding}
+            <Select
+              label="Export colors"
+              value={String(settings.colors)}
+              options={[
+                ...new Set([
+                  "0",
+                  "4",
+                  "8",
+                  "16",
+                  "32",
+                  "64",
+                  "128",
+                  "256",
+                  String(settings.colors),
+                ]),
+              ]}
+              onChange={(colors) =>
+                setSettings((s) => ({ ...s, colors: Number(colors) }))
+              }
             />
-            <Check
-              label="Extrude edges"
-              value={extrude}
-              onChange={setExtrude}
+            <Select
+              label="Export alpha levels"
+              value={String(settings.alphaLevels)}
+              options={[
+                ...new Set([
+                  "0",
+                  "2",
+                  "4",
+                  "8",
+                  "16",
+                  "32",
+                  "64",
+                  "256",
+                  String(settings.alphaLevels),
+                ]),
+              ]}
+              onChange={(alphaLevels) =>
+                setSettings((s) => ({ ...s, alphaLevels: Number(alphaLevels) }))
+              }
             />
           </div>
-        )}
+          <NumberField
+            label="Export pixel block"
+            value={settings.pixelSize}
+            min={1}
+            max={16}
+            onChange={(pixelSize) => setSettings((s) => ({ ...s, pixelSize }))}
+          />
+          <Check
+            label="Export dithering"
+            value={settings.dither}
+            onChange={(dither) => setSettings((s) => ({ ...s, dither }))}
+          />
+          {!["gif", "sequence"].includes(format ?? "gif") && (
+            <div className="two-fields">
+              <NumberField
+                label="Atlas padding"
+                value={padding}
+                min={0}
+                max={16}
+                onChange={setPadding}
+              />
+              <Check
+                label="Extrude edges"
+                value={extrude}
+                onChange={setExtrude}
+              />
+            </div>
+          )}
+        </details>
       </fieldset>
       <p className="hint">
         0 colors/alpha keeps source values. Palette, alpha, pixel block and
@@ -178,7 +199,9 @@ export function ExportDialog({
         <button
           className="primary wide"
           disabled={!!error}
-          onClick={() => onExport({ format, ...settings, padding, extrude })}
+          onClick={() =>
+            onExport({ format, ...settings, padding, extrude, ...range })
+          }
         >
           Render & download ZIP ↗
         </button>

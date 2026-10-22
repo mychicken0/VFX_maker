@@ -4,6 +4,7 @@ import { exportEffect, preview, toBase64 } from "./export.js";
 import type { ExportOptions } from "./export.js";
 import { VfxRenderer } from "./pixi.js";
 import { z } from "zod";
+import { exportVariants } from "./variants.js";
 const renderer = await VfxRenderer.create();
 document.body.append(renderer.canvas);
 const bridge = {
@@ -30,6 +31,21 @@ const bridge = {
     );
   },
   presets: PRESETS,
+  async variants(value: unknown, ids: string[], options: ExportOptions) {
+    const files = await exportVariants(
+      renderer,
+      parseProject(value),
+      ids,
+      options,
+      (completed, total) =>
+        window.dispatchEvent(
+          new CustomEvent("vfx-progress", { detail: { completed, total } }),
+        ),
+    );
+    return Object.fromEntries(
+      Object.entries(files).map(([name, bytes]) => [name, toBase64(bytes)]),
+    );
+  },
   schemas: {
     project: z.toJSONSchema(projectSchema),
     layer: z.toJSONSchema(layerSchema),

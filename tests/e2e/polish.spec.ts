@@ -305,7 +305,7 @@ test("canvas scaling is one edit and recent projects restore complete compositio
     .poll(() =>
       page.evaluate(async () => {
         const db = await new Promise<IDBDatabase>((resolve, reject) => {
-          const r = indexedDB.open("vfx-maker-projects", 2);
+          const r = indexedDB.open("vfx-maker-projects", 3);
           r.onsuccess = () => resolve(r.result);
           r.onerror = () => reject(r.error);
         });

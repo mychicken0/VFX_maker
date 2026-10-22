@@ -24,30 +24,6 @@ export function schedule(duration: number, fps: number) {
     duration: Math.min(1 / fps, duration - i / fps),
   }));
 }
-function canvas(width: number, height: number) {
-  const c = document.createElement("canvas");
-  c.width = width;
-  c.height = height;
-  return c;
-}
-async function png(c: HTMLCanvasElement): Promise<Uint8Array> {
-  const blob = await new Promise<Blob>((resolve, reject) =>
-    c.toBlob(
-      (b) => (b ? resolve(b) : reject(new Error("PNG encoding failed"))),
-      "image/png",
-    ),
-  );
-  return new Uint8Array(await blob.arrayBuffer());
-}
-function rgbaCanvas(pixels: Uint8ClampedArray, width: number, height: number) {
-  const c = canvas(width, height);
-  c.getContext("2d")!.putImageData(
-    new ImageData(new Uint8ClampedArray(pixels), width, height),
-    0,
-    0,
-  );
-  return c;
-}
 export async function preview(
   renderer: VfxRenderer,
   project: Project,
@@ -56,9 +32,13 @@ export async function preview(
   if (!Number.isFinite(time) || time < 0 || time > project.duration)
     throw new Error("Preview time is outside the effect duration");
   renderer.render(time);
-  return png(
-    rgbaCanvas(renderer.pixels(), project.canvas.width, project.canvas.height),
-  );
+  // Encode the same straight RGBA as export; a Canvas2D round-trip changes
+  // translucent RGB by a few units through an extra premultiplication.
+  return encodePng({
+    width: project.canvas.width,
+    height: project.canvas.height,
+    rgba: renderer.pixels(),
+  });
 }
 // Bound palette sampling independently from total frame count.
 function sampleFrames(frames: Bitmap[]) {
@@ -118,14 +98,14 @@ export async function exportEffect(
   const project = parseProject(value),
     plan = exportPlan(project, input);
   const { options, pixels, fps, width, height } = plan;
-  const times = schedule(project.duration, fps),
+  const times = schedule(plan.duration, fps),
     files: ExportFiles = {};
   const originals: Bitmap[] = [];
   progress?.(0, times.length);
   // Collect source pixels once; simulation is identical to the preview.
   for (let i = 0; i < times.length; i++) {
     signal?.throwIfAborted();
-    renderer.render(times[i].time);
+    renderer.render(plan.start + times[i].time);
     originals.push({
       width: project.canvas.width,
       height: project.canvas.height,
@@ -265,7 +245,8 @@ export async function exportEffect(
         sourceCanvas: project.canvas,
         output: pixels,
         fps,
-        duration: project.duration,
+        duration: plan.duration,
+        sourceRange: { start: plan.start, end: plan.end },
         loop: project.loop,
         atlas: layout
           ? {
