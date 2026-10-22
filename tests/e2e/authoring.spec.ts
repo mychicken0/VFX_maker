@@ -465,6 +465,46 @@ test("native Save remembers a real browser file handle across reloads and protec
       .getByRole("dialog")
       .getByRole("button", { name: /Restore this version/ }),
   ).toHaveCount(2);
+  await button(page, "Close dialog").click();
+  await page.addInitScript(() => {
+    Object.defineProperty(FileSystemHandle.prototype, "queryPermission", {
+      configurable: true,
+      value: async () => "prompt",
+    });
+    Object.defineProperty(FileSystemHandle.prototype, "requestPermission", {
+      configurable: true,
+      value: async () => "granted",
+    });
+  });
+  await page.reload();
+  await expect(page.locator(".document-status")).toContainText(
+    "native.vfx.json",
+  );
+  await field(page, "Effect name", "After permission renewal");
+  await page.keyboard.press("Control+s");
+  await expect
+    .poll(async () => (await disk()).name)
+    .toBe("After permission renewal");
+  await page.addInitScript(() => {
+    Object.defineProperty(FileSystemHandle.prototype, "queryPermission", {
+      configurable: true,
+      value: async () => "prompt",
+    });
+    const key = "vfx-maker.0.4.autosave",
+      p = JSON.parse(localStorage.getItem(key)!);
+    p.name = "Other document";
+    localStorage.setItem(key, JSON.stringify(p));
+    localStorage.setItem(
+      "vfx-maker.recovery",
+      JSON.stringify({ id: "different-document", dirty: true }),
+    );
+  });
+  await page.reload();
+  await expect(page.getByLabel("Effect name", { exact: true })).toHaveValue(
+    "Other document",
+  );
+  await expect(page.locator(".document-status")).toHaveCount(0);
+  expect((await disk()).name).toBe("After permission renewal");
 });
 
 test("Bezier strokes and each mask type alter actual rendered RGBA and survive export", async ({

@@ -4,6 +4,7 @@ import { serialize } from "../core/api.js";
 import { downloadFile, safeFilename } from "./files.js";
 import {
   ACTIVE_FILE,
+  RECOVERY,
   browserBackups,
   filePickers,
   pickerOptions,
@@ -100,7 +101,6 @@ export function useDocument() {
       }
       const record = await rememberedFile().catch(() => undefined);
       if (record) {
-        setBinding({ kind: "native", record });
         if (
           !record.handle.queryPermission ||
           (await record.handle.queryPermission({ mode: "readwrite" })) ===
@@ -112,6 +112,13 @@ export function useDocument() {
           await rememberFile(connected).catch(() => {});
           return { ...value, id: record.id, file: record.name };
         }
+        // Without permission we can only bind a browser copy identified as
+        // this document. Another tab may have autosaved a different project.
+        try {
+          const recovery = JSON.parse(localStorage.getItem(RECOVERY) ?? "null");
+          if (recovery?.id === record.id)
+            setBinding({ kind: "native", record });
+        } catch {}
       }
       return null;
     });

@@ -24,7 +24,10 @@ before removing that sidecar.
 
 In browsers with the File System Access API, **Open** and **Save As** can connect
 a native disk handle. The handle persists in IndexedDB and permission may need
-to be granted again. Backups live in IndexedDB, not next to this native file.
+to be granted again. A matching browser copy can reconnect for permission
+renewal on Save. If the browser copy belongs to another document and disk
+permission is unavailable, it stays unbound until an explicit Open or Save As.
+Backups live in IndexedDB, not next to this native file.
 The browser's replacement stream is aborted on errors. Browsers without that
 API use file import and download; **Project menu → Download project** always
 creates a portable copy and keeps the current binding.

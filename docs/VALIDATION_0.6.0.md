@@ -17,7 +17,8 @@ actual adjacent-frame onion pixels; playback ranges without trimming exports;
 freehand creation and Bezier/mask handles; reference positioning with unchanged
 exported RGBA and no reference in exported source; disk Save/Save As, backup
 restoration, stale revision protection and abrupt tab-close recovery; native
-file-handle persistence and backup continuity on reopening; and usable timeline
+file-handle persistence, backup continuity and permission renewal on reopening;
+an unrelated browser copy remaining unbound when permission has expired; and usable timeline
 focus at 640 × 360 and 390px widths.
 
 Mask tests compare actual RGBA for rectangle, ellipse and polygon clips and
@@ -66,6 +67,12 @@ its padding in very small areas. Reference images use relative widths, so
 alignment follows that size immediately. The regression freezes ResizeObserver delivery and checks
 wide/tall windows with a non-square canvas. Related rectangles are sampled in
 one browser evaluation to compare the same layout frame.
+
+Hosted run
+[39747165585](https://github.com/mychicken0/VFX_maker/actions/runs/39747165585)
+confirmed the Fit fix: all 31 browser tests passed, and package/artifact steps
+succeeded. The subsequent native-permission guard was checked with the eight
+authoring scenarios and a targeted renewal/unrelated-document regression.
 
 The 0.6 workflow pins Ubuntu 24.04 during the announced `ubuntu-latest` migration,
 uploads the 0.6 tarball, and uses Playwright's GitHub reporter to put individual
