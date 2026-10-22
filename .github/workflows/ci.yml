@@ -11,7 +11,9 @@ jobs:
           node-version-file: .node-version
           cache: npm
       - run: npm ci
-      - run: npx playwright install --with-deps chromium
+      # Ubuntu's hosted image includes native Chrome libraries. Avoid upgrading
+      # them through its slow apt mirror; both launchers use full Chromium.
+      - run: npx playwright install --no-shell chromium
       - name: Select installed Chromium
         run: |
           node --input-type=module -e 'import {chromium} from "playwright-core"; console.log("VFX_CHROMIUM_PATH=" + chromium.executablePath());' >> "$GITHUB_ENV"
