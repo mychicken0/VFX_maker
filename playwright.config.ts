@@ -3,7 +3,7 @@ export default defineConfig({
   testDir: "./tests/e2e",
   timeout: 60000,
   workers: 1,
-  reporter: "list",
+  reporter: process.env.CI ? [["list"], ["github"]] : "list",
   use: {
     baseURL: "http://127.0.0.1:4178",
     viewport: { width: 1440, height: 1000 },

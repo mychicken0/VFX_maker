@@ -3,7 +3,10 @@ import { readFile } from "node:fs/promises";
 import { getPreset, type Project } from "../../src/core/index.js";
 async function saved(page: Page): Promise<Project> {
   const wait = page.waitForEvent("download");
-  await page.getByRole("button", { name: "Save project", exact: true }).click();
+  await page.getByRole("button", { name: "Project menu", exact: true }).click();
+  await page
+    .getByRole("menuitem", { name: "Download project", exact: true })
+    .click();
   const d = await wait;
   return JSON.parse(await readFile((await d.path())!, "utf8"));
 }
@@ -163,6 +166,6 @@ test("imports a PNG, authors a sprite and reports invalid input without losing t
       mimeType: "application/json",
       buffer: Buffer.from('{"version":"99"}'),
     });
-  await expect(page.getByRole("status")).toContainText("0.5.0");
+  await expect(page.getByRole("status")).toContainText("0.6.0");
   expect((await saved(page)).layers).toEqual(p.layers);
 });

@@ -16,6 +16,20 @@ export function resizeProject(
   return parseProject({
     ...project,
     canvas: { ...project.canvas, width, height },
+    editor:
+      mode === "scale" && project.editor.reference
+        ? {
+            ...project.editor,
+            reference: {
+              ...project.editor.reference,
+              position: {
+                x: project.editor.reference.position.x * factor + dx,
+                y: project.editor.reference.position.y * factor + dy,
+              },
+              scale: project.editor.reference.scale * factor,
+            },
+          }
+        : project.editor,
     layers:
       mode === "canvas"
         ? project.layers

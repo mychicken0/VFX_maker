@@ -2,7 +2,7 @@ import { z } from "zod";
 import { inspectPng } from "./pixels.js";
 import { pixelOptionsSchema } from "./pixel-options.js";
 
-export const VERSION = "0.5.0" as const;
+export const VERSION = "0.6.0" as const;
 const finite = z.number().finite();
 const bounded = (min: number, max: number) => finite.min(min).max(max);
 export const vecSchema = z
@@ -43,11 +43,29 @@ const curveDefault = (a: number, b = a) => [
   { t: 0, value: a, ease: "linear" as const },
   { t: 1, value: b, ease: "linear" as const },
 ];
+export const maskSchema = z
+  .object({
+    shape: z.enum(["rectangle", "ellipse", "polygon"]).default("rectangle"),
+    position: vecSchema.default({ x: 0, y: 0 }),
+    width: bounded(1, 1024).default(64),
+    height: bounded(1, 1024).default(64),
+    points: z
+      .array(vecSchema)
+      .min(3)
+      .max(64)
+      .default([
+        { x: -32, y: 32 },
+        { x: 0, y: -32 },
+        { x: 32, y: 32 },
+      ]),
+  })
+  .strict();
 const common = {
   id: z.string().regex(/^[a-zA-Z][\w-]{0,63}$/),
   name: z.string().min(1).max(100),
   visible: z.boolean().default(true),
   locked: z.boolean().default(false),
+  mask: maskSchema.optional(),
   start: bounded(0, 20).default(0),
   duration: bounded(0.02, 20).default(1),
   repeat: z.boolean().default(false),
@@ -129,6 +147,11 @@ export const pathSchema = z
     ...common,
     type: z.literal("path"),
     points: z.array(vecSchema).min(2).max(64),
+    handles: z
+      .array(z.object({ in: vecSchema, out: vecSchema }).strict())
+      .min(2)
+      .max(64)
+      .optional(),
     closed: z.boolean().default(false),
     width: curveSchema.default(curveDefault(5, 0)),
     draw: curveSchema.default([
@@ -218,12 +241,38 @@ export const assetSchema = z
       return false;
     }
   }, "Asset must be a valid static sRGB PNG of at most 1 MiB with matching dimensions (up to 8-bit)");
+export const groupSchema = z
+  .object({
+    id: z.string().regex(/^[a-zA-Z][\w-]{0,63}$/),
+    name: z.string().min(1).max(100),
+    ids: z.array(z.string()).min(1).max(32),
+  })
+  .strict();
+export const editorSchema = z
+  .object({
+    range: z
+      .object({ start: bounded(0, 10), end: bounded(0, 10) })
+      .strict()
+      .optional(),
+    reference: z
+      .object({
+        image: assetSchema,
+        position: vecSchema.default({ x: 64, y: 64 }),
+        scale: bounded(0.125, 8).default(1),
+        opacity: bounded(0, 1).default(0.7),
+        visible: z.boolean().default(true),
+        plane: z.enum(["behind", "above"]).default("behind"),
+      })
+      .strict()
+      .optional(),
+  })
+  .strict();
 export const projectSchema = z
   .object({
     format: z.literal("vfx-maker").default("vfx-maker"),
     version: z
       .literal(VERSION, {
-        error: "Unsupported project version; expected 0.5.0",
+        error: "Unsupported project version; expected 0.6.0",
       })
       .default(VERSION),
     name: z.string().min(1).max(100).default("Untitled effect"),
@@ -247,6 +296,8 @@ export const projectSchema = z
     loop: z.boolean().default(true),
     layers: z.array(layerSchema).max(32).default([]),
     assets: z.array(assetSchema).max(8).default([]),
+    groups: z.array(groupSchema).max(32).default([]),
+    editor: editorSchema.default({}),
     output: pixelOptionsSchema.default({
       scale: 1,
       colors: 0,
@@ -262,8 +313,30 @@ export const projectSchema = z
       fail("Layer IDs must be unique");
     if (new Set(p.assets.map((a) => a.id)).size !== p.assets.length)
       fail("Asset IDs must be unique");
+    if (new Set(p.groups.map((g) => g.id)).size !== p.groups.length)
+      fail("Group IDs must be unique");
+    const grouped = new Set<string>();
+    for (const group of p.groups)
+      for (const id of group.ids) {
+        if (!p.layers.some((l) => l.id === id))
+          fail(`Group ${group.id}: unknown layer ${id}`);
+        if (grouped.has(id)) fail(`Layer ${id} belongs to more than one group`);
+        grouped.add(id);
+      }
+    if (
+      p.editor.range &&
+      (p.editor.range.start >= p.editor.range.end ||
+        p.editor.range.end > p.duration)
+    )
+      fail("Playback range must have start < end within effect duration");
     const assets = new Set(p.assets.map((a) => a.id));
     for (const l of p.layers) {
+      if (
+        l.type === "path" &&
+        l.handles &&
+        l.handles.length !== l.points.length
+      )
+        fail(`${l.id}: every Bezier anchor needs matching handles`);
       if (l.motion.scale.some((k) => k.value < 0.01 || k.value > 16))
         fail(`${l.id}.motion.scale must stay in 0.01..16`);
       if (
@@ -304,7 +377,13 @@ export const projectSchema = z
       fail("A project supports at most 4000 particle births per cycle");
     if (Math.ceil(p.duration * p.fps) > 300)
       fail("A project supports at most 300 frames");
-    if (p.assets.reduce((n, a) => n + a.width * a.height, 0) > 1048576)
+    if (
+      p.assets.reduce((n, a) => n + a.width * a.height, 0) +
+        (p.editor.reference
+          ? p.editor.reference.image.width * p.editor.reference.image.height
+          : 0) >
+      1048576
+    )
       fail("Combined textures exceed one million pixels");
   });
 export type Curve = z.infer<typeof curveSchema>;
@@ -321,7 +400,7 @@ export function parseProject(value: unknown): Project {
     value &&
     typeof value === "object" &&
     "version" in value &&
-    value.version === "0.4.0"
+    ["0.4.0", "0.5.0"].includes(String(value.version))
   )
     value = { ...value, version: VERSION };
   return projectSchema.parse(value);

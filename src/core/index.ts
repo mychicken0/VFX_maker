@@ -9,3 +9,5 @@ export * from "./errors.js";
 export * from "./pixel-options.js";
 export * from "./pixels.js";
 export * from "./authoring.js";
+export * from "./geometry.js";
+export * from "./editing.js";

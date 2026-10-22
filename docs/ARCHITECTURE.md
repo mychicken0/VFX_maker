@@ -6,7 +6,7 @@ There are no effect-name branches in simulation or rendering. A stable layer-ID
 hash plus project seed and particle index creates independent random cohorts.
 
 `src/render/pixi.ts` owns the PixiJS application, graphics, textured flipbook
-sprites and per-layer glow. Projects decode textures before switching scenes.
+sprites, sampled cubic Bezier strokes, per-layer masks and glow. Projects decode textures before switching scenes.
 Stale async scene loads are discarded. Layers share generic graphics routines;
 texture frame objects and sprite pools are reused until the scene changes.
 `pixi.js/unsafe-eval` installs Pixi's official precompiled/polyfill paths so the
@@ -34,7 +34,12 @@ Project serialization and inspector callbacks are memoized during playback.
 Pixel optimization runs in a separate worker; replacing settings terminates
 stale work. Object URLs are revoked and renderers destroyed on close. Vite bundles every dependency;
 fonts and runtime code require no external CDN. The loopback Studio server has
-no filesystem mutation API. Optional initial projects use a random bearer token.
+a file-bound mutation API protected by a random bearer token, revision and
+document identity. Save As changes the binding and refuses existing paths.
+Native browser handles persist in IndexedDB; disk and browser backups retain
+five distinct versions. A journal detects dirty work on reload. Reference and
+onion canvases are separate preview layers; the renderer never draws reference
+images, and exports strip them from the included project.
 
 `src/node` provides root-scoped file access, optimistic revisions, direct edits,
 CLI, MCP and export jobs. Playwright launches local Chromium, serves the packaged
@@ -52,6 +57,9 @@ validates PNG chunk lengths, checksums, header and inflate budgets before decode
 It performs nearest-neighbor sampling, block pixels, RGB palette quantization,
 ordered dithering and separate alpha quantization. `authoring.ts` contains
 canvas resizing, gradient/tint hue rotation and grid-checked texture replacement.
+`editing.ts` handles flat groups, selection transforms, keyframe insertion and
+curve updates. `geometry.ts` simplifies bounded freehand samples and flattens
+cubic Bezier segments for the same arc-length path rendering pipeline.
 These same functions are exposed through Studio, CLI, MCP and the public API.
 `vite.config.ts` adapts the pinned UPNG module's environment probe to ESM for
 both development and production workers; dependency source is left untouched.

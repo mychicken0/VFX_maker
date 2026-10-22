@@ -1,3 +1,5 @@
+import { MaskPanel } from "./MaskPanel.js";
+import { defaultHandles } from "../core/geometry.js";
 import { memo } from "react";
 import type { Layer, Project, Vec } from "../core/model.js";
 import {
@@ -373,6 +375,17 @@ export const Inspector = memo(function Inspector({
                 {l.type === "path" && (
                   <details open>
                     <summary>Stroke</summary>
+                    <Check
+                      label="Bezier stroke"
+                      value={!!l.handles}
+                      onChange={(value) =>
+                        update({
+                          handles: value
+                            ? defaultHandles(l.points, l.closed)
+                            : undefined,
+                        })
+                      }
+                    />
                     <CurveEditor
                       label="Width"
                       keys={l.width}
@@ -501,6 +514,7 @@ export const Inspector = memo(function Inspector({
                     ))}
                   </details>
                 )}
+                <MaskPanel layer={l} update={update} />
                 <details open>
                   <summary>Color & opacity</summary>
                   <GradientEditor

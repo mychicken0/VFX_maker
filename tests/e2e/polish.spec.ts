@@ -10,7 +10,10 @@ async function start(page: Page) {
 }
 async function save(page: Page): Promise<Project> {
   const wait = page.waitForEvent("download");
-  await page.locator(".topbar").getByRole("button", { name: /^Save/ }).click();
+  await page.getByRole("button", { name: "Project menu", exact: true }).click();
+  await page
+    .getByRole("menuitem", { name: "Download project", exact: true })
+    .click();
   return JSON.parse(await readFile((await (await wait).path())!, "utf8"));
 }
 async function open(page: Page, p: Project) {
@@ -254,7 +257,7 @@ test("canvas scaling is one edit and recent projects restore complete compositio
     .poll(() =>
       page.evaluate(async () => {
         const db = await new Promise<IDBDatabase>((resolve, reject) => {
-          const r = indexedDB.open("vfx-maker-projects", 1);
+          const r = indexedDB.open("vfx-maker-projects", 2);
           r.onsuccess = () => resolve(r.result);
           r.onerror = () => reject(r.error);
         });

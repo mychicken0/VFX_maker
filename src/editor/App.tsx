@@ -1,5 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+  cleanupGroups,
+  groupLayers,
+  transformLayers,
+  patchLayers,
+  simplifyStroke,
+  type Vec,
   PRESETS,
   VERSION,
   readableError,
@@ -22,9 +28,18 @@ import {
   toBase64,
   type ExportOptions,
 } from "../render/export.js";
+import { ReferencePanel } from "./ReferencePanel.js";
+import { BatchPanel } from "./BatchPanel.js";
 import { Inspector } from "./Inspector.js";
 import { Timeline } from "./Timeline.js";
 import { Viewport } from "./Viewport.js";
+import { useDocument, type BackupItem } from "./useDocument.js";
+import { RECOVERY, filePickers } from "./documents.js";
+import {
+  SaveAsDialog,
+  BackupsDialog,
+  RecoveryDialog,
+} from "./DocumentDialogs.js";
 import { NumberField } from "./controls.js";
 import { PixelLab, type PixelSource } from "./PixelLab.js";
 import {
@@ -40,6 +55,13 @@ import { rememberProject, listRecent, type RecentProject } from "./recent.js";
 import { downloadFile as download, safeFilename as safeName } from "./files.js";
 // Keep the same autosave key so existing browser projects open automatically.
 const STORAGE = "vfx-maker.0.4.autosave";
+function recoveryInfo(): { id: string | null; dirty: boolean } | null {
+  try {
+    return JSON.parse(localStorage.getItem(RECOVERY) ?? "null");
+  } catch {
+    return null;
+  }
+}
 const HISTORY_BYTES = 16 * 1024 * 1024;
 function initial(): Project {
   try {
@@ -64,9 +86,30 @@ function trimHistory(items: Project[]) {
 }
 export function App() {
   const [project, setProject] = useState(initial),
-    [selected, setSelected] = useState<string | undefined>(
-      () => project.layers.at(-1)?.id,
+    [selection, setSelection] = useState<string[]>(() =>
+      project.layers.at(-1) ? [project.layers.at(-1)!.id] : [],
     );
+  const selected = selection.at(-1),
+    setSelected = useCallback(
+      (id: string | undefined) => setSelection(id ? [id] : []),
+      [],
+    );
+  const selectLayer = (
+    id: string,
+    event?: { ctrlKey: boolean; metaKey: boolean; shiftKey: boolean },
+  ) => {
+    if (event?.shiftKey && selected) {
+      const order = [...project.layers].reverse().map((l) => l.id),
+        a = order.indexOf(selected),
+        b = order.indexOf(id),
+        range = order.slice(Math.min(a, b), Math.max(a, b) + 1);
+      setSelection([...range.filter((x) => x !== id), id]);
+    } else if (event?.ctrlKey || event?.metaKey)
+      setSelection((ids) =>
+        ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id],
+      );
+    else setSelected(id);
+  };
   const serialized = useMemo(() => JSON.stringify(project), [project]);
   const history = useRef<{ past: Project[]; future: Project[] }>({
       past: [],
@@ -87,9 +130,14 @@ export function App() {
       | "resize"
       | "recent"
       | "recolor"
+      | "save-as"
+      | "backups"
+      | "recovery"
       | null
     >(null),
-    [saved, setSaved] = useState(serialized),
+    [saved, setSaved] = useState(() =>
+      recoveryInfo()?.dirty ? "" : serialized,
+    ),
     [storageError, setStorageError] = useState(false),
     [solo, setSolo] = useState<string>(),
     [pixelSource, setPixelSource] = useState<PixelSource | null>(null),
@@ -102,6 +150,12 @@ export function App() {
     openInput = useRef<HTMLInputElement>(null),
     assetInput = useRef<HTMLInputElement>(null),
     captureGeneration = useRef(0);
+  const doc = useDocument(),
+    initialRecovery = useRef(recoveryInfo()),
+    [fileMenu, setFileMenu] = useState(false),
+    [timelineFocus, setTimelineFocus] = useState(false),
+    [backups, setBackups] = useState<BackupItem[]>([]),
+    [recoveryProject, setRecoveryProject] = useState<Project | null>(null);
   const layout = useStudioLayout();
   const toast = useCallback((text: string) => setMessage(text), []);
   useEffect(() => {
@@ -162,31 +216,57 @@ export function App() {
     (id: string, patch: Record<string, unknown>) => {
       const layer = project.layers.find((l) => l.id === id);
       if (!layer || layer.locked) return;
-      safeCommit({
-        ...project,
-        layers: project.layers.map((l) =>
-          l.id === id ? ({ ...l, ...patch } as Layer) : l,
-        ),
-      });
+      try {
+        safeCommit(patchLayers(project, [id], patch));
+      } catch (e) {
+        toast(readableError(e));
+      }
     },
     [project, safeCommit],
   );
   const update = useCallback(
     (patch: Record<string, unknown>) => {
-      if (selected) updateLayer(selected, patch);
+      if (!selected) return;
+      if (selection.length > 1 && patch.position) {
+        const primary = project.layers.find((l) => l.id === selected)!,
+          pos = patch.position as { x: number; y: number };
+        try {
+          safeCommit(
+            transformLayers(project, selection, {
+              x: pos.x - primary.position.x,
+              y: pos.y - primary.position.y,
+            }),
+          );
+        } catch (e) {
+          toast(readableError(e));
+        }
+      } else updateLayer(selected, patch);
     },
-    [selected, updateLayer],
+    [selected, selection, project, updateLayer, safeCommit, toast],
   );
   const layer = project.layers.find((l) => l.id === selected);
   useEffect(() => {
-    if (!project.layers.some((l) => l.id === selected))
-      setSelected(project.layers.at(-1)?.id);
+    setSelection((ids) => {
+      const valid = ids.filter((id) => project.layers.some((l) => l.id === id));
+      return valid.length === ids.length
+        ? ids
+        : valid.length
+          ? valid
+          : project.layers.at(-1)
+            ? [project.layers.at(-1)!.id]
+            : [];
+    });
     if (solo && !project.layers.some((l) => l.id === solo)) setSolo(undefined);
   }, [project, selected, solo]);
+  const dirty = serialized !== saved;
   useEffect(() => {
     const id = setTimeout(() => {
       try {
         localStorage.setItem(STORAGE, serialized);
+        localStorage.setItem(
+          RECOVERY,
+          JSON.stringify({ id: doc.id, dirty, updated: Date.now() }),
+        );
         setStorageError(false);
       } catch {
         setStorageError(true);
@@ -194,18 +274,21 @@ export function App() {
       void rememberProject(project).catch(() => {});
     }, 500);
     return () => clearTimeout(id);
-  }, [project, serialized]);
-  const dirty = serialized !== saved;
+  }, [project, serialized, dirty, doc.id]);
   useEffect(() => {
     const handler = (e: BeforeUnloadEvent) => {
       try {
         localStorage.setItem(STORAGE, serialized);
+        localStorage.setItem(
+          RECOVERY,
+          JSON.stringify({ id: doc.id, dirty, updated: Date.now() }),
+        );
       } catch {}
       if (dirty) e.preventDefault();
     };
     window.addEventListener("beforeunload", handler);
     return () => window.removeEventListener("beforeunload", handler);
-  }, [dirty, serialized]);
+  }, [dirty, serialized, doc.id]);
   useEffect(() => {
     if (!playing) return;
     let frame = 0,
@@ -214,11 +297,15 @@ export function App() {
       const dt = Math.min(0.1, (now - previous) / 1000);
       previous = now;
       setTime((t) => {
+        const start = project.editor.range?.start ?? 0,
+          end = project.editor.range?.end ?? project.duration;
+        if (t < start || t > end) return start;
         const next = t + dt;
-        if (next >= project.duration) {
-          if (project.loop) return next % project.duration;
+        if (next >= end) {
+          if (project.loop || project.editor.range)
+            return start + ((next - start) % (end - start));
           setPlaying(false);
-          return project.duration;
+          return end;
         }
         return next;
       });
@@ -226,55 +313,126 @@ export function App() {
     };
     frame = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(frame);
-  }, [playing, project.duration, project.loop]);
+  }, [playing, project.duration, project.loop, project.editor.range]);
   useEffect(() => {
     if (time > project.duration) setTime(project.duration);
   }, [time, project.duration]);
-  const save = useCallback(() => {
-    download(
-      new TextEncoder().encode(JSON.stringify(project, null, 2) + "\n"),
-      safeName(project.name) + ".vfx.json",
-      "application/json",
-    );
+  const markSaved = useCallback(() => {
+    setSaved(serialized);
     try {
       localStorage.setItem(STORAGE, serialized);
+      localStorage.setItem(
+        RECOVERY,
+        JSON.stringify({ id: doc.id, dirty: false, updated: Date.now() }),
+      );
       setStorageError(false);
     } catch {
       setStorageError(true);
     }
     void rememberProject(project).catch(() => {});
-    setSaved(serialized);
-    toast("Project downloaded. PNG textures are embedded.");
-  }, [project, serialized, toast]);
+  }, [serialized, project, doc.id]);
+  const save = useCallback(
+    async (as = false, path?: string) => {
+      if (as && doc.binding?.kind === "server" && !path) {
+        setModal("save-as");
+        return;
+      }
+      try {
+        const result = await doc.save(project, as, path);
+        markSaved();
+        setFileMenu(false);
+        if (as) setModal(null);
+        toast(
+          result.kind === "disk"
+            ? `Saved ${result.name}.`
+            : "Project downloaded. Use Save As with a supported file picker to connect a disk file.",
+        );
+      } catch (e) {
+        if ((e as Error).name !== "AbortError") toast(readableError(e));
+        if (path) throw e;
+      }
+    },
+    [doc, project, markSaved, toast],
+  );
+  const downloadProject = () => {
+    doc.download(project);
+    if (!doc.binding) markSaved();
+    setFileMenu(false);
+    toast("Project downloaded.");
+  };
   const closeModal = useCallback(() => {
-    if (progress) return;
+    if (progress || doc.busy) return;
     captureGeneration.current++;
     setModal(null);
-  }, [progress]);
-  const removeSelected = useCallback(() => {
-    if (layer && !layer.locked)
-      safeCommit({
-        ...project,
-        layers: project.layers.filter((l) => l.id !== layer.id),
-      });
-  }, [project, layer, safeCommit]);
-  const duplicate = useCallback(() => {
-    if (!layer || project.layers.length >= 32) return;
-    const id = layer.type + "-" + crypto.randomUUID().slice(0, 8);
-    const copy = {
-      ...structuredClone(layer),
-      id,
-      name: uniqueLayerName(
-        layer.name,
-        project.layers.map((l) => l.name),
-      ),
-      locked: false,
+  }, [progress, doc.busy]);
+  useEffect(() => {
+    if (!fileMenu) return;
+    const outside = (event: PointerEvent) => {
+      if (!(event.target as Element).closest(".file-menu-wrap"))
+        setFileMenu(false);
     };
-    const layers = [...project.layers];
-    layers.splice(layers.indexOf(layer) + 1, 0, copy);
-    safeCommit({ ...project, layers });
-    setSelected(id);
-  }, [project, layer, safeCommit]);
+    document.addEventListener("pointerdown", outside);
+    return () => document.removeEventListener("pointerdown", outside);
+  }, [fileMenu]);
+  const removeSelected = useCallback(
+    () =>
+      safeCommit(
+        cleanupGroups({
+          ...project,
+          layers: project.layers.filter(
+            (l) => !selection.includes(l.id) || l.locked,
+          ),
+        }),
+      ),
+    [project, selection, safeCommit],
+  );
+  const duplicate = useCallback(() => {
+    const chosen = project.layers.filter((l) => selection.includes(l.id));
+    if (!chosen.length || project.layers.length + chosen.length > 32) return;
+    const names = project.layers.map((l) => l.name),
+      mapping = new Map<string, string>(),
+      layers: Layer[] = [];
+    for (const original of project.layers) {
+      layers.push(original);
+      if (chosen.includes(original)) {
+        const id = original.type + "-" + crypto.randomUUID().slice(0, 8),
+          name = uniqueLayerName(original.name, names);
+        names.push(name);
+        mapping.set(original.id, id);
+        layers.push({ ...structuredClone(original), id, name, locked: false });
+      }
+    }
+    const groups = [...project.groups];
+    for (const group of project.groups)
+      if (group.ids.every((id) => mapping.has(id)))
+        groups.push({
+          id: "group-" + crypto.randomUUID().slice(0, 8),
+          name: uniqueLayerName(
+            group.name,
+            groups.map((g) => g.name),
+          ),
+          ids: group.ids.map((id) => mapping.get(id)!),
+        });
+    safeCommit({ ...project, layers, groups });
+    setSelection([...mapping.values()]);
+  }, [project, selection, safeCommit]);
+  const activeGroup = project.groups.find(
+    (g) =>
+      g.ids.length === selection.length &&
+      g.ids.every((id) => selection.includes(id)),
+  );
+  function createGroup() {
+    try {
+      const id = "group-" + crypto.randomUUID().slice(0, 8),
+        name = uniqueLayerName(
+          "Group",
+          project.groups.map((g) => g.name),
+        );
+      safeCommit(groupLayers(project, id, name, selection));
+    } catch (e) {
+      toast(readableError(e));
+    }
+  }
   function moveLayer(delta: number) {
     if (!layer) return;
     const layers = [...project.layers],
@@ -288,13 +446,14 @@ export function App() {
     const handler = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         closeModal();
+        setFileMenu(false);
         layout.setDrawer(null);
         return;
       }
       if (modal) return;
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") {
         e.preventDefault();
-        save();
+        void save(e.shiftKey);
         return;
       }
       if (
@@ -356,26 +515,39 @@ export function App() {
     layout.setDrawer,
   ]);
   useEffect(() => {
-    const token = new URLSearchParams(location.hash.slice(1)).get("project");
-    if (!token) return;
-    window.history.replaceState(null, "", location.pathname);
-    void fetch("/api/project", {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((r) => {
-        if (!r.ok) throw Error("Cannot load the project passed to Studio");
-        return r.json();
-      })
+    let alive = true;
+    void doc
+      .connect()
       .then((value) => {
-        if (value) {
-          const p = parseProject(value);
-          setProject(p);
-          setSaved(JSON.stringify(p));
-          setSelected(p.layers.at(-1)?.id);
+        if (!alive || !value) return;
+        const disk = value.project,
+          text = JSON.stringify(disk);
+        setSaved(text);
+        if (
+          initialRecovery.current?.dirty &&
+          initialRecovery.current.id === value.id &&
+          serialized !== text
+        ) {
+          setRecoveryProject(disk);
+          setModal("recovery");
+          return;
         }
+        void rememberProject(project).catch(() => {});
+        setProject(disk);
+        setSelected(disk.layers.at(-1)?.id);
+        setTime(0);
+        setPlaying(false);
       })
-      .catch((e) => toast(readableError(e)));
-  }, [toast]);
+      .catch((e) => {
+        if (alive) {
+          doc.detach();
+          toast(readableError(e));
+        }
+      });
+    return () => {
+      alive = false;
+    };
+  }, []);
   function loadProject(p: Project, fromFile = false) {
     commit(p);
     setSelected(p.layers.at(-1)?.id);
@@ -389,7 +561,9 @@ export function App() {
     if (!file) return;
     try {
       if (file.size > 4194304) throw Error("Project exceeds 4 MiB");
-      loadProject(parseText(await file.text()), true);
+      const parsed = parseText(await file.text());
+      doc.detach();
+      loadProject(parsed, true);
       toast("Project opened.");
     } catch (e) {
       toast(readableError(e));
@@ -450,6 +624,45 @@ export function App() {
     safeCommit({ ...project, layers: [...project.layers, next] });
     setSelected(id);
     setTab("layers");
+  }
+  function addStroke(points: Vec[]) {
+    try {
+      const shape = simplifyStroke(points);
+      if (shape.length < 2) return;
+      const x =
+          (Math.min(...shape.map((p) => p.x)) +
+            Math.max(...shape.map((p) => p.x))) /
+          2,
+        y =
+          (Math.min(...shape.map((p) => p.y)) +
+            Math.max(...shape.map((p) => p.y))) /
+          2,
+        id = "path-" + crypto.randomUUID().slice(0, 8);
+      const stroke = layerSchema.parse({
+        id,
+        type: "path",
+        name: uniqueLayerName(
+          "Drawn stroke",
+          project.layers.map((l) => l.name),
+        ),
+        position: { x, y },
+        duration: project.duration,
+        points: shape.map((p) => ({ x: p.x - x, y: p.y - y })),
+        ...(layer?.type === "path"
+          ? {
+              colors: layer.colors,
+              width: layer.width,
+              taper: layer.taper,
+              glow: layer.glow,
+            }
+          : {}),
+      });
+      commit({ ...project, layers: [...project.layers, stroke] });
+      setSelected(id);
+      setTab("layers");
+    } catch (e) {
+      toast(readableError(e));
+    }
   }
   async function openPixels() {
     setPlaying(false);
@@ -544,7 +757,7 @@ export function App() {
   );
   return (
     <div
-      className={`studio ${layout.compact ? "compact" : ""} ${layout.layout.timelineOpen ? "" : "timeline-collapsed"}`}
+      className={`studio ${layout.compact ? "compact" : ""} ${layout.layout.timelineOpen ? (timelineFocus ? "timeline-focus" : "") : "timeline-collapsed"}`}
       data-history={historyVersion}
       style={layout.style}
       onDragOver={(e) => {
@@ -580,7 +793,7 @@ export function App() {
           {project.name}
           <span
             className={dirty ? "unsaved-dot" : "saved-dot"}
-            title={dirty ? "Changes since last file download" : "Saved file"}
+            title={dirty ? "Unsaved changes" : "Saved project"}
           />
         </div>
         <div className="spacer" />
@@ -600,8 +813,27 @@ export function App() {
         >
           ↷
         </button>
-        <button onClick={() => openInput.current?.click()}>Open</button>
-        <button onClick={save}>
+        <button
+          disabled={doc.busy}
+          onClick={() => {
+            if (filePickers().showOpenFilePicker) {
+              void doc
+                .openNative()
+                .then((p) => {
+                  if (p) loadProject(p, true);
+                })
+                .catch((e) => {
+                  if (e.name !== "AbortError") {
+                    toast(readableError(e));
+                    openInput.current?.click();
+                  }
+                });
+            } else openInput.current?.click();
+          }}
+        >
+          Open
+        </button>
+        <button disabled={doc.busy} onClick={() => void save()}>
           Save<span className="save-long"> project</span>
         </button>
         <button
@@ -613,6 +845,62 @@ export function App() {
         >
           Export ↗
         </button>
+        <div className="file-menu-wrap">
+          <button
+            aria-label="Project menu"
+            aria-expanded={fileMenu}
+            onClick={() => setFileMenu((v) => !v)}
+          >
+            ⋯
+          </button>
+          {fileMenu && (
+            <div className="file-menu" role="menu">
+              <button
+                role="menuitem"
+                disabled={doc.busy}
+                onClick={() => {
+                  setFileMenu(false);
+                  void save(true);
+                }}
+              >
+                Save As…
+              </button>
+              <button
+                role="menuitem"
+                disabled={doc.busy}
+                onClick={downloadProject}
+              >
+                Download project
+              </button>
+              <button
+                role="menuitem"
+                disabled={!doc.binding || doc.busy}
+                onClick={() => {
+                  setFileMenu(false);
+                  void doc
+                    .backups()
+                    .then((items) => {
+                      setBackups(items);
+                      setModal("backups");
+                    })
+                    .catch((e) => toast(readableError(e)));
+                }}
+              >
+                File backups…
+              </button>
+              <button
+                role="menuitem"
+                disabled={doc.busy}
+                onClick={() => {
+                  setFileMenu(false);
+                  openInput.current?.click();
+                }}
+              >
+                Import project file…
+              </button>
+            </div>
+          )}
+        </div>
         <button aria-label="Help" onClick={() => setModal("help")}>
           ?
         </button>
@@ -692,7 +980,7 @@ export function App() {
           inert={!layout.leftVisible}
         >
           <div className="library-tabs">
-            {["layers", "effects", "assets"].map((t) => (
+            {["layers", "effects", "assets", "reference"].map((t) => (
               <button
                 className={tab === t ? "active" : ""}
                 key={t}
@@ -715,6 +1003,50 @@ export function App() {
                   value={layerSearch}
                   onChange={(e) => setLayerSearch(e.target.value)}
                 />
+              </div>
+              <div className="group-list">
+                {project.groups.map((g) => (
+                  <button
+                    key={g.id}
+                    className={activeGroup?.id === g.id ? "active" : ""}
+                    aria-label={`Select group ${g.name}`}
+                    onClick={() =>
+                      setSelection(
+                        [...g.ids].sort(
+                          (a, b) =>
+                            Number(
+                              !project.layers.find((l) => l.id === a)!.locked,
+                            ) -
+                            Number(
+                              !project.layers.find((l) => l.id === b)!.locked,
+                            ),
+                        ),
+                      )
+                    }
+                  >
+                    <span>▱ {g.name}</span>
+                    <small>{g.ids.length}</small>
+                  </button>
+                ))}
+              </div>
+              <div className="group-actions">
+                <button disabled={selection.length < 2} onClick={createGroup}>
+                  Group selection
+                </button>
+                <button
+                  disabled={!activeGroup}
+                  onClick={() =>
+                    safeCommit({
+                      ...project,
+                      groups: project.groups.filter(
+                        (g) => g.id !== activeGroup?.id,
+                      ),
+                    })
+                  }
+                >
+                  Ungroup
+                </button>
+                <span>{selection.length} selected</span>
               </div>
               <div className="layer-list">
                 {[...project.layers]
@@ -741,7 +1073,7 @@ export function App() {
                         layers.splice(to, 0, moved);
                         safeCommit({ ...project, layers });
                       }}
-                      className={`layer-row ${selected === l.id ? "selected" : ""} ${!l.visible ? "muted" : ""}`}
+                      className={`layer-row ${selection.includes(l.id) ? "selected" : ""} ${!l.visible ? "muted" : ""}`}
                     >
                       <button
                         className="layer-visibility"
@@ -759,7 +1091,7 @@ export function App() {
                       </button>
                       <button
                         className="layer-select"
-                        onClick={() => setSelected(l.id)}
+                        onClick={(e) => selectLayer(l.id, e)}
                       >
                         <span className={`type-dot ${l.type}`} />
                         <span>
@@ -788,13 +1120,19 @@ export function App() {
               <div className="layer-actions">
                 <button
                   onClick={duplicate}
-                  disabled={!layer || project.layers.length >= 32}
+                  disabled={
+                    !layer || project.layers.length + selection.length > 32
+                  }
                   title="Duplicate selected layer"
                 >
                   Duplicate
                 </button>
                 <button
-                  disabled={!layer || layer.locked}
+                  disabled={
+                    !project.layers.some(
+                      (l) => selection.includes(l.id) && !l.locked,
+                    )
+                  }
                   onClick={removeSelected}
                 >
                   Delete
@@ -920,6 +1258,13 @@ export function App() {
               </div>
             </>
           )}
+          {tab === "reference" && (
+            <ReferencePanel
+              project={project}
+              onApply={safeCommit}
+              onError={toast}
+            />
+          )}
           {tab === "assets" && (
             <>
               <div className="panel-heading">
@@ -1033,17 +1378,31 @@ export function App() {
             onError={toast}
             onInteract={() => setPlaying(false)}
             solo={solo}
+            selection={selection}
+            updateProject={safeCommit}
+            addStroke={addStroke}
           />
           {layout.layout.timelineOpen && separator("timeline")}
           <Timeline
+            focused={timelineFocus}
+            onFocus={() => setTimelineFocus((v) => !v)}
+            onKeyframeView={(open) => {
+              if (open && innerHeight < 620) setTimelineFocus(true);
+              else {
+                setTimelineFocus(false);
+                if (open && layout.layout.timeline < 350)
+                  layout.resize("timeline", 350 - layout.layout.timeline);
+              }
+            }}
             project={project}
             selected={selected}
-            select={setSelected}
+            select={selectLayer}
             time={time}
             setTime={setTime}
             playing={playing}
             setPlaying={setPlaying}
             updateLayer={updateLayer}
+            updateProject={safeCommit}
           />
         </div>
         {layout.rightVisible && !layout.compact && separator("right")}
@@ -1051,12 +1410,16 @@ export function App() {
           className={`inspector-panel ${layout.rightVisible ? "panel-visible" : "panel-hidden"}`}
           inert={!layout.rightVisible}
         >
-          <Inspector
-            layer={layer}
-            project={project}
-            update={update}
-            updateProject={safeCommit}
-          />
+          {selection.length > 1 ? (
+            <BatchPanel project={project} ids={selection} onApply={commit} />
+          ) : (
+            <Inspector
+              layer={layer}
+              project={project}
+              update={update}
+              updateProject={safeCommit}
+            />
+          )}
         </div>
       </main>
       <footer className="statusbar" inert={!!modal}>
@@ -1065,6 +1428,12 @@ export function App() {
             ? "Autosave unavailable — download your project"
             : "● Local autosave on"}
         </span>
+        {doc.name && (
+          <span className="document-status" title={doc.name}>
+            {doc.busy ? "Saving…" : dirty ? "● Unsaved changes" : "✓ Saved"} ·{" "}
+            {doc.name}
+          </span>
+        )}
         <span className="status-shortcut">
           Ctrl / ⌘ S to save <i>·</i> No account needed
         </span>
@@ -1098,6 +1467,41 @@ export function App() {
             ×
           </button>
         </div>
+      )}
+      {modal === "save-as" && (
+        <SaveAsDialog
+          name={doc.name ?? safeName(project.name) + ".vfx.json"}
+          busy={doc.busy}
+          onClose={closeModal}
+          onSave={(path) => save(true, path)}
+        />
+      )}
+      {modal === "backups" && (
+        <BackupsDialog
+          entries={backups}
+          busy={doc.busy}
+          onClose={closeModal}
+          onRestore={async (id) => {
+            const p = await doc.restore(id);
+            commit(p);
+            setSaved(JSON.stringify(p));
+            setModal(null);
+            toast("File restored. Its previous content was backed up.");
+          }}
+        />
+      )}
+      {modal === "recovery" && recoveryProject && (
+        <RecoveryDialog
+          name={doc.name ?? project.name}
+          onKeep={() => {
+            setModal(null);
+            toast("Recovered unsaved changes. Save when ready.");
+          }}
+          onFile={() => {
+            loadProject(recoveryProject, true);
+            setModal(null);
+          }}
+        />
       )}
       {modal === "pixels" && (
         <PixelLab

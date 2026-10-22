@@ -1,5 +1,11 @@
 import * as fs from "node:fs/promises";
 import { z } from "zod";
+import {
+  cleanupGroups,
+  groupLayers,
+  transformLayers,
+  putKeyframe,
+} from "../core/editing.js";
 import { getPreset, PRESETS } from "../core/presets.js";
 import {
   assetSchema,
@@ -53,6 +59,40 @@ export class Service {
   update(file: string, revision: string, patch: unknown) {
     return this.store.edit(file, revision, (p) => merge(p, patch));
   }
+  group(
+    file: string,
+    revision: string,
+    id: string,
+    name: string,
+    ids: string[],
+  ) {
+    return this.store.edit(file, revision, (p) =>
+      groupLayers(p, id, name, ids),
+    );
+  }
+  transform(
+    file: string,
+    revision: string,
+    ids: string[],
+    options: Parameters<typeof transformLayers>[2],
+  ) {
+    return this.store.edit(file, revision, (p) =>
+      transformLayers(p, ids, options),
+    );
+  }
+  keyframe(
+    file: string,
+    revision: string,
+    id: string,
+    channel: string,
+    time: number,
+    value: number,
+    ease: "linear" | "smooth" | "hold" = "linear",
+  ) {
+    return this.store.edit(file, revision, (p) =>
+      putKeyframe(p, id, channel, time, value, ease),
+    );
+  }
   updateLayer(file: string, revision: string, id: string, patch: unknown) {
     return this.store.edit(file, revision, (p) => {
       const i = p.layers.findIndex((l) => l.id === id);
@@ -83,7 +123,10 @@ export class Service {
       const l = p.layers.find((l) => l.id === id);
       if (!l) throw new Error(`Unknown layer ${id}`);
       if (l.locked) throw new Error("Unlock the layer before removing it");
-      return { ...p, layers: p.layers.filter((l) => l.id !== id) };
+      return cleanupGroups({
+        ...p,
+        layers: p.layers.filter((l) => l.id !== id),
+      });
     });
   }
   reorder(file: string, revision: string, ids: string[]) {

@@ -240,7 +240,11 @@ export async function exportEffect(
       "Unity 2022.3+ with 2D Sprite package: place this entire folder in Assets, select metadata.json, then Assets > VFX Maker > Import selected metadata. Creates sliced sprites and a uniquely named AnimationClip. This is a baked animation.\n",
     );
   }
-  files["effect.vfx.json"] = text(JSON.stringify(project, null, 2) + "\n");
+  const portable = {
+    ...project,
+    editor: { ...project.editor, reference: undefined },
+  };
+  files["effect.vfx.json"] = text(JSON.stringify(portable, null, 2) + "\n");
   const hashes: Record<string, string> = {};
   for (const [name, bytes] of Object.entries(files))
     hashes[name] = Array.from(

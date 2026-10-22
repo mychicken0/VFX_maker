@@ -1,8 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Layer, Project, Vec } from "../core/model.js";
+import { defaultHandles, pathPolyline } from "../core/geometry.js";
+import { CurveHandles, MaskHandles, InkSurface } from "./ShapeHandles.js";
 import { evaluate } from "../core/math.js";
 import { readableError } from "../core/errors.js";
 import { localTime } from "../core/simulation.js";
+import { OnionSkin } from "./OnionSkin.js";
 import { VfxRenderer } from "../render/pixi.js";
 export function Viewport({
   project,
@@ -12,6 +15,9 @@ export function Viewport({
   onError,
   onInteract,
   solo,
+  selection = [],
+  updateProject,
+  addStroke,
 }: {
   project: Project;
   layer?: Layer;
@@ -20,6 +26,9 @@ export function Viewport({
   onError: (e: string) => void;
   onInteract: () => void;
   solo?: string;
+  selection?: string[];
+  updateProject?: (p: Project) => void;
+  addStroke?: (points: Vec[]) => void;
 }) {
   const area = useRef<HTMLDivElement>(null),
     host = useRef<HTMLDivElement>(null),
@@ -34,7 +43,16 @@ export function Viewport({
     [snap, setSnap] = useState(true),
     [guides, setGuides] = useState(true),
     [background, setBackground] = useState<"dark" | "checker">("dark"),
-    [draft, setDraft] = useState<Layer>();
+    [draft, setDraft] = useState<Layer>(),
+    [onion, setOnion] = useState(false),
+    [referenceMode, setReferenceMode] = useState(false),
+    [referenceDraft, setReferenceDraft] = useState<{
+      x: number;
+      y: number;
+    } | null>(null),
+    [inkMode, setInkMode] = useState(false),
+    [maskMode, setMaskMode] = useState(false),
+    [anchorIndex, setAnchorIndex] = useState(0);
   timeRef.current = time;
   const zoom =
     zoomChoice === "fit"
@@ -53,13 +71,29 @@ export function Viewport({
     () => ({
       ...project,
       layers: project.layers.map((l) => {
-        const value = draft?.id === l.id ? draft : l;
+        let value = draft?.id === l.id ? draft : l;
+        if (
+          draft &&
+          layer &&
+          l.id !== layer.id &&
+          selection.includes(l.id) &&
+          !l.locked
+        ) {
+          value = {
+            ...value,
+            position: {
+              x: value.position.x + draft.position.x - layer.position.x,
+              y: value.position.y + draft.position.y - layer.position.y,
+            },
+          };
+        }
+
         return solo
           ? { ...value, visible: l.id === solo && value.visible }
           : value;
       }),
     }),
-    [project, draft, solo],
+    [project, draft, solo, selection, layer],
   );
   useEffect(() => {
     if (!area.current) return;
@@ -156,6 +190,15 @@ export function Viewport({
         (p.x * Math.sin(t.rotation) + p.y * Math.cos(t.rotation)) * t.scale,
     };
   };
+  const local = (p: Vec, l: Layer): Vec => {
+    const t = transform(l),
+      dx = p.x - t.x,
+      dy = p.y - t.y;
+    return {
+      x: (dx * Math.cos(t.rotation) + dy * Math.sin(t.rotation)) / t.scale,
+      y: (-dx * Math.sin(t.rotation) + dy * Math.cos(t.rotation)) / t.scale,
+    };
+  };
   const anchor = active ? world({ x: 0, y: 0 }, active) : { x: 0, y: 0 };
   const rounded = (n: number) =>
     snap ? Math.round(n) : Math.round(n * 100) / 100;
@@ -169,7 +212,17 @@ export function Viewport({
     };
   };
   const drag = (e: React.PointerEvent<SVGElement>, index: number | null) => {
-    if (e.button !== 0 || !active || active.locked || panMode) return;
+    if (
+      e.button !== 0 ||
+      !active ||
+      active.locked ||
+      panMode ||
+      referenceMode ||
+      inkMode ||
+      maskMode
+    )
+      return;
+    if (index !== null) setAnchorIndex(index);
     e.stopPropagation();
     onInteract();
     const target = e.currentTarget;
@@ -272,10 +325,94 @@ export function Viewport({
         <button
           aria-label="Pan canvas"
           aria-pressed={panMode}
-          onClick={() => setPanMode(!panMode)}
+          onClick={() => {
+            setPanMode(!panMode);
+            setInkMode(false);
+            setMaskMode(false);
+            setReferenceMode(false);
+          }}
         >
           Hand
         </button>
+        {addStroke && (
+          <button
+            aria-label="Freehand stroke"
+            aria-pressed={inkMode}
+            onClick={() => {
+              setInkMode((v) => !v);
+              setGuides(true);
+              setPanMode(false);
+              setReferenceMode(false);
+              setMaskMode(false);
+              onInteract();
+            }}
+          >
+            Freehand
+          </button>
+        )}
+        {layer?.type === "path" && (
+          <button
+            aria-label="Bezier handles"
+            disabled={layer.locked}
+            aria-pressed={!!layer.handles}
+            onClick={() => {
+              update({
+                handles: layer.handles
+                  ? undefined
+                  : defaultHandles(layer.points, layer.closed),
+              });
+              setMaskMode(false);
+              setInkMode(false);
+              setReferenceMode(false);
+              setGuides(true);
+              onInteract();
+            }}
+          >
+            Bezier
+          </button>
+        )}
+        {layer?.mask && (
+          <button
+            aria-label="Mask edit"
+            aria-pressed={maskMode}
+            onClick={() => {
+              setMaskMode((v) => !v);
+              setInkMode(false);
+              setReferenceMode(false);
+              setPanMode(false);
+              setGuides(true);
+              onInteract();
+            }}
+          >
+            Mask edit
+          </button>
+        )}
+        <button
+          aria-label="Onion skin"
+          aria-pressed={onion}
+          onClick={() => {
+            setOnion((v) => !v);
+            onInteract();
+          }}
+        >
+          Onion
+        </button>
+        {project.editor.reference && (
+          <button
+            aria-label="Reference move"
+            aria-pressed={referenceMode}
+            onClick={() => {
+              setReferenceMode((v) => !v);
+              setInkMode(false);
+              setMaskMode(false);
+              setPanMode(false);
+              setGuides(true);
+              onInteract();
+            }}
+          >
+            Reference move
+          </button>
+        )}
         <button
           aria-label="Fit canvas"
           onClick={() => {
@@ -343,11 +480,34 @@ export function Viewport({
               background === "dark" ? project.canvas.background : undefined,
           }}
         >
+          {project.editor.reference?.visible &&
+            (() => {
+              const ref = project.editor.reference,
+                pos = referenceDraft ?? ref.position;
+              return (
+                <div className={`reference-plane reference-${ref.plane}`}>
+                  <img
+                    alt="Canvas reference"
+                    src={ref.image.data}
+                    style={{
+                      left: `${(pos.x / width) * 100}%`,
+                      top: `${(pos.y / height) * 100}%`,
+                      width: ref.image.width * ref.scale * zoom,
+                      height: ref.image.height * ref.scale * zoom,
+                      opacity: ref.opacity,
+                    }}
+                  />
+                </div>
+              );
+            })()}
           <div
             ref={host}
             className={`pixi-host ${project.canvas.pixelArt ? "pixel-art" : ""}`}
             data-testid="pixi-viewport"
           />
+          {onion && (
+            <OnionSkin project={viewProject} time={time} onError={onError} />
+          )}
           {grid && zoom >= 4 && (
             <svg
               className="pixel-grid"
@@ -379,6 +539,9 @@ export function Viewport({
               onDoubleClick={(e) => {
                 if (
                   panMode ||
+                  inkMode ||
+                  maskMode ||
+                  referenceMode ||
                   !active ||
                   active.locked ||
                   !("points" in active) ||
@@ -407,81 +570,198 @@ export function Viewport({
                 });
               }}
             >
+              {inkMode && addStroke && (
+                <InkSurface
+                  width={width}
+                  height={height}
+                  zoom={zoom}
+                  onStroke={addStroke}
+                />
+              )}
+              {maskMode && active && !active.locked && active.mask && (
+                <MaskHandles
+                  layer={active}
+                  zoom={zoom}
+                  width={width}
+                  height={height}
+                  world={world}
+                  local={local}
+                  onDraft={setDraft}
+                  onCommit={update}
+                />
+              )}
+              {referenceMode && project.editor.reference && updateProject && (
+                <g
+                  aria-label="Drag reference position"
+                  className="drag-handle"
+                  onPointerDown={(event) => {
+                    if (event.button !== 0) return;
+                    event.preventDefault();
+                    event.stopPropagation();
+                    onInteract();
+                    const el = event.currentTarget,
+                      original = project.editor.reference!,
+                      start = pointFromEvent(event);
+                    let next = original.position;
+                    el.setPointerCapture(event.pointerId);
+                    const move = (e: PointerEvent) => {
+                      const b = el
+                        .closest(".canvas-stack")!
+                        .getBoundingClientRect();
+                      next = {
+                        x: rounded(
+                          original.position.x +
+                            ((e.clientX - b.left) / b.width) * width -
+                            start.x,
+                        ),
+                        y: rounded(
+                          original.position.y +
+                            ((e.clientY - b.top) / b.height) * height -
+                            start.y,
+                        ),
+                      };
+                      setReferenceDraft(next);
+                    };
+                    const cleanup = () => {
+                      el.removeEventListener("pointermove", move);
+                      el.removeEventListener("pointerup", end);
+                      el.removeEventListener("pointercancel", cancel);
+                      setReferenceDraft(null);
+                    };
+                    const end = () => {
+                      cleanup();
+                      updateProject({
+                        ...project,
+                        editor: {
+                          ...project.editor,
+                          reference: { ...original, position: next },
+                        },
+                      });
+                    };
+                    const cancel = () => cleanup();
+                    el.addEventListener("pointermove", move);
+                    el.addEventListener("pointerup", end);
+                    el.addEventListener("pointercancel", cancel);
+                  }}
+                >
+                  <circle
+                    cx={(referenceDraft ?? project.editor.reference.position).x}
+                    cy={(referenceDraft ?? project.editor.reference.position).y}
+                    r={10 / zoom}
+                    fill="#252333"
+                    stroke="#8fd8d0"
+                    strokeWidth={1 / zoom}
+                  />
+                  <text
+                    x={
+                      (referenceDraft ?? project.editor.reference.position).x +
+                      12 / zoom
+                    }
+                    y={(referenceDraft ?? project.editor.reference.position).y}
+                    fontSize={10 / zoom}
+                    fill="#8fd8d0"
+                  >
+                    REFERENCE
+                  </text>
+                </g>
+              )}
               <path
+                pointerEvents="none"
                 d={`M${width / 2} 0V${height}M0 ${height / 2}H${width}`}
                 stroke="#b8b6ce"
                 opacity="0.14"
                 strokeWidth={1 / zoom}
                 strokeDasharray={`${3 / zoom} ${3 / zoom}`}
               />
-              {active && active.visible && !active.locked && (
-                <>
-                  {"points" in active &&
-                    (active.type === "path" || active.mode === "path") && (
-                      <>
-                        <polyline
-                          points={active.points
-                            .map((p) => {
-                              const w = world(p, active);
-                              return `${w.x},${w.y}`;
-                            })
-                            .join(" ")}
-                          fill="none"
-                          stroke="#b3a0ff"
-                          opacity="0.6"
-                          strokeWidth={1 / zoom}
-                        />
-                        {active.points.map((p, i) => {
-                          const w = world(p, active);
-                          return (
-                            <g key={i}>
-                              <circle
-                                aria-label={`Drag point ${i + 1}`}
-                                className="drag-handle"
-                                cx={w.x}
-                                cy={w.y}
-                                r={6 / zoom}
-                                fill="#d1c4ff"
-                                stroke="#262235"
-                                strokeWidth={1 / zoom}
-                                onPointerDown={(e) => drag(e, i)}
-                              />
-                              <text
-                                x={w.x + 6 / zoom}
-                                y={w.y - 5 / zoom}
-                                fontSize={10 / zoom}
-                                fill="#d1c4ff"
-                                pointerEvents="none"
-                              >
-                                {i + 1}
-                              </text>
-                            </g>
-                          );
-                        })}
-                      </>
+              {active &&
+                active.visible &&
+                !active.locked &&
+                !referenceMode &&
+                !inkMode &&
+                !maskMode && (
+                  <>
+                    {"points" in active &&
+                      (active.type === "path" || active.mode === "path") && (
+                        <>
+                          <polyline
+                            points={(active.type === "path"
+                              ? pathPolyline(active)
+                              : active.points
+                            )
+                              .map((p) => {
+                                const w = world(p, active);
+                                return `${w.x},${w.y}`;
+                              })
+                              .join(" ")}
+                            fill="none"
+                            stroke="#b3a0ff"
+                            opacity="0.6"
+                            strokeWidth={1 / zoom}
+                          />
+                          {active.points.map((p, i) => {
+                            const w = world(p, active);
+                            return (
+                              <g key={i}>
+                                <circle
+                                  aria-label={`Drag point ${i + 1}`}
+                                  className="drag-handle"
+                                  cx={w.x}
+                                  cy={w.y}
+                                  r={6 / zoom}
+                                  fill="#d1c4ff"
+                                  stroke="#262235"
+                                  strokeWidth={1 / zoom}
+                                  onPointerDown={(e) => drag(e, i)}
+                                />
+                                <text
+                                  x={w.x + 6 / zoom}
+                                  y={w.y - 5 / zoom}
+                                  fontSize={10 / zoom}
+                                  fill="#d1c4ff"
+                                  pointerEvents="none"
+                                >
+                                  {i + 1}
+                                </text>
+                              </g>
+                            );
+                          })}
+                        </>
+                      )}
+                    {active.type === "path" && active.handles && (
+                      <CurveHandles
+                        layer={active}
+                        index={Math.min(anchorIndex, active.points.length - 1)}
+                        zoom={zoom}
+                        width={width}
+                        height={height}
+                        world={world}
+                        local={local}
+                        onDraft={setDraft}
+                        onCommit={update}
+                      />
                     )}
-                  <g
-                    aria-label="Drag layer position"
-                    className="drag-handle"
-                    onPointerDown={(e) => drag(e, null)}
-                  >
-                    <circle
-                      cx={anchor.x}
-                      cy={anchor.y}
-                      r={9 / zoom}
-                      fill="#14121f"
-                      stroke="#c4b0ff"
-                      strokeWidth={1 / zoom}
-                    />
-                    <path
-                      d={`M${anchor.x - 4 / zoom} ${anchor.y}h${8 / zoom}M${anchor.x} ${anchor.y - 4 / zoom}v${8 / zoom}`}
-                      stroke="#d1c4ff"
-                      strokeWidth={1 / zoom}
-                      pointerEvents="none"
-                    />
-                  </g>
-                </>
-              )}
+                    <g
+                      aria-label="Drag layer position"
+                      className="drag-handle"
+                      onPointerDown={(e) => drag(e, null)}
+                    >
+                      <circle
+                        cx={anchor.x}
+                        cy={anchor.y}
+                        r={9 / zoom}
+                        fill="#14121f"
+                        stroke="#c4b0ff"
+                        strokeWidth={1 / zoom}
+                      />
+                      <path
+                        d={`M${anchor.x - 4 / zoom} ${anchor.y}h${8 / zoom}M${anchor.x} ${anchor.y - 4 / zoom}v${8 / zoom}`}
+                        stroke="#d1c4ff"
+                        strokeWidth={1 / zoom}
+                        pointerEvents="none"
+                      />
+                    </g>
+                  </>
+                )}
             </svg>
           )}
           <div className="canvas-label">

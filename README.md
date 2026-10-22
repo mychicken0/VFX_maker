@@ -1,4 +1,4 @@
-# VFX Maker 0.5.0
+# VFX Maker 0.6.0
 
 **A visual VFX studio built with TypeScript, PixiJS 8 and React 19.**
 Shape a sword slash by dragging its points, retime layers in the timeline, edit
@@ -17,10 +17,10 @@ npm run build
 node dist/cli.js studio --open
 ```
 
-Or install the prepared `vfx-maker-0.5.0.tgz` once and use it in any folder:
+Or install the prepared `vfx-maker-0.6.0.tgz` once and use it in any folder:
 
 ```bash
-npm install -g /path/to/vfx-maker-0.5.0.tgz
+npm install -g /path/to/vfx-maker-0.6.0.tgz
 cd /path/to/your/game
 vfx studio --open
 ```
@@ -43,8 +43,16 @@ tested; macOS, Windows, Firefox and Safari are not verified.
   and sprites. Drag layers to change compositing order; hide, lock or duplicate.
 - Drag the viewport's center handle to move a layer. Drag numbered stroke
   points to reshape it; double-click to add a point.
-- Move and resize timeline clips to change start and duration. Step by frame,
-  scrub, loop, or press Space to play/pause.
+- Ctrl/⌘-click or Shift-click to select layers, then group them. Move the
+  selection in the canvas or apply translation, rotation, scale, blend and opacity
+  together. Locked layers are skipped unless explicitly included.
+- Draw **Freehand** strokes or enable **Bezier** tangents on existing strokes.
+  Layer masks clip to a rectangle, ellipse or editable polygon, including glow.
+- Move and resize timeline clips. Open **Keyframes**, choose a channel and
+  double-click/drag keys directly; frame snapping, numeric values and easing are
+  editable. Use **Onion** for adjacent frames and **Loop range** for a work area.
+- Import a character or scene under **Reference**, then position it, change its
+  scale/opacity and place it behind or above the effect. It remains preview-only.
 - Edit color stops and curves for opacity, size, draw progress and geometry.
   Transform keyframes animate X/Y offsets, rotation and scale.
 - Import PNG textures or flipbooks. Set columns/rows/frame count; textures are
@@ -60,17 +68,23 @@ tested; macOS, Windows, Firefox and Safari are not verified.
   losslessly, reduce colors/alpha levels, resize with nearest-neighbor sampling,
   or make larger pixel blocks. Download PNG, replace a texture or reuse the
   settings on every export format. Actual byte savings are shown.
-- Undo/redo with Ctrl/⌘ Z and Ctrl/⌘ Shift Z. Local browser autosave protects
-  recent work; eight named project backups are available under **Recent**.
-  **Save project** downloads a file you can move or share.
+- Undo/redo with Ctrl/⌘ Z and Ctrl/⌘ Shift Z. Browser autosave restores recent
+  edits after a close; **Recent** retains eight project snapshots. **Save** writes
+  a connected disk file, **Save As** changes the target, and **File backups**
+  restores one of the last five distinct file versions.
 - Export GIF, transparent PNG sequence, padded spritesheet, Godot SpriteFrames
   or Unity import folder directly from Studio. Output scale works in every
   format; atlas padding and optional edge extrusion support game textures.
   Palettes are shared across animation frames. Export ZIPs include the project.
 
-Open/Save use browser files. A project passed to `vfx studio file.vfx.json` is
-loaded into the editor; downloading does **not** overwrite that disk file.
-Browser autosave is specific to the browser and origin/port.
+**Saving:** `vfx studio file.vfx.json` connects Save to that file with SHA-256
+revision checks and backups in its `.vfx-backups` directory. Chromium browsers
+can also remember a file chosen with the native Open/Save As picker; backups go
+to IndexedDB. Other browsers fall back to file import/download. **Project menu →
+Download project** always creates a portable copy. Recovery offers unsaved work
+or the disk version when reopening a connected document. Browser storage and
+remembered handles are specific to the profile and origin/port, and can be
+removed by clearing site data. See [saving and authoring](docs/STUDIO.md).
 
 ## Terminal
 
@@ -84,6 +98,10 @@ vfx export slash.vfx.json --format godot --scale 0.5 --out slash-godot
 vfx optimize preview.png --out small.png --colors 16 --scale 0.5
 vfx resize slash.vfx.json --width 64 --height 64
 vfx recolor slash.vfx.json --hue 120
+vfx group slash.vfx.json --id attack --name Attack --layers cut-a,cut-b
+vfx transform slash.vfx.json --layers cut-a,cut-b --x 4 --scale 0.8
+vfx keyframe slash.vfx.json cut-a motion.x --time 0.5 --value 12 --ease smooth
+vfx backups slash.vfx.json
 ```
 
 See the [rendered sword GIF](examples/red-magic-cross.gif).
@@ -126,7 +144,8 @@ vfx studio my-effect.vfx.json --open
 `build` executes **trusted local TypeScript**, with normal Node access. It is
 not exposed as an MCP tool. Modules can generate shapes, parameters and layers
 using ordinary code; saved projects contain data and can be opened without
-executing code. See [customization](docs/CUSTOMIZATION.md).
+executing code. See [customization](docs/CUSTOMIZATION.md) and the runnable
+[Bezier/mask/group example](examples/bezier-slash.ts).
 
 ## Codex / Claude through MCP
 
@@ -147,7 +166,8 @@ For clients with `mcpServers`, merge this entry into their settings:
 }
 ```
 
-21 tools cover templates, schemas, portable projects, direct layer updates,
+26 tools cover templates, schemas, portable projects, layer/group transforms,
+keyframes, backups and restoration, direct layer updates,
 embedded assets, inline image previews, PNG optimization, canvas resizing,
 recoloring, exports and cancellable background jobs. The official MCP SDK is used; stdout carries only the protocol.
 Read the [agent workflow](docs/MCP.md).
@@ -178,6 +198,7 @@ stripped during recompression. PNG optimization does not require Chromium.
 
 See [pixel workflows](docs/PIXEL_WORKFLOWS.md),
 [open source/product references](docs/OPEN_SOURCE_RESEARCH.md),
-[0.5.0 changes](docs/RELEASE_0.5.0.md),
-[validation and measurements](docs/VALIDATION_0.5.0.md), and
+[0.6.0 changes](docs/RELEASE_0.6.0.md),
+[validation](docs/VALIDATION_0.6.0.md),
+[previous pixel measurements](docs/VALIDATION_0.5.0.md), and
 [project compatibility](docs/MIGRATION.md).

@@ -8,7 +8,8 @@ import {
   Sprite,
   Texture,
 } from "pixi.js";
-import type { Asset, Project } from "../core/model.js";
+import { pathPolyline } from "../core/geometry.js";
+import type { Vec, Asset, Project } from "../core/model.js";
 import { parseProject } from "../core/model.js";
 import {
   clamp,
@@ -24,6 +25,7 @@ interface View {
   body: Container;
   halo: Container;
   graphics: Graphics;
+  path?: Vec[];
   sprites: Sprite[];
   haloSprites: Sprite[];
 }
@@ -104,6 +106,31 @@ export class VfxRenderer {
       halo.alpha = layer.glow.strength;
       halo.visible = layer.glow.strength > 0;
       root.addChild(halo, body);
+      if (layer.mask) {
+        const mask = new Graphics(),
+          m = layer.mask;
+        if (m.shape === "rectangle")
+          mask
+            .rect(
+              m.position.x - m.width / 2,
+              m.position.y - m.height / 2,
+              m.width,
+              m.height,
+            )
+            .fill(0xffffff);
+        else if (m.shape === "ellipse")
+          mask
+            .ellipse(m.position.x, m.position.y, m.width / 2, m.height / 2)
+            .fill(0xffffff);
+        else
+          mask
+            .poly(
+              m.points.flatMap((p) => [p.x + m.position.x, p.y + m.position.y]),
+            )
+            .fill(0xffffff);
+        root.addChild(mask);
+        root.mask = mask;
+      }
       root.position.set(layer.position.x, layer.position.y);
       root.rotation = (layer.rotation * Math.PI) / 180;
       root.scale.set(layer.scale);
@@ -114,6 +141,7 @@ export class VfxRenderer {
         halo,
         body,
         graphics,
+        path: layer.type === "path" ? pathPolyline(layer) : undefined,
         sprites: [],
         haloSprites: [],
       });
@@ -204,7 +232,7 @@ export class VfxRenderer {
           }
         });
       } else if (l.type === "path") {
-        const pts = l.closed ? [...l.points, l.points[0]] : l.points;
+        const pts = v.path!;
         const progress = clamp(evaluate(l.draw, u)),
           width = Math.max(0, evaluate(l.width, u)),
           color = colorAt(l.colors, u);

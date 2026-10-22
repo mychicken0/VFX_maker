@@ -271,6 +271,85 @@ cli
     );
   });
 cli
+  .command("group <file>")
+  .description("Create a named selection group without reordering layers")
+  .requiredOption("--id <id>", "Unique group ID")
+  .requiredOption("--name <name>", "Group name")
+  .requiredOption("--layers <ids>", "Comma-separated existing layer IDs")
+  .option("--if-match <revision>")
+  .action(async (file, o) => {
+    const s = await service();
+    output(
+      await s.group(
+        file,
+        o.ifMatch ?? (await s.store.read(file)).revision,
+        o.id,
+        o.name,
+        o.layers.split(","),
+      ),
+    );
+  });
+cli
+  .command("transform <file>")
+  .description("Transform a selection around its mean anchor")
+  .requiredOption("--layers <ids>", "Comma-separated layer IDs")
+  .option("--x <number>", "Horizontal offset", Number)
+  .option("--y <number>", "Vertical offset", Number)
+  .option("--rotation <degrees>", "Rotation offset", Number)
+  .option("--scale <number>", "Uniform scale factor", Number)
+  .option("--include-locked", "Also transform locked layers")
+  .option("--if-match <revision>")
+  .action(async (file, o) => {
+    const s = await service();
+    output(
+      await s.transform(
+        file,
+        o.ifMatch ?? (await s.store.read(file)).revision,
+        o.layers.split(","),
+        o,
+      ),
+    );
+  });
+cli
+  .command("keyframe <file> <layer> <channel>")
+  .description("Insert or replace a normalized curve key")
+  .requiredOption("--time <number>", "Normalized layer time, 0..1", Number)
+  .requiredOption("--value <number>", "Curve value", Number)
+  .option("--ease <mode>", "linear, smooth or hold", "linear")
+  .option("--if-match <revision>")
+  .action(async (file, id, channel, o) => {
+    const s = await service();
+    output(
+      await s.keyframe(
+        file,
+        o.ifMatch ?? (await s.store.read(file)).revision,
+        id,
+        channel,
+        o.time,
+        o.value,
+        o.ease,
+      ),
+    );
+  });
+cli
+  .command("backups <file>")
+  .description("List up to five retained versions before disk edits")
+  .action(async (file) => output(await (await service()).store.backups(file)));
+cli
+  .command("restore <file> <backup>")
+  .description("Restore a backup, backing up the current file first")
+  .option("--if-match <revision>")
+  .action(async (file, id, o) => {
+    const s = await service();
+    output(
+      await s.store.restore(
+        file,
+        o.ifMatch ?? (await s.store.read(file)).revision,
+        id,
+      ),
+    );
+  });
+cli
   .command("build <source>")
   .description(
     "Execute a trusted TypeScript effect module and save its exported project",
@@ -312,14 +391,21 @@ cli
   .action(async (file, opts) => {
     if (!Number.isInteger(opts.port) || opts.port < 0 || opts.port > 65535)
       throw new Error("Port must be 0..65535");
+    const studioService = await service();
     const project = file
-      ? (await (await service()).store.read(file)).project
+      ? (await studioService.store.read(file)).project
       : undefined;
-    const server = await serve({ port: opts.port, project });
+    const server = await serve({
+      port: opts.port,
+      project,
+      document: file ? { store: studioService.store, file } : undefined,
+    });
     const url = server.url + (project ? "/#project=" + server.token : "/");
     output({
       studio: url,
-      note: "Open/save use local browser files. Ctrl+C stops this server.",
+      note: file
+        ? "Save writes the selected project with revision checks and backups. Ctrl+C stops this server."
+        : "Open or create a project in Studio. Ctrl+C stops this server.",
     });
     if (opts.open) {
       const command =

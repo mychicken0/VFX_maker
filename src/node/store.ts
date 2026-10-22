@@ -78,9 +78,15 @@ export class Store {
         text = serialize(project);
       if (Buffer.byteLength(text) > 4 * 1024 * 1024)
         throw new Error("Project exceeds 4 MiB");
+      const previous = await fs.readFile(path);
+      if (revision(previous) !== current.revision)
+        throw new Error("Revision conflict: file changed during edit");
+      await this.backup(path, previous);
       const temp = path + "." + randomUUID() + ".tmp";
       try {
         await fs.writeFile(temp, text, { flag: "wx" });
+        if (revision(await fs.readFile(path)) !== current.revision)
+          throw new Error("Revision conflict: file changed during edit");
         await fs.rename(temp, path);
       } finally {
         await fs.rm(temp, { force: true });
@@ -90,6 +96,85 @@ export class Store {
       await lock.close();
       await fs.unlink(path + ".lock");
     }
+  }
+  private backupPrefix(path: string) {
+    return (
+      revision(relative(this.root, path)).slice(0, 16) +
+      "-" +
+      basename(path).slice(0, 24) +
+      "."
+    );
+  }
+  private async backup(path: string, bytes: Buffer) {
+    const directory = resolve(dirname(path), ".vfx-backups");
+    await fs.mkdir(directory, { recursive: true });
+    await this.path(relative(this.root, directory));
+    const name = relative(
+      this.root,
+      resolve(directory, this.backupPrefix(path) + revision(bytes) + ".json"),
+    );
+    const safe = await this.path(name, false).catch(async (e) => {
+      if ((e as Error).message === "Output already exists") {
+        if ((await fs.lstat(resolve(this.root, name))).isSymbolicLink())
+          throw Error("Backup must not be a symlink");
+        return this.path(name);
+      }
+      throw e;
+    });
+    try {
+      await fs.writeFile(safe, bytes, { flag: "wx" });
+    } catch (e) {
+      if ((e as NodeJS.ErrnoException).code !== "EEXIST") throw e;
+    }
+    const now = new Date();
+    await fs.utimes(safe, now, now);
+    const backups = await this.backups(relative(this.root, path));
+    for (const entry of backups.slice(5))
+      await fs.unlink(
+        await this.path(relative(this.root, resolve(directory, entry.id))),
+      );
+  }
+  async backups(file: string) {
+    const path = await this.path(file),
+      directory = resolve(dirname(path), ".vfx-backups"),
+      prefix = this.backupPrefix(path);
+    let names: string[];
+    try {
+      await this.path(relative(this.root, directory));
+      names = await fs.readdir(directory);
+    } catch (e) {
+      if ((e as NodeJS.ErrnoException).code === "ENOENT") return [];
+      throw e;
+    }
+    const entries = [];
+    for (const id of names) {
+      if (
+        !id.startsWith(prefix) ||
+        !id.endsWith(".json") ||
+        !/^([0-9a-f]{64})$/.test(id.slice(prefix.length, -5))
+      )
+        continue;
+      if ((await fs.lstat(resolve(directory, id))).isSymbolicLink())
+        throw Error("Backup must not be a symlink");
+      const safe = await this.path(relative(this.root, resolve(directory, id))),
+        stat = await fs.stat(safe);
+      entries.push({ id, updated: stat.mtimeMs, bytes: stat.size });
+    }
+    return entries.sort(
+      (a, b) => b.updated - a.updated || a.id.localeCompare(b.id),
+    );
+  }
+  async restore(file: string, expected: string, id: string) {
+    if (!(await this.backups(file)).some((b) => b.id === id))
+      throw new Error("Unknown backup");
+    const source = await this.path(file),
+      backup = await this.path(
+        relative(this.root, resolve(dirname(source), ".vfx-backups", id)),
+      );
+    if ((await fs.stat(backup)).size > 4194304)
+      throw new Error("Backup exceeds project budget");
+    const project = parseText(await fs.readFile(backup, "utf8"));
+    return this.edit(file, expected, () => project);
   }
   async publish(
     name: string,

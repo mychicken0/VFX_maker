@@ -1,4 +1,6 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
+import { KeyframeTrack } from "./KeyframeTrack.js";
+import { NumberField } from "./controls.js";
 import type { Layer, Project } from "../core/model.js";
 export function Timeline({
   project: p,
@@ -9,10 +11,21 @@ export function Timeline({
   playing,
   setPlaying,
   updateLayer,
+  updateProject,
+  focused,
+  onFocus,
+  onKeyframeView,
 }: {
+  focused: boolean;
+  onFocus: () => void;
+  onKeyframeView: (open: boolean) => void;
+  updateProject: (p: Project) => void;
   project: Project;
   selected?: string;
-  select: (id: string) => void;
+  select: (
+    id: string,
+    event?: { ctrlKey: boolean; metaKey: boolean; shiftKey: boolean },
+  ) => void;
   time: number;
   setTime: (t: number) => void;
   playing: boolean;
@@ -20,6 +33,9 @@ export function Timeline({
   updateLayer: (id: string, patch: Record<string, unknown>) => void;
 }) {
   const trackArea = useRef<HTMLDivElement>(null);
+  const [showKeys, setShowKeys] = useState(false);
+  const active = p.layers.find((l) => l.id === selected),
+    range = p.editor.range;
   const drag = (
     e: React.PointerEvent<HTMLDivElement>,
     l: Layer,
@@ -115,9 +131,79 @@ export function Timeline({
           Space to play <i>·</i> drag clips to retime
         </span>
       </div>
+      <div className="timeline-tools">
+        <button
+          aria-pressed={showKeys}
+          onClick={() => {
+            setPlaying(false);
+            onKeyframeView(!showKeys);
+            setShowKeys((v) => !v);
+          }}
+        >
+          Keyframes
+        </button>
+        {showKeys && (
+          <button onClick={onFocus} aria-pressed={focused}>
+            {focused ? "Restore canvas" : "Focus timeline"}
+          </button>
+        )}
+        <button
+          aria-pressed={!!range}
+          onClick={() =>
+            updateProject({
+              ...p,
+              editor: {
+                ...p.editor,
+                range: range ? undefined : { start: 0, end: p.duration },
+              },
+            })
+          }
+        >
+          Loop range
+        </button>
+        {range && (
+          <>
+            <NumberField
+              label="Range start"
+              value={range.start}
+              min={0}
+              max={range.end - 0.001}
+              step={0.01}
+              onChange={(start) =>
+                updateProject({
+                  ...p,
+                  editor: { ...p.editor, range: { ...range, start } },
+                })
+              }
+            />
+            <NumberField
+              label="Range end"
+              value={range.end}
+              min={range.start + 0.001}
+              max={p.duration}
+              step={0.01}
+              onChange={(end) =>
+                updateProject({
+                  ...p,
+                  editor: { ...p.editor, range: { ...range, end } },
+                })
+              }
+            />
+          </>
+        )}
+      </div>
       <div className="timeline-ruler">
         <span>LAYERS</span>
         <div>
+          {range && (
+            <span
+              className="play-range"
+              style={{
+                left: `${(range.start / p.duration) * 100}%`,
+                width: `${((range.end - range.start) / p.duration) * 100}%`,
+              }}
+            />
+          )}
           {Array.from({ length: 7 }, (_, i) => (
             <small key={i} style={{ left: `${(i / 6) * 100}%` }}>
               {((i / 6) * p.duration).toFixed(1)}s
@@ -138,12 +224,15 @@ export function Timeline({
         </div>
       </div>
       <div className="timeline-tracks" ref={trackArea}>
+        {showKeys && active && (
+          <KeyframeTrack project={p} layer={active} update={updateLayer} />
+        )}
         {[...p.layers].reverse().map((l) => (
           <div
             key={l.id}
             className={`timeline-row ${selected === l.id ? "selected" : ""}`}
           >
-            <button onClick={() => select(l.id)}>
+            <button onClick={(e) => select(l.id, e)}>
               <span className={`type-dot ${l.type}`} />
               {l.name}
             </button>

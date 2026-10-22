@@ -24,7 +24,7 @@ const server = new McpServer(
   {
     maxToolInputElements: 50000,
     instructions:
-      "VFX Maker 0.5 uses editable layers. Inspect a project to get its revision before changes. Updates merge nested objects and replace arrays. Layer order is bottom to top. Start with get_preset, then update_layer; use curves and paths for custom shapes. Export uses local Chromium + PixiJS, no network. Files are confined to the selected root and output paths must be unused. Prefer start_export and poll for long renders. TypeScript code execution is available only in the CLI build command for trusted sources.",
+      "VFX Maker 0.6 uses editable layers. Inspect a project to get its revision before changes. Updates merge nested objects and replace arrays. Layer order is bottom to top. Start with get_preset, then update_layer; use curves, Bezier path handles and layer masks for custom shapes. Group and transform selected layers together. Keyframe times are normalized within each layer. Each disk edit backs up the previous file; list_backups and restore_backup recover it. Editor references never render or export. Export uses local Chromium + PixiJS, no network. Files are confined to the selected root and output paths must be unused. Prefer start_export and poll for long renders. TypeScript code execution is available only in the CLI build command for trusted sources.",
   },
 );
 const file = z.string().min(1).max(2048),
@@ -168,6 +168,62 @@ tool(
   "Set complete layer order, bottom to top.",
   { file, revision, ids: z.array(z.string()).max(32) },
   (a) => s.reorder(a.file, a.revision, a.ids),
+);
+tool(
+  "group_layers",
+  "Create a named selection group without changing compositing order. Moves members out of previous groups.",
+  {
+    file,
+    revision,
+    id: z.string(),
+    name: z.string(),
+    ids: z.array(z.string()).min(1).max(32),
+  },
+  (a) => s.group(a.file, a.revision, a.id, a.name, a.ids),
+);
+tool(
+  "transform_layers",
+  "Move, rotate and uniformly scale selected layers around their mean anchor or an explicit pivot. Locked layers are skipped by default.",
+  {
+    file,
+    revision,
+    ids: z.array(z.string()).min(1).max(32),
+    x: z.number().optional(),
+    y: z.number().optional(),
+    rotation: z.number().min(-360).max(360).optional(),
+    scale: z.number().positive().max(16).optional(),
+    pivot: z.object({ x: z.number(), y: z.number() }).optional(),
+    includeLocked: z.boolean().default(false),
+  },
+  (a) => s.transform(a.file, a.revision, a.ids, a),
+);
+tool(
+  "put_keyframe",
+  "Insert or replace a curve key. Time is normalized 0..1 within the layer; other channels stay unchanged. Channel examples: motion.x, opacity, width, draw.",
+  {
+    file,
+    revision,
+    id: z.string(),
+    channel: z.string(),
+    time: z.number().min(0).max(1),
+    value: z.number(),
+    ease: z.enum(["linear", "smooth", "hold"]).default("linear"),
+  },
+  (a) =>
+    s.keyframe(a.file, a.revision, a.id, a.channel, a.time, a.value, a.ease),
+);
+tool(
+  "list_backups",
+  "List the five retained versions of a root-scoped project before disk edits.",
+  { file },
+  (a) => s.store.backups(a.file),
+  true,
+);
+tool(
+  "restore_backup",
+  "Restore a listed backup with a revision check. Backs up the current file first.",
+  { file, revision, id: z.string() },
+  (a) => s.store.restore(a.file, a.revision, a.id),
 );
 tool(
   "import_asset",

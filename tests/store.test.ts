@@ -15,6 +15,46 @@ afterEach(async () => {
   await rm(dir, { recursive: true, force: true });
 });
 describe("portable projects and edits", () => {
+  it("retains five distinct backups, restores with a revision and backs up the version being replaced", async () => {
+    let current = await s.create("saved.json");
+    const revisions = [current.revision];
+    for (let seed = 1; seed <= 7; seed++) {
+      current = await s.update("saved.json", current.revision, { seed });
+      revisions.push(current.revision);
+    }
+    const backups = await s.store.backups("saved.json");
+    expect(backups).toHaveLength(5);
+    expect(backups.some((b) => b.id.includes(revisions[6]))).toBe(true);
+    const chosen = backups.find((b) => b.id.includes(revisions[6]))!;
+    const restored = await s.store.restore(
+      "saved.json",
+      current.revision,
+      chosen.id,
+    );
+    expect(restored.project.seed).toBe(6);
+    expect(
+      (await s.store.backups("saved.json")).some((b) =>
+        b.id.includes(revisions[7]),
+      ),
+    ).toBe(true);
+    await expect(
+      s.store.restore("saved.json", current.revision, chosen.id),
+    ).rejects.toThrow("Revision conflict");
+    await expect(
+      s.store.restore("saved.json", restored.revision, "../saved.json"),
+    ).rejects.toThrow("Unknown backup");
+    expect((await s.store.read("saved.json")).project.seed).toBe(6);
+  });
+  it("fails before replacing the project when a backup directory escapes the root", async () => {
+    const created = await s.create("safe.json"),
+      before = await readFile(join(dir, "safe.json"));
+    await symlink(tmpdir(), join(dir, ".vfx-backups"));
+    await expect(
+      s.update("safe.json", created.revision, { seed: 77 }),
+    ).rejects.toThrow("symlink");
+    expect(await readFile(join(dir, "safe.json"))).toEqual(before);
+    await expect(readFile(join(dir, "safe.json.lock"))).rejects.toThrow();
+  });
   it("creates, edits with nested merging, rejects stale revisions and never clobbers a project", async () => {
     const a = await s.create("a.json", { preset: "spark_burst" });
     await expect(s.create("a.json")).rejects.toThrow("exists");

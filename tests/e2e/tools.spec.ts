@@ -32,7 +32,7 @@ test("installed-style CLI works outside the repository with portable TypeScript 
     p.fps = 10;
     await writeFile(join(dir, "custom.json"), JSON.stringify(p));
     const info = await cli("inspect", "custom.json");
-    expect(info.project.version).toBe("0.5.0");
+    expect(info.project.version).toBe("0.6.0");
     await cli(
       "set",
       "custom.json",
@@ -96,10 +96,63 @@ test("installed-style CLI works outside the repository with portable TypeScript 
       "64",
     );
     expect(resized.project.canvas.width).toBe(64);
+    const grouped = await cli(
+      "group",
+      "custom.json",
+      "--id",
+      "attack",
+      "--name",
+      "Attack",
+      "--layers",
+      "cut-a,cut-b",
+    );
+    expect(grouped.project.groups[0].ids).toEqual(["cut-a", "cut-b"]);
+    const moved = await cli(
+      "transform",
+      "custom.json",
+      "--layers",
+      "cut-a,cut-b",
+      "--x",
+      "3",
+      "--scale",
+      "0.8",
+    );
+    expect(
+      moved.project.layers.find((l: { id: string }) => l.id === "cut-a").scale,
+    ).toBeCloseTo(0.4);
+    const keyed = await cli(
+      "keyframe",
+      "custom.json",
+      "cut-a",
+      "motion.x",
+      "--time",
+      "0.5",
+      "--value",
+      "12",
+      "--ease",
+      "smooth",
+    );
+    expect(
+      keyed.project.layers.find((l: { id: string }) => l.id === "cut-a").motion
+        .x[1].value,
+    ).toBe(12);
+    const backups = await cli("backups", "custom.json");
+    expect(backups.length).toBeLessThanOrEqual(5);
+    const restored = await cli(
+      "restore",
+      "custom.json",
+      backups[0].id,
+      "--if-match",
+      keyed.revision,
+    );
+    expect(
+      restored.project.layers.find((l: { id: string }) => l.id === "cut-a")
+        .motion.x,
+    ).toHaveLength(2);
     const version = await exec(process.execPath, [cliEntrypoint, "--version"], {
       cwd: dir,
     });
-    expect(version.stdout.trim()).toBe("0.5.0");
+    expect(version.stdout.trim()).toBe("0.6.0");
   } finally {
     await rm(dir, { recursive: true, force: true });
   }
@@ -134,7 +187,7 @@ test("official MCP client authors without graph wiring, returns real image and m
   };
   try {
     await client.connect(transport);
-    expect((await client.listTools()).tools).toHaveLength(21);
+    expect((await client.listTools()).tools).toHaveLength(26);
     const project = getPreset("spark_burst");
     project.duration = 0.31;
     project.fps = 10;
@@ -145,6 +198,38 @@ test("official MCP client authors without graph wiring, returns real image and m
       id: "sparks",
       patch: { count: 12, colors: [{ t: 0, color: "#44ffaa" }] },
     });
+    a = await call("group_layers", {
+      file: "effect.json",
+      revision: a.revision,
+      id: "burst",
+      name: "Burst",
+      ids: ["shockwave", "sparks"],
+    });
+    expect(a.project.groups[0].ids).toEqual(["shockwave", "sparks"]);
+    a = await call("transform_layers", {
+      file: "effect.json",
+      revision: a.revision,
+      ids: ["shockwave", "sparks"],
+      x: 2,
+    });
+    a = await call("put_keyframe", {
+      file: "effect.json",
+      revision: a.revision,
+      id: "sparks",
+      channel: "motion.x",
+      time: 0.5,
+      value: 3,
+      ease: "smooth",
+    });
+    expect(a.project.layers[1].motion.x[1].value).toBe(3);
+    const history = await call("list_backups", { file: "effect.json" });
+    expect(history.result).toHaveLength(4);
+    a = await call("restore_backup", {
+      file: "effect.json",
+      revision: a.revision,
+      id: history.result[0].id,
+    });
+    expect(a.project.layers[1].motion.x).toHaveLength(2);
     const stale = await client.callTool({
       name: "update_project",
       arguments: {

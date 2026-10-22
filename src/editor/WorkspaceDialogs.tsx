@@ -366,7 +366,7 @@ export function HelpDialog({ onClose }: { onClose: () => void }) {
     <Modal title="Studio help" onClose={onClose}>
       <p>
         Start with an editable effect, reshape its layers and export an
-        animation. Projects and textures stay local to your browser.
+        animation. Projects and textures stay on your device.
       </p>
       <dl>
         <dt>Preview</dt>
@@ -377,9 +377,29 @@ export function HelpDialog({ onClose }: { onClose: () => void }) {
         </dd>
         <dt>Keyboard</dt>
         <dd>
-          Space: play/pause. Ctrl/⌘ S: download project. Ctrl/⌘ Z / Shift Z:
-          undo/redo. Ctrl/⌘ D: duplicate. Delete: remove unlocked layer. Arrow
-          keys: move one pixel; Shift: ten.
+          Space: play/pause. Ctrl/⌘ S: save. Ctrl/⌘ Shift S: Save As. Ctrl/⌘ Z /
+          Shift Z: undo/redo. Ctrl/⌘ D: duplicate. Delete: remove unlocked
+          layer. Arrow keys: move one pixel; Shift: ten.
+        </dd>
+        <dt>Saving and recovery</dt>
+        <dd>
+          Save writes the connected file and retains five distinct backups.
+          Project menu contains Save As, Download project and File backups.
+          Unsaved browser work can be recovered after reopening. Use the same
+          browser profile and Studio address to access browser recovery.
+        </dd>
+        <dt>Selection and drawing</dt>
+        <dd>
+          Ctrl/⌘-click or Shift-click layers to select several. Group them and
+          apply transforms together. Freehand draws a new stroke; Bezier edits
+          tangents. Enable Layer mask in the Inspector, then use Mask edit.
+        </dd>
+        <dt>Animation and reference</dt>
+        <dd>
+          Keyframes opens the timeline graph: double-click to add, drag to edit.
+          Onion shows adjacent frames. Loop range repeats a work area without
+          trimming exports. Reference images help preview size and placement;
+          they are excluded from exported files.
         </dd>
         <dt>Workspace</dt>
         <dd>

@@ -1,15 +1,6 @@
 import { parseProject, type Project } from "../core/model.js";
 export type RecentProject = { name: string; updated: number; project: Project };
-function db(): Promise<IDBDatabase> {
-  return new Promise((resolve, reject) => {
-    const request = indexedDB.open("vfx-maker-projects", 1);
-    request.onupgradeneeded = () =>
-      request.result.createObjectStore("recent", { keyPath: "name" });
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () =>
-      reject(new Error("Local project backups are unavailable"));
-  });
-}
+import { openDatabase as db } from "./persistence.js";
 export async function listRecent(): Promise<RecentProject[]> {
   const database = await db();
   try {
