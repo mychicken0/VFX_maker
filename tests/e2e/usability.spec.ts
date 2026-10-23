@@ -211,7 +211,6 @@ test("Blueprint wires a control through real ports, edits the wire, saves positi
     .getByLabel("Blueprint layer", { exact: true })
     .selectOption("cut-a");
   await button(page, "+ Number control").click();
-  const output = page.locator(".react-flow__node").last();
   await page.getByRole("button", { name: "Fit nodes", exact: true }).click();
   // Newly created Number control appears in the form and can also be wired by drag.
   const sourceId = await page.getByLabel("Blueprint control").inputValue();
@@ -222,19 +221,20 @@ test("Blueprint wires a control through real ports, edits the wire, saves positi
     target = page.locator('[data-id="layer:cut-a"] [data-handleid="rotation"]');
   await expect(out).toBeVisible();
   await expect(target).toBeVisible();
+  await expect(
+    page.getByLabel("Blueprint node graph", { exact: true }),
+  ).toHaveAttribute("aria-busy", "false");
   const a = (await out.boundingBox())!,
     b = (await target.boundingBox())!;
   await page.mouse.move(a.x + a.width / 2, a.y + a.height / 2);
   await page.mouse.down();
   await page.mouse.move(b.x + b.width / 2, b.y + b.height / 2, { steps: 12 });
   await page.mouse.up();
-  await expect(
-    page.locator(".react-flow__edge").filter({ hasText: "multiply ×1" }),
-  ).not.toHaveCount(0);
-  await field(page, "Node New control", "1.5");
   const wire = page.locator(
     `.react-flow__edge[data-id="binding:${sourceId}:0"] .react-flow__edge-interaction`,
   );
+  await expect(wire).toHaveCount(1);
+  await field(page, "Node New control", "1.5");
   await wire.click({ force: true });
   await expect(page.getByLabel("Connection mode")).toBeVisible();
   await page.getByLabel("Connection mode").selectOption("add");
@@ -256,7 +256,6 @@ test("Blueprint wires a control through real ports, edits the wire, saves positi
     after.editor.blueprint,
   );
   expect(errors).toEqual([]);
-  void output;
 });
 
 test("Blueprint and transform tools remain reachable at 390px with large text", async ({

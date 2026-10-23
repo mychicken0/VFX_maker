@@ -136,6 +136,7 @@ function Graph({
 }: Omit<Parameters<typeof Blueprint>[0], "onClose">) {
   const [error, setError] = useState(""),
     [scope, setScope] = useState("selected"),
+    [fitting, setFitting] = useState(true),
     [selectedNode, setSelectedNode] = useState(
       selected ? layerId(selected) : "",
     ),
@@ -149,13 +150,6 @@ function Graph({
     [extraPorts, setExtraPorts] = useState<Record<string, string[]>>({});
   const flow = useReactFlow<Card>();
   const initialized = useNodesInitialized();
-  useEffect(() => {
-    if (!initialized) return;
-    const frame = requestAnimationFrame(
-      () => void flow.fitView({ padding: 0.15, maxZoom: 1 }),
-    );
-    return () => cancelAnimationFrame(frame);
-  }, [initialized, scope, destination, p.controls.length, p.layers.length]);
   const act = (fn: () => Project) => {
     try {
       update(fn());
@@ -254,6 +248,28 @@ function Graph({
       })),
     );
   }, [p, scope, destination, extraPorts]);
+  const topology = nodes.map((n) => n.id).join("|");
+  useEffect(() => {
+    setFitting(true);
+    if (!initialized) return;
+    let alive = true;
+    const frame = requestAnimationFrame(() => {
+      const measured = flow.getNodes();
+      // A newly rendered topology may precede React Flow's measurement update.
+      if (
+        measured.map((n) => n.id).join("|") !== topology ||
+        measured.some((n) => !n.measured?.width || !n.measured?.height)
+      )
+        return;
+      void flow.fitView({ padding: 0.15, maxZoom: 1 }).then(() => {
+        if (alive) setFitting(false);
+      });
+    });
+    return () => {
+      alive = false;
+      cancelAnimationFrame(frame);
+    };
+  }, [initialized, topology]);
   const edges = useMemo(() => {
     const result: Edge[] = [];
     for (const c of p.controls)
@@ -372,7 +388,12 @@ function Graph({
           <option value="all">All layers</option>
         </select>
         <button
-          onClick={() => void flow.fitView({ padding: 0.15, maxZoom: 1 })}
+          disabled={fitting}
+          onClick={async () => {
+            setFitting(true);
+            await flow.fitView({ padding: 0.15, maxZoom: 1 });
+            setFitting(false);
+          }}
         >
           Fit nodes
         </button>
@@ -398,7 +419,11 @@ function Graph({
         </span>
       </div>
       <div className="blueprint-main">
-        <div className="blueprint-graph" aria-label="Blueprint node graph">
+        <div
+          className="blueprint-graph"
+          aria-label="Blueprint node graph"
+          aria-busy={fitting}
+        >
           <ReactFlow<Card>
             nodes={nodes}
             edges={edges}
@@ -431,8 +456,8 @@ function Graph({
               }))
             }
             deleteKeyCode={null}
-            fitView
-            fitViewOptions={{ maxZoom: 1, padding: 0.15 }}
+            nodesConnectable={!fitting}
+            nodesDraggable={!fitting}
             minZoom={0.15}
             maxZoom={2}
             colorMode="dark"
