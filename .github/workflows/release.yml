@@ -1,0 +1,27 @@
+name: Publish verified release
+on:
+  workflow_dispatch:
+    inputs:
+      ci_run_id:
+        description: Successful VFX Maker CI run for this exact commit
+        required: true
+        type: string
+permissions:
+  contents: write
+  actions: read
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ github.token }}
+      VFX_CI_RUN_ID: ${{ inputs.ci_run_id }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+      - name: Verify exact-commit CI and download its packages
+        run: node scripts/publish-release.mjs prepare
+      - name: Publish MIT release with verified packages and source
+        run: node scripts/publish-release.mjs publish
