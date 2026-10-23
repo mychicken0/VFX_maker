@@ -157,7 +157,7 @@ test("MCP observes, previews a draft, commits once and verifies exact exported p
   test.setTimeout(120000);
   const s = await session();
   try {
-    expect((await s.client.listTools()).tools).toHaveLength(34);
+    expect((await s.client.listTools()).tools).toHaveLength(38);
     expect((await s.call("capabilities")).coordinates.origin).toBe("top-left");
     expect(
       (await s.client.readResource({ uri: "vfx://guide" })).contents[0],
@@ -453,7 +453,7 @@ test("inspection references never change clean pixels and large layer sheets dis
     canvas: { width: 512, height: 512 },
     duration: 0.3,
     fps: 10,
-    layers: Array.from({ length: 32 }, (_, i) =>
+    layers: Array.from({ length: 64 }, (_, i) =>
       ring({
         id: `r${i}`,
         name: `Ring ${i}`,
@@ -471,8 +471,8 @@ test("inspection references never change clean pixels and large layer sheets dis
   const scene = JSON.parse(
     Buffer.from(result["observation.json"], "base64").toString(),
   ) as ObservationReport;
-  expect(scene.layers).toHaveLength(32);
-  expect(scene.omittedLayerIds).toHaveLength(23);
+  expect(scene.layers).toHaveLength(64);
+  expect(scene.omittedLayerIds).toHaveLength(55);
   const png = PNG.sync.read(Buffer.from(result["observation.png"], "base64"));
   expect(png.width * png.height).toBeLessThanOrEqual(1048576);
   expect(

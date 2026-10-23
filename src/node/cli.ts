@@ -8,7 +8,7 @@ import { build } from "esbuild";
 import { VERSION, parseProject } from "../core/model.js";
 import { Store } from "./store.js";
 import { Service } from "./service.js";
-import { browserPath } from "./driver.js";
+import { browserPath, closeRenderPool } from "./driver.js";
 import { serve } from "./server.js";
 const cli = new Command()
   .name("vfx")
@@ -21,6 +21,122 @@ const output = (v: unknown): void => {
 };
 const service = async () => new Service(await Store.open(cli.opts().root));
 cli
+  .command("gradient <file>")
+  .description(
+    "Set an exact solid color or gradient on all/selected layers, including gray smoke",
+  )
+  .option("--color <hex>", "Solid RGB color")
+  .option("--gradient <json>", "Array of {t,color} stops")
+  .option("--layers <ids>", "Comma-separated layer IDs")
+  .option("--include-locked")
+  .option("--if-match <revision>")
+  .action(async (file, o) => {
+    if (!!o.color === !!o.gradient) throw Error("Choose --color or --gradient");
+    const s = await service();
+    output(
+      await s.gradient(
+        file,
+        o.ifMatch ?? (await s.store.read(file)).revision,
+        o.color ?? JSON.parse(o.gradient),
+        !!o.includeLocked,
+        o.layers?.split(",").map((id: string) => id.trim()),
+      ),
+    );
+  });
+cli
+  .command("preflight <file>")
+  .description(
+    "Report export budgets without a browser or file creation; exit 2 when over budget",
+  )
+  .option("--options <json>", "Export options JSON", "{}")
+  .option("--if-match <revision>")
+  .action(async (file, o) => {
+    const r = await (
+      await service()
+    ).preflight(file, JSON.parse(o.options), o.ifMatch);
+    output(r);
+    if (!r.ok) process.exitCode = 2;
+  });
+cli
+  .command("analyze <file>")
+  .description(
+    "Numeric RGBA regression/parity report; exit 2 when a comparison fails",
+  )
+  .option(
+    "--times <seconds>",
+    "Comma-separated times; default all export frames",
+  )
+  .option("--no-parity", "Skip reverse-order rerender parity")
+  .option("--baseline <file>", "Root-scoped saved analysis JSON")
+  .option("--out <file>", "Fresh report JSON file")
+  .option("--if-match <revision>")
+  .action(async (file, o) => {
+    const r = await (
+      await service()
+    ).analyze(
+      file,
+      { times: o.times?.split(",").map(Number), parity: o.parity },
+      o.ifMatch,
+      o.baseline,
+      o.out,
+    );
+    output(r);
+    if (!r.ok) process.exitCode = 2;
+  });
+cli
+  .command("batch")
+  .description(
+    "Create/edit/export up to 32 independent projects with per-item results",
+  )
+  .option("--tasks <json>", "Task array; discover with vfx schema batch")
+  .option("--tasks-file <file>", "Root-scoped JSON task array")
+  .option("--dry-run", "Validate revisions, files and budgets without writing")
+  .option("--progress", "Write project-count progress to stderr")
+  .action(async (o) => {
+    if (!!o.tasks === !!o.tasksFile)
+      throw Error("Choose --tasks or --tasks-file");
+    const s = await service();
+    let input: unknown;
+    if (o.tasks) input = JSON.parse(o.tasks);
+    else {
+      const path = await s.store.path(o.tasksFile);
+      if ((await stat(path)).size > 4194304)
+        throw Error("Tasks file exceeds 4 MiB");
+      input = JSON.parse(await readFile(path, "utf8"));
+    }
+    const prepared = await s.prepareBatch(input);
+    if (o.dryRun) {
+      const ok = prepared.results.every((r) => r.status === "ready");
+      output({
+        ok,
+        dryRun: true,
+        atomicAcrossProjects: false,
+        results: prepared.results,
+      });
+      if (!ok) process.exitCode = 2;
+      return;
+    }
+    const abort = new AbortController(),
+      cancel = () => abort.abort();
+    process.once("SIGINT", cancel);
+    try {
+      const r = await s.executeBatch(
+        prepared,
+        abort.signal,
+        o.progress
+          ? (completed, total) =>
+              process.stderr.write(
+                JSON.stringify({ completed, total, unit: "projects" }) + "\n",
+              )
+          : undefined,
+      );
+      output(r);
+      if (!r.ok) process.exitCode = abort.signal.aborted ? 130 : 2;
+    } finally {
+      process.removeListener("SIGINT", cancel);
+    }
+  });
+cli
   .command("presets")
   .description("List editable effect templates")
   .action(async () => output((await service()).presets()));
@@ -28,7 +144,7 @@ cli
   .command("schema")
   .argument(
     "[kind]",
-    "project, layer, asset, pixels, export, creative, modifier, control, edits or observation",
+    "project, layer, asset, pixels, export, creative, modifier, control, edits, observation, analysis or batch",
     "project",
   )
   .action(async (kind) => {
@@ -44,6 +160,8 @@ cli
         "control",
         "edits",
         "observation",
+        "analysis",
+        "batch",
       ].includes(kind)
     )
       throw new Error("Unknown schema kind");
@@ -204,6 +322,7 @@ cli
   )
   .requiredOption("--out <directory>", "New inspection directory inside --root")
   .option("--view <view>", "frame, storyboard or layers", "frame")
+  .option("--storyboard-mode <mode>", "active (default) or timeline", "active")
   .option(
     "--time <seconds>",
     "Explicit project time; omit for automatic visible-frame sampling",
@@ -245,6 +364,7 @@ cli
       file,
       {
         view: o.view,
+        storyboardMode: o.storyboardMode,
         time: o.time,
         times: o.times?.split(",").map(Number),
         ids: o.ids?.split(",").map((id: string) => id.trim()),
@@ -743,4 +863,6 @@ try {
   const message = e instanceof Error ? e.message : String(e);
   process.stderr.write(JSON.stringify({ error: message }) + "\n");
   process.exitCode = e instanceof Error && e.name === "AbortError" ? 130 : 1;
+} finally {
+  await closeRenderPool();
 }

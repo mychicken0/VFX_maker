@@ -1,0 +1,642 @@
+[
+  {
+    "action": "create",
+    "file": "0.vfx.json",
+    "preset": "blue_magic",
+    "seed": 42,
+    "edits": [
+      {
+        "action": "update_project",
+        "patch": {
+          "name": "Cool blue_magic"
+        }
+      },
+      {
+        "action": "set_gradient",
+        "colors": [
+          {
+            "t": 0,
+            "color": "#ede5ff"
+          },
+          {
+            "t": 1,
+            "color": "#804cff"
+          }
+        ]
+      },
+      {
+        "action": "creative",
+        "operation": {
+          "action": "set_control",
+          "id": "size",
+          "value": 0.9
+        }
+      }
+    ],
+    "out": "gif-0",
+    "options": {
+      "format": "gif",
+      "scale": 2
+    }
+  },
+  {
+    "action": "create",
+    "file": "1.vfx.json",
+    "preset": "smoke",
+    "seed": 43,
+    "edits": [
+      {
+        "action": "update_project",
+        "patch": {
+          "name": "Cool smoke"
+        }
+      },
+      {
+        "action": "set_gradient",
+        "colors": [
+          {
+            "t": 0,
+            "color": "#ede5ff"
+          },
+          {
+            "t": 1,
+            "color": "#804cff"
+          }
+        ]
+      },
+      {
+        "action": "creative",
+        "operation": {
+          "action": "set_control",
+          "id": "size",
+          "value": 0.9
+        }
+      }
+    ],
+    "out": "gif-1",
+    "options": {
+      "format": "gif",
+      "scale": 2
+    }
+  },
+  {
+    "action": "create",
+    "file": "2.vfx.json",
+    "preset": "dust",
+    "seed": 44,
+    "edits": [
+      {
+        "action": "update_project",
+        "patch": {
+          "name": "Cool dust"
+        }
+      },
+      {
+        "action": "set_gradient",
+        "colors": [
+          {
+            "t": 0,
+            "color": "#ede5ff"
+          },
+          {
+            "t": 1,
+            "color": "#804cff"
+          }
+        ]
+      },
+      {
+        "action": "creative",
+        "operation": {
+          "action": "set_control",
+          "id": "size",
+          "value": 0.9
+        }
+      }
+    ],
+    "out": "gif-2",
+    "options": {
+      "format": "gif",
+      "scale": 2
+    }
+  },
+  {
+    "action": "create",
+    "file": "3.vfx.json",
+    "preset": "rain",
+    "seed": 45,
+    "edits": [
+      {
+        "action": "update_project",
+        "patch": {
+          "name": "Cool rain"
+        }
+      },
+      {
+        "action": "set_gradient",
+        "colors": [
+          {
+            "t": 0,
+            "color": "#ede5ff"
+          },
+          {
+            "t": 1,
+            "color": "#804cff"
+          }
+        ]
+      },
+      {
+        "action": "creative",
+        "operation": {
+          "action": "set_control",
+          "id": "size",
+          "value": 0.9
+        }
+      }
+    ],
+    "out": "gif-3",
+    "options": {
+      "format": "gif",
+      "scale": 2
+    }
+  },
+  {
+    "action": "create",
+    "file": "4.vfx.json",
+    "preset": "heal_pulse",
+    "seed": 46,
+    "edits": [
+      {
+        "action": "update_project",
+        "patch": {
+          "name": "Cool heal_pulse"
+        }
+      },
+      {
+        "action": "set_gradient",
+        "colors": [
+          {
+            "t": 0,
+            "color": "#ede5ff"
+          },
+          {
+            "t": 1,
+            "color": "#804cff"
+          }
+        ]
+      },
+      {
+        "action": "creative",
+        "operation": {
+          "action": "set_control",
+          "id": "size",
+          "value": 0.9
+        }
+      }
+    ],
+    "out": "gif-4",
+    "options": {
+      "format": "gif",
+      "scale": 2
+    }
+  },
+  {
+    "action": "create",
+    "file": "5.vfx.json",
+    "preset": "stardust",
+    "seed": 47,
+    "edits": [
+      {
+        "action": "update_project",
+        "patch": {
+          "name": "Cool stardust"
+        }
+      },
+      {
+        "action": "set_gradient",
+        "colors": [
+          {
+            "t": 0,
+            "color": "#ede5ff"
+          },
+          {
+            "t": 1,
+            "color": "#804cff"
+          }
+        ]
+      },
+      {
+        "action": "creative",
+        "operation": {
+          "action": "set_control",
+          "id": "size",
+          "value": 0.9
+        }
+      }
+    ],
+    "out": "gif-5",
+    "options": {
+      "format": "gif",
+      "scale": 2
+    }
+  },
+  {
+    "action": "create",
+    "file": "6.vfx.json",
+    "preset": "masked_portal",
+    "seed": 48,
+    "edits": [
+      {
+        "action": "update_project",
+        "patch": {
+          "name": "Cool masked_portal"
+        }
+      },
+      {
+        "action": "set_gradient",
+        "colors": [
+          {
+            "t": 0,
+            "color": "#ede5ff"
+          },
+          {
+            "t": 1,
+            "color": "#804cff"
+          }
+        ]
+      },
+      {
+        "action": "creative",
+        "operation": {
+          "action": "set_control",
+          "id": "size",
+          "value": 0.9
+        }
+      }
+    ],
+    "out": "gif-6",
+    "options": {
+      "format": "gif",
+      "scale": 2
+    }
+  },
+  {
+    "action": "create",
+    "file": "7.vfx.json",
+    "preset": "pixel_flame",
+    "seed": 49,
+    "edits": [
+      {
+        "action": "update_project",
+        "patch": {
+          "name": "Cool pixel_flame"
+        }
+      },
+      {
+        "action": "set_gradient",
+        "colors": [
+          {
+            "t": 0,
+            "color": "#ede5ff"
+          },
+          {
+            "t": 1,
+            "color": "#804cff"
+          }
+        ]
+      },
+      {
+        "action": "creative",
+        "operation": {
+          "action": "set_control",
+          "id": "size",
+          "value": 0.9
+        }
+      }
+    ],
+    "out": "gif-7",
+    "options": {
+      "format": "gif",
+      "scale": 2
+    }
+  },
+  {
+    "action": "create",
+    "file": "8.vfx.json",
+    "preset": "blue_magic",
+    "seed": 50,
+    "edits": [
+      {
+        "action": "update_project",
+        "patch": {
+          "name": "Warm blue_magic"
+        }
+      },
+      {
+        "action": "set_gradient",
+        "colors": [
+          {
+            "t": 0,
+            "color": "#fff1d0"
+          },
+          {
+            "t": 1,
+            "color": "#ff6633"
+          }
+        ]
+      },
+      {
+        "action": "creative",
+        "operation": {
+          "action": "set_control",
+          "id": "size",
+          "value": 1.1
+        }
+      }
+    ],
+    "out": "gif-8",
+    "options": {
+      "format": "gif",
+      "scale": 2
+    }
+  },
+  {
+    "action": "create",
+    "file": "9.vfx.json",
+    "preset": "smoke",
+    "seed": 51,
+    "edits": [
+      {
+        "action": "update_project",
+        "patch": {
+          "name": "Warm smoke"
+        }
+      },
+      {
+        "action": "set_gradient",
+        "colors": [
+          {
+            "t": 0,
+            "color": "#fff1d0"
+          },
+          {
+            "t": 1,
+            "color": "#ff6633"
+          }
+        ]
+      },
+      {
+        "action": "creative",
+        "operation": {
+          "action": "set_control",
+          "id": "size",
+          "value": 1.1
+        }
+      }
+    ],
+    "out": "gif-9",
+    "options": {
+      "format": "gif",
+      "scale": 2
+    }
+  },
+  {
+    "action": "create",
+    "file": "10.vfx.json",
+    "preset": "dust",
+    "seed": 52,
+    "edits": [
+      {
+        "action": "update_project",
+        "patch": {
+          "name": "Warm dust"
+        }
+      },
+      {
+        "action": "set_gradient",
+        "colors": [
+          {
+            "t": 0,
+            "color": "#fff1d0"
+          },
+          {
+            "t": 1,
+            "color": "#ff6633"
+          }
+        ]
+      },
+      {
+        "action": "creative",
+        "operation": {
+          "action": "set_control",
+          "id": "size",
+          "value": 1.1
+        }
+      }
+    ],
+    "out": "gif-10",
+    "options": {
+      "format": "gif",
+      "scale": 2
+    }
+  },
+  {
+    "action": "create",
+    "file": "11.vfx.json",
+    "preset": "rain",
+    "seed": 53,
+    "edits": [
+      {
+        "action": "update_project",
+        "patch": {
+          "name": "Warm rain"
+        }
+      },
+      {
+        "action": "set_gradient",
+        "colors": [
+          {
+            "t": 0,
+            "color": "#fff1d0"
+          },
+          {
+            "t": 1,
+            "color": "#ff6633"
+          }
+        ]
+      },
+      {
+        "action": "creative",
+        "operation": {
+          "action": "set_control",
+          "id": "size",
+          "value": 1.1
+        }
+      }
+    ],
+    "out": "gif-11",
+    "options": {
+      "format": "gif",
+      "scale": 2
+    }
+  },
+  {
+    "action": "create",
+    "file": "12.vfx.json",
+    "preset": "heal_pulse",
+    "seed": 54,
+    "edits": [
+      {
+        "action": "update_project",
+        "patch": {
+          "name": "Warm heal_pulse"
+        }
+      },
+      {
+        "action": "set_gradient",
+        "colors": [
+          {
+            "t": 0,
+            "color": "#fff1d0"
+          },
+          {
+            "t": 1,
+            "color": "#ff6633"
+          }
+        ]
+      },
+      {
+        "action": "creative",
+        "operation": {
+          "action": "set_control",
+          "id": "size",
+          "value": 1.1
+        }
+      }
+    ],
+    "out": "gif-12",
+    "options": {
+      "format": "gif",
+      "scale": 2
+    }
+  },
+  {
+    "action": "create",
+    "file": "13.vfx.json",
+    "preset": "stardust",
+    "seed": 55,
+    "edits": [
+      {
+        "action": "update_project",
+        "patch": {
+          "name": "Warm stardust"
+        }
+      },
+      {
+        "action": "set_gradient",
+        "colors": [
+          {
+            "t": 0,
+            "color": "#fff1d0"
+          },
+          {
+            "t": 1,
+            "color": "#ff6633"
+          }
+        ]
+      },
+      {
+        "action": "creative",
+        "operation": {
+          "action": "set_control",
+          "id": "size",
+          "value": 1.1
+        }
+      }
+    ],
+    "out": "gif-13",
+    "options": {
+      "format": "gif",
+      "scale": 2
+    }
+  },
+  {
+    "action": "create",
+    "file": "14.vfx.json",
+    "preset": "masked_portal",
+    "seed": 56,
+    "edits": [
+      {
+        "action": "update_project",
+        "patch": {
+          "name": "Warm masked_portal"
+        }
+      },
+      {
+        "action": "set_gradient",
+        "colors": [
+          {
+            "t": 0,
+            "color": "#fff1d0"
+          },
+          {
+            "t": 1,
+            "color": "#ff6633"
+          }
+        ]
+      },
+      {
+        "action": "creative",
+        "operation": {
+          "action": "set_control",
+          "id": "size",
+          "value": 1.1
+        }
+      }
+    ],
+    "out": "gif-14",
+    "options": {
+      "format": "gif",
+      "scale": 2
+    }
+  },
+  {
+    "action": "create",
+    "file": "15.vfx.json",
+    "preset": "pixel_flame",
+    "seed": 57,
+    "edits": [
+      {
+        "action": "update_project",
+        "patch": {
+          "name": "Warm pixel_flame"
+        }
+      },
+      {
+        "action": "set_gradient",
+        "colors": [
+          {
+            "t": 0,
+            "color": "#fff1d0"
+          },
+          {
+            "t": 1,
+            "color": "#ff6633"
+          }
+        ]
+      },
+      {
+        "action": "creative",
+        "operation": {
+          "action": "set_control",
+          "id": "size",
+          "value": 1.1
+        }
+      }
+    ],
+    "out": "gif-15",
+    "options": {
+      "format": "gif",
+      "scale": 2
+    }
+  }
+]

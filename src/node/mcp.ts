@@ -1,4 +1,10 @@
 #!/usr/bin/env node
+import { closeRenderPool, renderStats } from "./driver.js";
+import { MAX_LAYERS } from "../core/limits.js";
+import { MAX_BATCH_PROJECTS } from "../core/limits.js";
+import { batchSchema } from "./batch.js";
+import { analysisSchema } from "../core/analysis.js";
+import { colorSchema, gradientSchema } from "../core/model.js";
 import { Command } from "commander";
 import {
   McpServer,
@@ -110,6 +116,7 @@ const tool = <S extends z.ZodRawShape>(
   shape: S,
   handler: (args: z.infer<z.ZodObject<S>>) => unknown | Promise<unknown>,
   readOnly = false,
+  destructiveHint = !readOnly,
 ) => {
   const schema = z.object(shape).strict();
   server.registerTool(
@@ -119,7 +126,7 @@ const tool = <S extends z.ZodRawShape>(
       inputSchema: shape as z.ZodRawShape,
       annotations: {
         readOnlyHint: readOnly,
-        destructiveHint: !readOnly,
+        destructiveHint,
         idempotentHint: readOnly,
         openWorldHint: false,
       },
@@ -148,6 +155,10 @@ tool(
   () => ({
     version: VERSION,
     root: s.store.root,
+    renderer: renderStats(),
+    projectBatch:
+      "batch_projects prepares independent projects, edits and optional exports. dryRun writes nothing; real runs return a background job. Inspect result.ok and each item, even when the job completes. Transactions are per file, not across files.",
+    qa: "analyze_project hashes straight RGBA at each requested frame (all export frames by default), rerenders in reverse order for parity, and optionally compares a root-scoped saved baseline. Peak activity is not a game hit marker.",
     coordinates: COORDINATES,
     agentWorkflow: {
       observe:
@@ -173,7 +184,7 @@ tool(
       "inspect_creative lists macro controls, variants and valid layer binding targets. edit_creative edits modifiers, controls, variants and timing. save_component and insert_component reuse selected layers across projects. start_variant_export queues a batch of 1..8 variants.",
     formats: ["gif", "spritesheet", "sequence", "godot", "unity"],
     limits: {
-      layers: 32,
+      layers: MAX_LAYERS,
       particleBirths: 4000,
       frames: 300,
       sourcePixels: 16777216,
@@ -186,6 +197,7 @@ tool(
       observationInlinePngBytes: 2097152,
       observationTimes: 9,
       editOperations: 64,
+      batchProjects: MAX_BATCH_PROJECTS,
     },
     imageProcessing:
       "Local PNG optimization needs no browser. Palette, scale, block and alpha reductions are lossy; default PNG recompression preserves decoded RGBA.",
@@ -223,6 +235,8 @@ tool(
       "control",
       "edits",
       "observation",
+      "analysis",
+      "batch",
     ]),
   },
   (a) => s.schema(a.kind),
@@ -273,7 +287,7 @@ tool(
 tool(
   "reorder_layers",
   "Set complete layer order, bottom to top.",
-  { file, revision, ids: z.array(z.string()).max(32) },
+  { file, revision, ids: z.array(z.string()).max(MAX_LAYERS) },
   (a) => s.reorder(a.file, a.revision, a.ids),
 );
 tool(
@@ -284,7 +298,7 @@ tool(
     revision,
     id: z.string(),
     name: z.string(),
-    ids: z.array(z.string()).min(1).max(32),
+    ids: z.array(z.string()).min(1).max(MAX_LAYERS),
   },
   (a) => s.group(a.file, a.revision, a.id, a.name, a.ids),
 );
@@ -294,7 +308,7 @@ tool(
   {
     file,
     revision,
-    ids: z.array(z.string()).min(1).max(32),
+    ids: z.array(z.string()).min(1).max(MAX_LAYERS),
     x: z.number().optional(),
     y: z.number().optional(),
     rotation: z.number().min(-360).max(360).optional(),
@@ -388,9 +402,80 @@ tool(
     revision,
     hue: z.number().min(-360).max(360),
     includeLocked: z.boolean().default(false),
-    ids: z.array(z.string()).max(32).optional(),
+    ids: z.array(z.string()).max(MAX_LAYERS).optional(),
   },
   (a) => s.recolor(a.file, a.revision, a.hue, a.includeLocked, a.ids),
+);
+tool(
+  "set_gradient",
+  "Set one solid color or a complete gradient on all/selected unlocked layers, including grayscale smoke. Fully selected hue controls reset to neutral; mixed hue bindings are detached only for changed layers. One revisioned edit and backup. Texture pixels stay unchanged.",
+  {
+    file,
+    revision,
+    colors: z.union([colorSchema, gradientSchema]),
+    ids: z.array(z.string()).min(1).max(MAX_LAYERS).optional(),
+    includeLocked: z.boolean().default(false),
+  },
+  (a) => s.gradient(a.file, a.revision, a.colors, a.includeLocked, a.ids),
+);
+tool(
+  "preflight_export",
+  "Estimate and validate export budgets before rendering. Reports used/limit per resource and memory estimates; creates no files and starts no browser.",
+  {
+    file,
+    revision: revision.optional(),
+    options: exportOptionsSchema.prefault({}),
+  },
+  (a) => s.preflight(a.file, a.options, a.revision),
+  true,
+);
+tool(
+  "analyze_project",
+  "Numeric QA: exact straight-RGBA SHA-256 per frame, alpha/bounds/activity stats, reverse-order parity and optional baseline comparison. Defaults to all export frames. baseline/out are root-scoped JSON files; out must be fresh. Inspect ok; identical rerenders do not establish artistic correctness.",
+  {
+    file,
+    revision: revision.optional(),
+    ...analysisSchema.shape,
+    baseline: file.optional(),
+    out: file.optional(),
+  },
+  (a) =>
+    s.analyze(
+      a.file,
+      { times: a.times, parity: a.parity },
+      a.revision,
+      a.baseline,
+      a.out,
+    ),
+  false,
+  false,
+);
+tool(
+  "batch_projects",
+  "Prepare 1..32 independent create/edit/export tasks; create/edit tasks may include an export. dryRun returns per-item validation without writing or rendering. Real runs use a background job with project-count progress; inspect result.ok and each result, including partial writes if an export fails. Cancellation preserves completed projects. Atomicity is per file. Paths must be distinct; options require out.",
+  {
+    items: batchSchema,
+    dryRun: z.boolean().default(false),
+  },
+  async (a) => {
+    const prepared = await s.prepareBatch(a.items);
+    if (a.dryRun)
+      return {
+        dryRun: true,
+        ok: prepared.results.every((r) => r.status === "ready"),
+        atomicAcrossProjects: false,
+        snapshotBytes: prepared.snapshotBytes,
+        results: prepared.results,
+      };
+    return {
+      ...jobs.start(
+        (signal, progress) => s.executeBatch(prepared, signal, progress),
+        "projects",
+      ),
+      progressUnit: "projects",
+      items: prepared.results,
+    };
+  },
 );
 server.registerTool(
   "render_preview",
@@ -646,7 +731,7 @@ tool(
     file,
     revision,
     out: file,
-    ids: z.array(z.string()).min(1).max(32),
+    ids: z.array(z.string()).min(1).max(MAX_LAYERS),
     name: z.string().min(1).max(100),
   },
   (a) => s.saveComponent(a.file, a.out, a.ids, a.name, a.revision),
@@ -698,6 +783,7 @@ const shutdown = async () => {
   if (stopping) return;
   stopping = true;
   await jobs.close();
+  await closeRenderPool();
   await server.close();
 };
 process.once("SIGINT", () => {

@@ -105,7 +105,7 @@ describe("selection editing and document validation", () => {
   it("validates loop ranges and upgrades previous project data without changing the input", () => {
     const p = composition(),
       old = { ...p, version: "0.5.0" };
-    expect(parseProject(old).version).toBe("0.7.2");
+    expect(parseProject(old).version).toBe("0.7.3");
     expect(old.version).toBe("0.5.0");
     for (const range of [
       { start: 0, end: 11 },

@@ -1,3 +1,4 @@
+import { MAX_LAYERS } from "../core/limits.js";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   cleanupGroups,
@@ -430,7 +431,8 @@ export function App() {
   );
   const duplicate = useCallback(() => {
     const chosen = project.layers.filter((l) => selection.includes(l.id));
-    if (!chosen.length || project.layers.length + chosen.length > 32) return;
+    if (!chosen.length || project.layers.length + chosen.length > MAX_LAYERS)
+      return;
     const names = project.layers.map((l) => l.name),
       mapping = new Map<string, string>(),
       layers: Layer[] = [];
@@ -640,7 +642,7 @@ export function App() {
     }
   }
   function add(type: Layer["type"]) {
-    if (project.layers.length >= 32) return;
+    if (project.layers.length >= MAX_LAYERS) return;
     if (type === "sprite" && !project.assets.length) {
       setTab("assets");
       toast("Import a PNG first, then add a sprite.");
@@ -1058,7 +1060,9 @@ export function App() {
               <>
                 <div className="panel-heading">
                   <span>COMPOSITION</span>
-                  <small>{project.layers.length} / 32</small>
+                  <small>
+                    {project.layers.length} / {MAX_LAYERS}
+                  </small>
                 </div>
                 <div className="search">
                   <input
@@ -1189,7 +1193,8 @@ export function App() {
                   <button
                     onClick={duplicate}
                     disabled={
-                      !layer || project.layers.length + selection.length > 32
+                      !layer ||
+                      project.layers.length + selection.length > MAX_LAYERS
                     }
                     title="Duplicate selected layer"
                   >
@@ -1249,7 +1254,7 @@ export function App() {
                       <button
                         key={type}
                         aria-label={`Add ${type === "path" ? "stroke" : type === "field" ? "procedural texture" : type}`}
-                        disabled={project.layers.length >= 32}
+                        disabled={project.layers.length >= MAX_LAYERS}
                         onClick={() => add(type)}
                       >
                         <span className={`add-icon ${type}`}>

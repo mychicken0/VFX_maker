@@ -19,3 +19,6 @@ export * from "./editing.js";
 export * from "./spatial.js";
 export * from "./operations.js";
 export * from "./observation.js";
+
+export * from "./limits.js";
+export * from "./analysis.js";

@@ -1,0 +1,261 @@
+{
+  "version": "0.7.3",
+  "protocol": "official MCP SDK stdio",
+  "projects": 16,
+  "formats": [
+    "gif",
+    "godot"
+  ],
+  "renderer": {
+    "launches": 1,
+    "requests": 51,
+    "reuses": 50,
+    "active": 0,
+    "idle": 1,
+    "maxWorkers": 2,
+    "idleSeconds": 30
+  },
+  "baselinePassed": true,
+  "results": [
+    {
+      "index": 0,
+      "preset": "blue_magic",
+      "revision": "f11b2c23e003cd8e1b0ee0c3068ef879ce7cbe7eeb7011cc3f6aa10f191e6a70",
+      "parity": true,
+      "visibleFrames": 3,
+      "peak": {
+        "time": 0.1,
+        "value": 476.616
+      },
+      "gif": {
+        "bytes": 69142,
+        "sha256": "20f984327439d895ea4fa7271097ec66853d6118c2695c6020fa1ab74a520b8c"
+      }
+    },
+    {
+      "index": 1,
+      "preset": "smoke",
+      "revision": "ab1a226b3ae8280b1a72221ce8caab890bfb4960f9e23f6b222964f74e283204",
+      "parity": true,
+      "visibleFrames": 4,
+      "peak": {
+        "time": 0.1,
+        "value": 611.494
+      },
+      "gif": {
+        "bytes": 148661,
+        "sha256": "62bdb2cf868d2cd74208af84d7a3ade92c99238a43e6c7ee43abb6edd2021ac7"
+      }
+    },
+    {
+      "index": 2,
+      "preset": "dust",
+      "revision": "c2d1cdc29fee78fccbc557ddc006003acb2fcb91a88286a0f3c800ad63fe991a",
+      "parity": true,
+      "visibleFrames": 3,
+      "peak": {
+        "time": 0.35,
+        "value": 240.851
+      },
+      "gif": {
+        "bytes": 53835,
+        "sha256": "c9425319bff79094a4545a13e75a424de415c7f68104c9d985b9fbe731748e46"
+      }
+    },
+    {
+      "index": 3,
+      "preset": "rain",
+      "revision": "635959d3f6f27303ecad5435f6ff1d85632962109120396b9b99808df6325520",
+      "parity": true,
+      "visibleFrames": 4,
+      "peak": {
+        "time": 0.35,
+        "value": 143.408
+      },
+      "gif": {
+        "bytes": 88605,
+        "sha256": "60a4f31de0d998a5d23fc6729803d340e39a3a8a49dbc66f28bfba27fe02c6b1"
+      }
+    },
+    {
+      "index": 4,
+      "preset": "heal_pulse",
+      "revision": "ba6914f4fb454c64e049ad7d9a078a1079352505e5b49c0adc06f5cd2c75215a",
+      "parity": true,
+      "visibleFrames": 3,
+      "peak": {
+        "time": 0.1,
+        "value": 310.016
+      },
+      "gif": {
+        "bytes": 49353,
+        "sha256": "8b7e584ade028861adac16bae2dbe5b0d0719feb620371b6899f0aadd9efb19d"
+      }
+    },
+    {
+      "index": 5,
+      "preset": "stardust",
+      "revision": "a316ea210ce7f8f2e93fc307bc16a818c08aded494b5739b53ff6c0fe8480845",
+      "parity": true,
+      "visibleFrames": 4,
+      "peak": {
+        "time": 0.35,
+        "value": 161.663
+      },
+      "gif": {
+        "bytes": 52825,
+        "sha256": "4d6ecced0cbe239359c8cbb933dec5602360719bcaa2afefc7152e9d1eeb65ee"
+      }
+    },
+    {
+      "index": 6,
+      "preset": "masked_portal",
+      "revision": "80e9aae6e293e9e85e72486652720ec2e2e0e35c220ac4e72f47f19779249122",
+      "parity": true,
+      "visibleFrames": 4,
+      "peak": {
+        "time": 0.6,
+        "value": 1296.153
+      },
+      "gif": {
+        "bytes": 191562,
+        "sha256": "9bac0ad6734add963f0dcd9ad7547db5255c8268200d3472d07c38fe57abf375"
+      }
+    },
+    {
+      "index": 7,
+      "preset": "pixel_flame",
+      "revision": "12d9223a7c410d33508b4856cb7895bc54ce8f89b4741f7ceabd7ef023d87318",
+      "parity": true,
+      "visibleFrames": 4,
+      "peak": {
+        "time": 0.9,
+        "value": 600.824
+      },
+      "gif": {
+        "bytes": 52987,
+        "sha256": "633d6e6f7c5a53eb92ce212fdb887bce1fe84a798109c40413dc75be374fd46a"
+      }
+    },
+    {
+      "index": 8,
+      "preset": "blue_magic",
+      "revision": "4cdc67192c1a69bf5fd10a031d8cacdc813110077b95fa003b5dc876aa3518d0",
+      "parity": true,
+      "visibleFrames": 3,
+      "peak": {
+        "time": 0.1,
+        "value": 669.78
+      },
+      "gif": {
+        "bytes": 77187,
+        "sha256": "ac0dda0a2cd9189168fec71f8985587aa2694cab4a84d8fe96157e5e9ce9242c"
+      }
+    },
+    {
+      "index": 9,
+      "preset": "smoke",
+      "revision": "c7fcae5e14b175ca1f93e0a3f91f5ea3f06c940d76de12d1b708b863911f483d",
+      "parity": true,
+      "visibleFrames": 4,
+      "peak": {
+        "time": 0.35,
+        "value": 891.125
+      },
+      "gif": {
+        "bytes": 172248,
+        "sha256": "ad3684248408a3c18a4ba543e49f9a5cff523f0dce09cd562487e0b4736e61f9"
+      }
+    },
+    {
+      "index": 10,
+      "preset": "dust",
+      "revision": "8bb043a6fd1f227c6c569af7f26f37d4482a411126cac060a6e52eca49533bb2",
+      "parity": true,
+      "visibleFrames": 3,
+      "peak": {
+        "time": 0.35,
+        "value": 331.824
+      },
+      "gif": {
+        "bytes": 56445,
+        "sha256": "e5b70e84ff4b59cef55d8a3301b7a433408993c3279b9c78d04a6d52a3bb17af"
+      }
+    },
+    {
+      "index": 11,
+      "preset": "rain",
+      "revision": "b6f2a2d904cf3550ac8d79ff5394300a2ed512f15c0c3e927a391a89308ad06f",
+      "parity": true,
+      "visibleFrames": 4,
+      "peak": {
+        "time": 0.6,
+        "value": 196.757
+      },
+      "gif": {
+        "bytes": 86430,
+        "sha256": "e5f5cda7eebdffee7f73901ff21c6e04d6cf726b2ca17ea5ed444796eedab77f"
+      }
+    },
+    {
+      "index": 12,
+      "preset": "heal_pulse",
+      "revision": "bfecd5a97ad9d4b171a029ced6fd0e464f2d5002ce3f35e5aa17f1e9b226702a",
+      "parity": true,
+      "visibleFrames": 3,
+      "peak": {
+        "time": 0.1,
+        "value": 429.898
+      },
+      "gif": {
+        "bytes": 68510,
+        "sha256": "b7cdd52c90b898655e88f78f51b3413c354f85c0706007c273f98c902144b581"
+      }
+    },
+    {
+      "index": 13,
+      "preset": "stardust",
+      "revision": "04fcb449033413ea85ab2991a1033806c4e5812f242c5dd1681fdab658bf1d01",
+      "parity": true,
+      "visibleFrames": 4,
+      "peak": {
+        "time": 0.35,
+        "value": 197.788
+      },
+      "gif": {
+        "bytes": 75522,
+        "sha256": "db101e384fcbc93bdf8e4621ada7f9e68b7a979e3fffc4ad1a44108e84896f21"
+      }
+    },
+    {
+      "index": 14,
+      "preset": "masked_portal",
+      "revision": "767517c26f3ffe71b403831ec7a5f896e6cb8428a9cf780c08cd36c15d227de2",
+      "parity": true,
+      "visibleFrames": 4,
+      "peak": {
+        "time": 0.6,
+        "value": 1848.859
+      },
+      "gif": {
+        "bytes": 237266,
+        "sha256": "db8dd1fb6ccb388fa9d0aeec139d304c166c948257d48071c602f47b03c05a53"
+      }
+    },
+    {
+      "index": 15,
+      "preset": "pixel_flame",
+      "revision": "9ebc36d370ef825cc55db691b66bc0b4f8a61d676136d2d44cd360c113371d08",
+      "parity": true,
+      "visibleFrames": 4,
+      "peak": {
+        "time": 0.6,
+        "value": 927.635
+      },
+      "gif": {
+        "bytes": 60379,
+        "sha256": "ba76152d903389622836772f256fedfc005e69b02865fb9fd172c30ecca743fd"
+      }
+    }
+  ]
+}

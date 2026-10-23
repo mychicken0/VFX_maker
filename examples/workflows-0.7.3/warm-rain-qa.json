@@ -1,0 +1,123 @@
+{
+  "kind": "vfx-analysis",
+  "formatVersion": 1,
+  "canvas": {
+    "width": 128,
+    "height": 128
+  },
+  "duration": 1.2,
+  "fps": 30,
+  "frames": [
+    {
+      "time": 0.1,
+      "frameIndex": 3,
+      "sha256": "80240459d02b1084b83e196e26db6b15e2445b4a5bc1a2aaad1f4a98a56c6d12",
+      "visiblePixels": 433,
+      "alphaMass": 129.341,
+      "bounds": {
+        "x": 0,
+        "y": 0,
+        "width": 128,
+        "height": 108
+      },
+      "touches": [
+        "left",
+        "top",
+        "right"
+      ]
+    },
+    {
+      "time": 0.35,
+      "frameIndex": 10,
+      "sha256": "1c14e2641a10243916e8412ab7d854df8ac21d9cb63ce5b4ffb6711e15ccb926",
+      "visiblePixels": 404,
+      "alphaMass": 126.18,
+      "bounds": {
+        "x": 0,
+        "y": 0,
+        "width": 126,
+        "height": 115
+      },
+      "touches": [
+        "left",
+        "top"
+      ]
+    },
+    {
+      "time": 0.6,
+      "frameIndex": 18,
+      "sha256": "9b5965e924dd83ebb8f2b906b685e98e7c59736c8aef40a1cd45ff7076d8a260",
+      "visiblePixels": 591,
+      "alphaMass": 196.757,
+      "bounds": {
+        "x": 0,
+        "y": 0,
+        "width": 128,
+        "height": 108
+      },
+      "touches": [
+        "left",
+        "top",
+        "right"
+      ]
+    },
+    {
+      "time": 0.9,
+      "frameIndex": 27,
+      "sha256": "9831c02898886f4d5cac6f7829db059b924025d3f9a5b570232a6e60eeea959a",
+      "visiblePixels": 504,
+      "alphaMass": 161.667,
+      "bounds": {
+        "x": 0,
+        "y": 0,
+        "width": 128,
+        "height": 128
+      },
+      "touches": [
+        "left",
+        "top",
+        "right",
+        "bottom"
+      ]
+    }
+  ],
+  "summary": {
+    "sampledFrames": 4,
+    "visibleFrames": 4,
+    "emptyFrames": 0,
+    "firstVisibleTime": 0.1,
+    "lastVisibleTime": 0.9,
+    "peakAlphaMass": {
+      "time": 0.6,
+      "value": 196.757
+    },
+    "peakVisiblePixels": {
+      "time": 0.6,
+      "value": 591
+    },
+    "edgeTimes": [
+      0.1,
+      0.35,
+      0.6,
+      0.9
+    ]
+  },
+  "parity": {
+    "checked": true,
+    "passed": true,
+    "order": "reverse",
+    "mismatches": []
+  },
+  "file": "11.vfx.json",
+  "revision": "b6f2a2d904cf3550ac8d79ff5394300a2ed512f15c0c3e927a391a89308ad06f",
+  "ok": true,
+  "renderer": {
+    "launches": 1,
+    "requests": 44,
+    "reuses": 43,
+    "active": 0,
+    "idle": 1,
+    "maxWorkers": 2,
+    "idleSeconds": 30
+  }
+}

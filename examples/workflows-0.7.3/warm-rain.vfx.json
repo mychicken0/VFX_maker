@@ -1,0 +1,239 @@
+{
+  "format": "vfx-maker",
+  "version": "0.7.3",
+  "name": "Warm rain",
+  "seed": 53,
+  "canvas": {
+    "width": 128,
+    "height": 128,
+    "pixelArt": true,
+    "background": "#110f19"
+  },
+  "duration": 1.2,
+  "fps": 30,
+  "loop": true,
+  "layers": [
+    {
+      "id": "rain",
+      "name": "Rain streaks",
+      "visible": true,
+      "locked": false,
+      "modifiers": [],
+      "start": 0,
+      "duration": 1.2,
+      "repeat": true,
+      "position": {
+        "x": 64,
+        "y": 0
+      },
+      "rotation": 0,
+      "scale": 1,
+      "opacity": [
+        {
+          "t": 0,
+          "value": 0,
+          "ease": "linear"
+        },
+        {
+          "t": 0.5,
+          "value": 0.6,
+          "ease": "linear"
+        },
+        {
+          "t": 1,
+          "value": 0,
+          "ease": "linear"
+        }
+      ],
+      "motion": {
+        "x": [
+          {
+            "t": 0,
+            "value": 0,
+            "ease": "linear"
+          },
+          {
+            "t": 1,
+            "value": 0,
+            "ease": "linear"
+          }
+        ],
+        "y": [
+          {
+            "t": 0,
+            "value": 0,
+            "ease": "linear"
+          },
+          {
+            "t": 1,
+            "value": 0,
+            "ease": "linear"
+          }
+        ],
+        "rotation": [
+          {
+            "t": 0,
+            "value": 0,
+            "ease": "linear"
+          },
+          {
+            "t": 1,
+            "value": 0,
+            "ease": "linear"
+          }
+        ],
+        "scale": [
+          {
+            "t": 0,
+            "value": 1,
+            "ease": "linear"
+          },
+          {
+            "t": 1,
+            "value": 1,
+            "ease": "linear"
+          }
+        ]
+      },
+      "blend": "add",
+      "glow": {
+        "strength": 0,
+        "blur": 3
+      },
+      "type": "particles",
+      "mode": "stream",
+      "count": 48,
+      "rate": 100,
+      "life": [
+        0.3,
+        0.55
+      ],
+      "speed": [
+        180,
+        240
+      ],
+      "angle": 105,
+      "spread": 4,
+      "spawn": {
+        "shape": "box",
+        "threshold": 0.1,
+        "radius": 10,
+        "width": 150,
+        "height": 20
+      },
+      "trail": {
+        "samples": 0,
+        "seconds": 0.12,
+        "width": 1,
+        "opacity": 0.5
+      },
+      "points": [
+        {
+          "x": -35,
+          "y": -35
+        },
+        {
+          "x": 35,
+          "y": 35
+        }
+      ],
+      "travel": 0.2,
+      "gravity": {
+        "x": 0,
+        "y": 80
+      },
+      "drag": 0.6,
+      "turbulence": 0,
+      "frequency": 4,
+      "shape": "spark",
+      "size": [
+        {
+          "t": 0,
+          "value": 0.6,
+          "ease": "linear"
+        }
+      ],
+      "colors": [
+        {
+          "t": 0,
+          "color": "#fff1d0"
+        },
+        {
+          "t": 1,
+          "color": "#ff6633"
+        }
+      ],
+      "spin": [
+        -180,
+        180
+      ],
+      "stretch": 10,
+      "frameMode": "life",
+      "frameFps": 12
+    }
+  ],
+  "assets": [],
+  "groups": [],
+  "controls": [
+    {
+      "id": "size",
+      "name": "Size",
+      "min": 0.25,
+      "max": 3,
+      "value": 1.1,
+      "step": 0.05,
+      "bindings": [
+        {
+          "layer": "rain",
+          "target": "scale",
+          "mode": "multiply",
+          "factor": 1,
+          "offset": 0
+        }
+      ]
+    },
+    {
+      "id": "intensity",
+      "name": "Intensity",
+      "min": 0.1,
+      "max": 2,
+      "value": 1,
+      "step": 0.05,
+      "bindings": [
+        {
+          "layer": "rain",
+          "target": "size",
+          "mode": "multiply",
+          "factor": 1,
+          "offset": 0
+        }
+      ]
+    },
+    {
+      "id": "hue",
+      "name": "Hue",
+      "min": -180,
+      "max": 180,
+      "value": 0,
+      "step": 1,
+      "bindings": [
+        {
+          "layer": "rain",
+          "target": "colors.hue",
+          "mode": "set",
+          "factor": 1,
+          "offset": 0
+        }
+      ]
+    }
+  ],
+  "variants": [],
+  "editor": {},
+  "output": {
+    "scale": 1,
+    "colors": 0,
+    "dither": false,
+    "pixelSize": 1,
+    "alphaLevels": 0
+  }
+}

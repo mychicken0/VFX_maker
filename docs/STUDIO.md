@@ -102,3 +102,9 @@ Reference images are separate from effect assets. They never enter the renderer,
 GIF, atlas, PNG sequence or engine files. Exported editable source also omits the
 reference; normal Save/Download project retains it. Whole-composition resizing
 moves and scales the reference to preserve alignment.
+
+Projects can contain up to 64 layers. Recolor offers **Rotate hue** or **Set gradient**.
+Set gradient also colors achromatic smoke and makes one undoable edit. It replaces
+layer source gradients/tints; embedded PNG pixels, modifiers and the background
+are preserved. Fully affected hue controls reset to neutral; mixed controls lose
+only the affected hue bindings, preserving unselected or locked layer colors.

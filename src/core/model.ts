@@ -1,3 +1,4 @@
+import { MAX_LAYERS } from "./limits.js";
 import { z } from "zod";
 import { inspectPng } from "./pixels.js";
 import { pixelOptionsSchema } from "./pixel-options.js";
@@ -9,7 +10,7 @@ import {
 import { validateControls } from "./parameters.js";
 import { emissionPixels } from "./emission.js";
 
-export const VERSION = "0.7.2" as const;
+export const VERSION = "0.7.3" as const;
 const finite = z.number().finite();
 const bounded = (min: number, max: number) => finite.min(min).max(max);
 export const vecSchema = z
@@ -295,7 +296,7 @@ export const groupSchema = z
   .object({
     id: z.string().regex(/^[a-zA-Z][\w-]{0,63}$/),
     name: z.string().min(1).max(100),
-    ids: z.array(z.string()).min(1).max(32),
+    ids: z.array(z.string()).min(1).max(MAX_LAYERS),
   })
   .strict();
 export const editorSchema = z
@@ -344,9 +345,9 @@ export const projectSchema = z
     duration: bounded(0.1, 10).default(1.2),
     fps: z.number().int().min(1).max(60).default(30),
     loop: z.boolean().default(true),
-    layers: z.array(layerSchema).max(32).default([]),
+    layers: z.array(layerSchema).max(MAX_LAYERS).default([]),
     assets: z.array(assetSchema).max(8).default([]),
-    groups: z.array(groupSchema).max(32).default([]),
+    groups: z.array(groupSchema).max(MAX_LAYERS).default([]),
     controls: z.array(controlSchema).max(16).default([]),
     variants: z.array(variantSchema).max(12).default([]),
     editor: editorSchema.default({}),
@@ -494,7 +495,7 @@ export function parseProject(value: unknown): Project {
     value &&
     typeof value === "object" &&
     "version" in value &&
-    ["0.4.0", "0.5.0", "0.6.0", "0.7.0", "0.7.1"].includes(
+    ["0.4.0", "0.5.0", "0.6.0", "0.7.0", "0.7.1", "0.7.2"].includes(
       String(value.version),
     )
   )

@@ -49,6 +49,7 @@ export class VfxRenderer {
   private sources: Texture[] = [];
   private generation = 0;
   private disposed = false;
+  private sourceKey?: string;
   static async create(canvas?: HTMLCanvasElement): Promise<VfxRenderer> {
     const r = new VfxRenderer();
     await r.app.init({
@@ -70,6 +71,9 @@ export class VfxRenderer {
     return this.app.canvas as HTMLCanvasElement;
   }
   async setProject(value: Project): Promise<void> {
+    const key = JSON.stringify(value);
+    if (!this.disposed && this.sourceKey === key) return;
+    this.sourceKey = undefined;
     const project = resolveControls(parseProject(value)),
       generation = ++this.generation;
     // Decode and verify every texture before changing the live scene.
@@ -188,6 +192,7 @@ export class VfxRenderer {
         fields,
       });
     }
+    this.sourceKey = key;
   }
   private slice(base: Texture, a: Asset): Texture[] {
     return Array.from(

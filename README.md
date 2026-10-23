@@ -1,12 +1,13 @@
-# VFX Maker 0.7.2
+# VFX Maker 0.7.3
 
 **A visual VFX studio built with TypeScript, PixiJS 8 and React 19.**
 Pick an effect, adjust Size, Intensity and Hue, and export it for your game.
 Open layer settings when you want to reshape a sword slash, add procedural
 textures or build your own modifier stack. The same Pixi renderer powers the browser editor, Terminal and MCP.
 
-**0.7.2:** agents can inspect annotated images and canvas coordinates, preview
-uncommitted edits, then commit and verify them through MCP. [Changes and real MCP example](docs/RELEASE_0.7.2.md).
+**0.7.3:** multi-project batches, direct gradients for gray smoke, numeric
+render regression QA, warm MCP renderers, activity-focused storyboards and
+64-layer projects. [Release and measured checks](docs/RELEASE_0.7.3.md).
 
 ![VFX Maker Studio](examples/studio.png)
 
@@ -39,10 +40,10 @@ npm run build
 node dist/cli.js studio --open
 ```
 
-Or install the prepared `vfx-maker-0.7.2.tgz` once and use it in any folder:
+Or install the prepared `vfx-maker-0.7.3.tgz` once and use it in any folder:
 
 ```bash
-npm install -g /path/to/vfx-maker-0.7.2.tgz
+npm install -g /path/to/vfx-maker-0.7.3.tgz
 cd /path/to/your/game
 vfx studio --open
 ```
@@ -139,6 +140,10 @@ vfx transform slash.vfx.json --layers cut-a,cut-b --x 4 --scale 0.8
 vfx keyframe slash.vfx.json cut-a motion.x --time 0.5 --value 12 --ease smooth
 vfx backups slash.vfx.json
 vfx observe slash.vfx.json --view storyboard --out inspection
+vfx gradient slash.vfx.json --color '#804cff'
+vfx preflight slash.vfx.json --options '{"format":"gif","scale":2}'
+vfx analyze slash.vfx.json --out baseline.json
+vfx batch --tasks-file tasks.json --dry-run
 vfx edit slash.vfx.json --edits-file edits.json --if-match REVISION --dry-run
 ```
 
@@ -204,7 +209,7 @@ For clients with `mcpServers`, merge this entry into their settings:
 }
 ```
 
-34 tools cover templates, schemas, portable projects, layer/group transforms,
+38 tools cover templates, schemas, portable projects, layer/group transforms,
 keyframes, backups and restoration, direct layer updates,
 embedded assets, inline image previews, PNG optimization, canvas resizing,
 recoloring, ordered modifiers, macro controls, components, variants, exports and
@@ -214,10 +219,15 @@ then commit with `apply_edits`. Observations include a real image, stable layer
 IDs, pixel bounds, timing and point picks. Hosts that hide images can read PNG
 resources or use `save_preview` with a local image viewer. A tool cannot add
 vision to a text-only model. Read the [agent workflow and host setup](docs/MCP.md).
+Use `batch_projects` for independent files, `set_gradient` for exact source
+colors, `preflight_export` for budgets and `analyze_project` for per-frame
+RGBA hashes, reverse-order parity and saved baseline comparisons. A completed
+batch reports each file independently; successful files are retained on partial failure.
 
 ![Effect authored and verified through MCP](examples/agent-workflow/gif/animation.gif)
 
-[Editable result, recipe and observation images](examples/agent-workflow/README.md).
+[Earlier visual workflow example](examples/agent-workflow/README.md) ·
+[0.7.3 batch, direct-color and QA examples](examples/workflows-0.7.3/README.md).
 
 ## Development
 
@@ -245,9 +255,10 @@ stripped during recompression. PNG optimization does not require Chromium.
 
 See [pixel workflows](docs/PIXEL_WORKFLOWS.md),
 [open source/product references](docs/OPEN_SOURCE_RESEARCH.md),
+[0.7.3 workflow improvements](docs/RELEASE_0.7.3.md),
 [0.7.2 agent tools](docs/RELEASE_0.7.2.md),
 [0.7.1 UI fixes](docs/RELEASE_0.7.1.md),
 [0.7.0 features](docs/RELEASE_0.7.0.md),
-[validation](docs/VALIDATION_0.7.2.md),
+[validation](docs/VALIDATION_0.7.3.md),
 [previous authoring release](docs/RELEASE_0.6.0.md), and
 [project compatibility](docs/MIGRATION.md).

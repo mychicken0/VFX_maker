@@ -44,7 +44,9 @@ images, and exports strip them from the included project.
 `src/node` provides root-scoped file access, optimistic revisions, direct edits,
 CLI, MCP and export jobs. Playwright launches local Chromium, serves the packaged
 renderer on an ephemeral loopback port, blocks external page requests, calls the
-same browser functions, then closes the browser/server. SwiftShader enables
+same browser functions, then releases its worker. A pool of at most two isolated browser/page/server workers
+reuses warm renderers until 30 idle seconds; cancellation discards only its worker.
+CLI exit and MCP shutdown close the pool explicitly. SwiftShader enables
 rendering without hardware GPU or display; real browser rendering is still
 required. The official MCP SDK handles protocol framing and schema discovery.
 
@@ -95,3 +97,11 @@ cubic Bezier segments for the same arc-length path rendering pipeline.
 These same functions are exposed through Studio, CLI, MCP and the public API.
 `vite.config.ts` adapts the pinned UPNG module's environment probe to ESM for
 both development and production workers; dependency source is left untouched.
+
+`core/analysis.ts` validates analysis/baseline schemas; `render/analysis.ts` hashes
+straight RGBA and rerenders frames in reverse order. Baselines compare hashes
+at their recorded times and canvas dimensions. `preflightExport` is shared by
+actual exports and agent preflight. `node/batch.ts` validates independent tasks;
+the service pins source snapshots before queueing, with one revision/backup per
+edited file, distinct paths, 32 items and a 16-MiB aggregate snapshot cap.
+Batch failures retain explicit per-item results and completed writes.

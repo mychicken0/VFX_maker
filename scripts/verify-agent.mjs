@@ -52,7 +52,7 @@ try {
       stderr: "pipe",
     }),
   );
-  assert.equal((await client.listTools()).tools.length, 34);
+  assert.equal((await client.listTools()).tools.length, 38);
   const guide = await client.readResource({ uri: "vfx://guide" });
   assert(guide.contents[0].text.includes("canvas"));
   const a = await call("new_project", {
@@ -128,7 +128,7 @@ try {
   const report = {
     version: final.scene.version,
     protocol: "official MCP SDK over stdio",
-    tools: 34,
+    tools: 38,
     revision: done.revision,
     checks: {
       draftDidNotWrite: true,

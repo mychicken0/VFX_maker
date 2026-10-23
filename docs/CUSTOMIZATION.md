@@ -88,7 +88,7 @@ the supported layers; it does not inject executable callbacks into projects.
 
 ## Limits and repeat behavior
 
-Projects support 32 layers, 4000 particle births per cycle, 8 textures with one
+Projects support 64 layers, 4000 particle births per cycle, 8 textures with one
 million combined decoded pixels, 4 MiB serialized files, 16..512px canvas sides,
 10 seconds and 300 frames. Export additionally caps source pixels at 16 million
 output PNG pixels at 16 million, GIF pixels at 32 million, and atlas pixels at

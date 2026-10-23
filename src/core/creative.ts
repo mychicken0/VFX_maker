@@ -1,3 +1,4 @@
+import { MAX_LAYERS } from "./limits.js";
 import { z } from "zod";
 import { modifierSchema, controlSchema } from "./creative-schema.js";
 import { parseProject, type Project } from "./model.js";
@@ -54,7 +55,7 @@ export const creativeEditSchema = z.discriminatedUnion("action", [
   z
     .object({
       action: z.literal("stagger"),
-      ids: z.array(z.string()).min(1).max(32),
+      ids: z.array(z.string()).min(1).max(MAX_LAYERS),
       seconds: z.number().finite().min(-10).max(10),
     })
     .strict(),

@@ -268,7 +268,7 @@ test("pixel export settings preserve output palette and alpha; metadata hashes m
       p,
     ),
     meta = JSON.parse(Buffer.from(files["metadata.json"], "base64").toString());
-  expect(meta.version).toBe("0.7.2");
+  expect(meta.version).toBe("0.7.3");
   expect(meta.canvas.width).toBe(64);
   expect(meta.sourceCanvas.width).toBe(128);
   const palettes = new Set<string>();

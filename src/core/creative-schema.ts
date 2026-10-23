@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { MAX_BINDINGS } from "./limits.js";
 
 export const identifier = z.string().regex(/^[a-zA-Z][\w-]{0,63}$/);
 const number = (min: number, max: number) =>
@@ -88,7 +89,7 @@ export const controlSchema = z
     max: number(-4096, 4096).default(2),
     value: number(-4096, 4096).default(1),
     step: number(0.001, 4096).default(0.01),
-    bindings: z.array(bindingSchema).max(64).default([]),
+    bindings: z.array(bindingSchema).max(MAX_BINDINGS).default([]),
   })
   .strict()
   .superRefine((c, ctx) => {

@@ -1,4 +1,52 @@
-import { parseProject, type Project } from "./model.js";
+import {
+  parseProject,
+  gradientSchema,
+  colorSchema,
+  type Gradient,
+  type Project,
+} from "./model.js";
+
+/** Set actual gradient/tint values, including achromatic smoke. */
+export function setProjectGradient(
+  project: Project,
+  colors: Gradient | string,
+  includeLocked = false,
+  ids?: string[],
+): Project {
+  const gradient =
+    typeof colors === "string"
+      ? [{ t: 0, color: colorSchema.parse(colors) }]
+      : gradientSchema.parse(colors);
+  if (ids?.some((id) => !project.layers.some((l) => l.id === id)))
+    throw Error("Unknown layer in color selection");
+  const chosen = new Set(
+    project.layers
+      .filter(
+        (l) => (includeLocked || !l.locked) && (!ids || ids.includes(l.id)),
+      )
+      .map((l) => l.id),
+  );
+  const isHue = (b: Project["controls"][number]["bindings"][number]) =>
+    b.target === "colors.hue" && chosen.has(b.layer);
+  return parseProject({
+    ...project,
+    layers: project.layers.map((l) =>
+      chosen.has(l.id) ? { ...l, colors: structuredClone(gradient) } : l,
+    ),
+    controls: project.controls.map((c) => {
+      if (!c.bindings.some(isHue)) return c;
+      // Keep ordinary Hue controls usable, without shifting the requested color.
+      if (
+        c.bindings.every((b) => isHue(b) && b.offset === 0) &&
+        c.min <= 0 &&
+        c.max >= 0
+      )
+        return { ...c, value: 0 };
+      // Mixed controls must not change unselected or locked layers.
+      return { ...c, bindings: c.bindings.filter((b) => !isHue(b)) };
+    }),
+  });
+}
 /** Scale the complete composition uniformly, or crop/expand only its canvas. */
 export function resizeProject(
   project: Project,

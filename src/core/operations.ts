@@ -1,3 +1,4 @@
+import { MAX_LAYERS } from "./limits.js";
 import { z } from "zod";
 import { layerSchema, parseProject, vecSchema, type Project } from "./model.js";
 import {
@@ -9,6 +10,8 @@ import {
 import { creativeEditSchema, editCreative } from "./creative.js";
 import { resolveControls } from "./parameters.js";
 import { pointToLocal } from "./spatial.js";
+import { setProjectGradient } from "./authoring.js";
+import { gradientSchema, colorSchema } from "./model.js";
 
 /** The same merge semantics are used by single edits and transactions. */
 export function merge<T>(base: T, patch: unknown): T {
@@ -26,14 +29,25 @@ export function merge<T>(base: T, patch: unknown): T {
 }
 const id = z.string().min(1).max(64),
   patch = z.record(z.string(), z.unknown()),
-  ids = z.array(id).min(1).max(32);
+  ids = z.array(id).min(1).max(MAX_LAYERS);
 export const editOperationSchema = z.discriminatedUnion("action", [
+  z
+    .object({
+      action: z.literal("set_gradient"),
+      colors: z.union([colorSchema, gradientSchema]),
+      ids: ids.optional(),
+      includeLocked: z.boolean().default(false),
+    })
+    .strict(),
   z.object({ action: z.literal("update_project"), patch }).strict(),
   z.object({ action: z.literal("add_layer"), layer: patch }).strict(),
   z.object({ action: z.literal("update_layer"), id, patch }).strict(),
   z.object({ action: z.literal("remove_layer"), id }).strict(),
   z
-    .object({ action: z.literal("reorder_layers"), ids: z.array(id).max(32) })
+    .object({
+      action: z.literal("reorder_layers"),
+      ids: z.array(id).max(MAX_LAYERS),
+    })
     .strict(),
   z
     .object({
@@ -155,6 +169,8 @@ export function reorderLayerData(p: Project, ids: string[]): Project {
 }
 export function applyEdit(p: Project, op: EditOperation): Project {
   switch (op.action) {
+    case "set_gradient":
+      return setProjectGradient(p, op.colors, op.includeLocked, op.ids);
     case "update_project":
       return updateProjectData(p, op.patch);
     case "add_layer":

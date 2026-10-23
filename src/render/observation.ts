@@ -372,6 +372,27 @@ export async function observe(
     o.view === "storyboard"
       ? (o.times ?? timelineTimes(source))
       : [o.time ?? bestTime];
+  const activeTimes = sampledTimes.filter(
+    (t) => sample(t).metrics.visiblePixels > 0,
+  );
+  if (
+    automatic &&
+    o.view === "storyboard" &&
+    o.storyboardMode === "active" &&
+    activeTimes.length
+  ) {
+    // Show distributed measured activity, keeping the real timestamps visible.
+    const count = Math.min(6, activeTimes.length);
+    shownTimes = Array.from(
+      { length: count },
+      (_, i) =>
+        activeTimes[
+          count === 1
+            ? 0
+            : Math.round((i * (activeTimes.length - 1)) / (count - 1))
+        ],
+    );
+  }
   if (automatic && o.view === "storyboard" && !shownTimes.includes(bestTime)) {
     const at =
       shownTimes.length > 2 ? 1 + Math.floor((shownTimes.length - 2) / 2) : 0;
@@ -383,6 +404,7 @@ export async function observe(
   const scene = describeScene(source, resolved, focalTime, o.ids),
     warnings: ObservationReport["warnings"] = [],
     isolated = new Map<string, Bitmap>();
+  const sheetIds = new Set(scene.layers.slice(-9).map((l) => l.id));
   const layers = scene.layers.map((l) => {
     renderer.render(focalTime, new Set([l.id]));
     const bitmap = {
@@ -392,7 +414,7 @@ export async function observe(
       },
       pixels = pixelMetrics(bitmap.rgba, bitmap.width, bitmap.height),
       geometryBounds = renderer.geometryBounds(l.id);
-    if (o.view === "layers") isolated.set(l.id, bitmap);
+    if (o.view === "layers" && sheetIds.has(l.id)) isolated.set(l.id, bitmap);
     let state = !l.visible
       ? "hidden"
       : !l.timing.active
@@ -433,6 +455,14 @@ export async function observe(
       times: sampledTimes,
       basis:
         "largest rendered alpha mass among sampled times; not an exhaustive proof of visibility",
+      storyboardMode: o.storyboardMode,
+      emptySamplesOmitted:
+        automatic &&
+        o.view === "storyboard" &&
+        o.storyboardMode === "active" &&
+        activeTimes.length
+          ? sampledTimes.length - activeTimes.length
+          : 0,
     },
     reference: {
       displayed: !!(o.includeReference && ref?.visible && ref.opacity),

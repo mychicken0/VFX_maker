@@ -66,19 +66,20 @@ editable source, including embedded PNGs, when compact scene data is insufficien
 and the following inspection options. Discover exact limits/defaults with
 `get_schema {kind: "observation"}`.
 
-| Option                               | Behavior                                                                              |
-| ------------------------------------ | ------------------------------------------------------------------------------------- |
-| `view: "frame"`                      | One annotated frame; default view                                                     |
-| `view: "storyboard"`                 | Six representative timeline samples by default; `times` accepts 1..9 explicit seconds |
-| `view: "layers"`                     | Isolated layer sheet at one time; top nine scoped layers, with omitted IDs reported   |
-| `time`                               | Explicit seconds for frame/layers; omit to sample a visible representative moment     |
-| `ids`                                | Scope rendering and metadata to 1..32 existing stable layer IDs                       |
-| `point: {x,y,threshold?}`            | Pick actual isolated alpha at a canvas point; hits ordered front to back              |
-| `crop: {x,y,width,height}`           | Annotated tile crop in original canvas pixels; clean PNGs keep full dimensions        |
-| `grid`, `guides`, `includeReference` | Defaults true; reference context never changes effect metrics or clean images         |
-| `background`                         | `checker` (default), `dark` or `transparent` for annotated tiles                      |
-| `scale`                              | Requested annotation scale, fitted to image budgets                                   |
-| `includeImage`                       | MCP-only; false omits the inline image while retaining metadata/resources             |
+| Option                               | Behavior                                                                                        |
+| ------------------------------------ | ----------------------------------------------------------------------------------------------- |
+| `view: "frame"`                      | One annotated frame; default view                                                               |
+| `view: "storyboard"`                 | Up to six distributed visible sampled moments by default; `times` accepts 1..9 explicit seconds |
+| `view: "layers"`                     | Isolated layer sheet at one time; top nine scoped layers, with omitted IDs reported             |
+| `storyboardMode`                     | `active` (default) omits sampled blank tails; `timeline` preserves full-duration context        |
+| `time`                               | Explicit seconds for frame/layers; omit to sample a visible representative moment               |
+| `ids`                                | Scope rendering and metadata to 1..64 existing stable layer IDs                                 |
+| `point: {x,y,threshold?}`            | Pick actual isolated alpha at a canvas point; hits ordered front to back                        |
+| `crop: {x,y,width,height}`           | Annotated tile crop in original canvas pixels; clean PNGs keep full dimensions                  |
+| `grid`, `guides`, `includeReference` | Defaults true; reference context never changes effect metrics or clean images                   |
+| `background`                         | `checker` (default), `dark` or `transparent` for annotated tiles                                |
+| `scale`                              | Requested annotation scale, fitted to image budgets                                             |
+| `includeImage`                       | MCP-only; false omits the inline image while retaining metadata/resources                       |
 
 Automatic selection measures alpha mass at at most 20 candidate times. It helps
 avoid an empty opening/tail, but does not prove the entire animation is visible.
@@ -165,29 +166,33 @@ SDK can reject malformed tool inputs before these handlers run.
 
 ## Available tools
 
-34 tools are available. Existing direct tools remain supported.
+38 tools are available. Existing direct tools remain supported.
 
-| Tool                                                       | Purpose                                                                               |
-| ---------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| capabilities                                               | Installed version, root, coordinates, workflows and budgets                           |
-| list_presets / get_preset                                  | Editable example discovery                                                            |
-| get_schema                                                 | Project/layer/asset/pixels/export/creative/modifier/control/edits/observation schemas |
-| new_project / inspect_project                              | Create or read full source                                                            |
-| observe_project                                            | Annotated images, scene coordinates, layer states, bounds and draft inspection        |
-| apply_edits                                                | Revision-checked atomic sequence or validation-only dry run                           |
-| save_preview                                               | Cached PNG to a fresh file for host image viewers                                     |
-| update_project                                             | Merge project fields or replace arrays                                                |
-| add_layer / update_layer / remove_layer                    | Direct layer authoring                                                                |
-| reorder_layers / group_layers / transform_layers           | Layer order and selection editing                                                     |
-| put_keyframe                                               | Insert/replace a normalized key                                                       |
-| list_backups / restore_backup                              | Disk versions and revision-checked restoration                                        |
-| import_asset / optimize_asset / optimize_png               | Embedded textures and PNG processing                                                  |
-| resize_project / recolor_project                           | Canvas size and selected/all gradient color                                           |
-| render_preview                                             | Clean inline PNG, pixel bounds and resource fallback                                  |
-| inspect_creative / edit_creative                           | Discover/edit controls, modifiers, looks and timing                                   |
-| save_component / insert_component                          | Portable editable parts                                                               |
-| export / start_export / get_export_job / cancel_export_job | Synchronous or managed exports                                                        |
-| start_variant_export                                       | Managed export of saved variants                                                      |
+| Tool                                                       | Purpose                                                                                              |
+| ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| capabilities                                               | Installed version, root, coordinates, workflows and budgets                                          |
+| list_presets / get_preset                                  | Editable example discovery                                                                           |
+| get_schema                                                 | Project/layer/asset/pixels/export/creative/modifier/control/edits/observation/analysis/batch schemas |
+| new_project / inspect_project                              | Create or read full source                                                                           |
+| set_gradient                                               | Exact solid color or gradient for all/selected layer source colors                                   |
+| preflight_export                                           | Numeric resource usage/limits without a browser                                                      |
+| analyze_project                                            | RGBA hashes, reverse-order parity and saved baseline regression checks                               |
+| batch_projects                                             | Independent create/edit/export tasks and project-count jobs                                          |
+| observe_project                                            | Annotated images, scene coordinates, layer states, bounds and draft inspection                       |
+| apply_edits                                                | Revision-checked atomic sequence or validation-only dry run                                          |
+| save_preview                                               | Cached PNG to a fresh file for host image viewers                                                    |
+| update_project                                             | Merge project fields or replace arrays                                                               |
+| add_layer / update_layer / remove_layer                    | Direct layer authoring                                                                               |
+| reorder_layers / group_layers / transform_layers           | Layer order and selection editing                                                                    |
+| put_keyframe                                               | Insert/replace a normalized key                                                                      |
+| list_backups / restore_backup                              | Disk versions and revision-checked restoration                                                       |
+| import_asset / optimize_asset / optimize_png               | Embedded textures and PNG processing                                                                 |
+| resize_project / recolor_project                           | Canvas size and selected/all gradient color                                                          |
+| render_preview                                             | Clean inline PNG, pixel bounds and resource fallback                                                 |
+| inspect_creative / edit_creative                           | Discover/edit controls, modifiers, looks and timing                                                  |
+| save_component / insert_component                          | Portable editable parts                                                                              |
+| export / start_export / get_export_job / cancel_export_job | Synchronous or managed exports                                                                       |
+| start_variant_export                                       | Managed export of saved variants                                                                     |
 
 Jobs pin an immutable project snapshot when submitted, after checking revision.
 They use one worker, hold at most 16 states, and evict completed states first.
@@ -293,3 +298,88 @@ are named by variant IDs. Each includes normal export metadata/project/checksums
 `variants.vfx.json` retains the base effect and all looks. Bounds: 32 million source
 pixels and 64 MiB generated output per batch. `options.start/end` optionally trim
 any export while keeping the source project intact.
+
+## Direct gradients, numeric QA and independent project batches
+
+`set_gradient {file, revision, colors: "#804cff"}` sets a solid source color.
+`colors` may instead be a complete array of `{t,color}` stops. Optional `ids` and
+`includeLocked` follow existing selection behavior. This colors gray smoke where
+hue rotation cannot. Fully selected hue-only controls reset to zero; mixed controls
+lose only affected hue bindings, so locked/unselected colors do not change. Texture
+pixels and modifier colors remain independent. `apply_edits` accepts the same
+`action: "set_gradient"`, including draft previews. Studio exposes it in Recolor.
+
+`preflight_export {file, options}` returns `ok`, `checks: [{resource,used,limit,passed}]`,
+its computed plan and RGBA-buffer memory estimates. It starts no browser and
+writes no files. It shares the export validator. Budget failures from actual
+exports carry `LIMIT_EXCEEDED` and the same numeric report. Estimates exclude
+encoder, browser and GPU overhead.
+
+`analyze_project {file, out: "baseline.json"}` produces SHA-256 of **straight RGBA**,
+alpha/bounds/activity statistics per frame, plus parity against reverse-order
+rerenders. Defaults to all original export frame times, bounded by 300 frames /
+16,777,216 source pixels. Optional `times` selects explicit samples and
+`parity:false` skips that rerender check. No image-encoding bytes are hashed.
+`analyze_project {file, baseline: "baseline.json"}` uses that baseline's times unless
+explicit times are supplied, compares dimensions and hashes, and reports missing
+times/mismatches. Inspect `ok`; a comparison failure is a valid QA result, not a
+protocol error. A baseline may cover a subset of times. Reports save only to fresh
+root-scoped JSON paths. CLI `vfx analyze` exits 2 on failed QA. Equal hashes prove
+repeatability/equality on the tested renderer, not that an effect looks right or
+that its activity peak is the correct game hit frame. Empty frames remain in stats.
+
+`batch_projects` takes `items`, a discriminated array of up to 32 tasks:
+
+```json
+{
+  "items": [
+    {
+      "action": "create",
+      "file": "purple-smoke.json",
+      "preset": "smoke",
+      "edits": [{ "action": "set_gradient", "colors": "#804cff" }],
+      "out": "purple-smoke-gif",
+      "options": { "format": "gif" }
+    },
+    { "action": "create", "file": "rain.json", "preset": "rain" }
+  ],
+  "dryRun": true
+}
+```
+
+Create takes `preset` or `project`, optional `seed/edits`, and optional `out/options`.
+Edit takes `file/revision/edits`, plus optional `out/options`. Export takes
+`file/revision/out/options`. Options require an output directory. Dry runs check
+files, revisions, schemas and export budgets without writing or rendering. Real
+runs return a job; poll existing `get_export_job`. Its `progressUnit` is `projects`.
+Snapshots are pinned at submission, with a 16-MiB combined source cap. Each input
+and output path must be distinct; use another batch after creation to export
+the same projects in a second format. Parent directories must exist.
+
+Atomicity is **per edited file**, not across projects or a project-plus-export.
+Each edited file gets one revision check and backup. Failed items do not undo
+successful files. `partial` means the project was written but its export failed.
+Cancellation preserves completed writes and marks pending items cancelled. A batch
+job with failed items finishes `failed` and retains `result.results`; always inspect
+`result.ok` and item statuses. Domain failures are recorded per item. Malformed
+request schemas, duplicate paths or the aggregate snapshot cap can reject the
+whole request before any job/write. Nothing overwrites an existing export folder.
+
+CLI equivalents: `vfx gradient`, `vfx preflight`, `vfx analyze`, and
+`vfx batch --tasks-file tasks.json [--dry-run]`. They share the same operations.
+The CLI batch command exits 2 on failed/partial items (130 on cancellation).
+
+## Warm rendering and storyboard timing
+
+A long-lived MCP server lazily keeps up to two isolated workers warm, with a
+30-second idle timeout. Project resources are reused for identical input. A
+cancelled in-flight render discards its own worker without closing another one.
+CLI commands close their pool on exit; separate CLI invocations still start cold.
+Use CLI batch to reuse the renderer across its tasks. `capabilities.renderer`
+reports launches, requests, reuse and active/idle counts.
+
+Default storyboards select distributed visible **sampled** moments and retain
+actual timestamp captions. This compresses empty pauses; it does not trim exports
+or prove unsampled moments are empty. Request `storyboardMode:"timeline"` for
+full-duration context, or explicit `times` to preserve a chosen blank interval.
+`sampling.emptySamplesOmitted` records omitted sampled empty times.

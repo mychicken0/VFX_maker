@@ -1,3 +1,4 @@
+import { MAX_LAYERS } from "./limits.js";
 import { z } from "zod";
 import { VERSION, type Project, type Layer } from "./model.js";
 import { evaluate, frameIndex } from "./math.js";
@@ -8,9 +9,10 @@ const time = z.number().finite().min(0).max(10);
 export const observationSchema = z
   .object({
     view: z.enum(["frame", "storyboard", "layers"]).default("frame"),
+    storyboardMode: z.enum(["active", "timeline"]).default("active"),
     time: time.optional(),
     times: z.array(time).min(1).max(9).optional(),
-    ids: z.array(z.string().min(1).max(64)).min(1).max(32).optional(),
+    ids: z.array(z.string().min(1).max(64)).min(1).max(MAX_LAYERS).optional(),
     crop: z
       .object({
         x: z.number().int().min(0),
@@ -345,7 +347,13 @@ export interface ObservationReport extends Omit<
   draft: boolean;
   layers: ObservedLayer[];
   frames: ObservedFrame[];
-  sampling: { automatic: boolean; times: number[]; basis: string };
+  sampling: {
+    automatic: boolean;
+    times: number[];
+    basis: string;
+    storyboardMode: "active" | "timeline";
+    emptySamplesOmitted: number;
+  };
   reference: {
     displayed: boolean;
     excludedFromPixels: true;

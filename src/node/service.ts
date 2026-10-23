@@ -7,19 +7,25 @@ import {
   layerSchema,
   parseProject,
   projectSchema,
+  type Gradient,
   type Project,
 } from "../core/model.js";
 import type { ExportOptions } from "../render/export.js";
 import { optimizePng, inspectPng, decodePng } from "../core/pixels.js";
 import { pixelOptionsSchema, type PixelInput } from "../core/pixel-options.js";
-import { exportOptionsSchema, exportPlan } from "../core/export-options.js";
+import {
+  exportOptionsSchema,
+  exportPlan,
+  preflightExport,
+} from "../core/export-options.js";
 import {
   recolorProject,
+  setProjectGradient,
   replaceAssetPng,
   resizeProject,
 } from "../core/authoring.js";
 import { Store, revision as hash } from "./store.js";
-import { render } from "./driver.js";
+import { render, renderStats } from "./driver.js";
 import {
   editCreative,
   creativeCapabilities,
@@ -46,8 +52,238 @@ import {
 } from "../core/observation.js";
 import { COORDINATES } from "../core/spatial.js";
 import { serialize } from "../core/api.js";
+import {
+  analysisSchema,
+  analysisTimes,
+  analysisBaselineSchema,
+  compareAnalysis,
+  type AnalysisInput,
+  type AnalysisReport,
+} from "../core/analysis.js";
+import {
+  batchSchema,
+  type BatchPreparation,
+  type BatchItemResult,
+} from "./batch.js";
+import { MAX_BATCH_SOURCE_BYTES } from "../core/limits.js";
+import { toolError } from "./tool-errors.js";
 export class Service {
   constructor(readonly store: Store) {}
+  gradient(
+    file: string,
+    revision: string,
+    colors: Gradient | string,
+    includeLocked = false,
+    ids?: string[],
+  ) {
+    return this.store.edit(file, revision, (p) =>
+      setProjectGradient(p, colors, includeLocked, ids),
+    );
+  }
+  async preflight(
+    file: string,
+    options: ExportOptions = {},
+    expected?: string,
+  ) {
+    const snapshot = await this.store.read(file);
+    if (expected && expected !== snapshot.revision)
+      throw Error("Revision conflict");
+    return {
+      file,
+      revision: snapshot.revision,
+      ...preflightExport(snapshot.project, options),
+    };
+  }
+  async analyze(
+    file: string,
+    options: AnalysisInput = {},
+    expected?: string,
+    baselineFile?: string,
+    out?: string,
+  ) {
+    const snapshot = await this.store.read(file);
+    if (expected && snapshot.revision !== expected)
+      throw Error("Revision conflict");
+    let baseline: unknown;
+    if (baselineFile) {
+      const path = await this.store.path(baselineFile);
+      if ((await fs.stat(path)).size > 4194304)
+        throw Error("Baseline exceeds 4 MiB");
+      baseline = analysisBaselineSchema.parse(
+        JSON.parse(await fs.readFile(path, "utf8")),
+      );
+    }
+    const parsed = analysisSchema.parse({
+      ...options,
+      ...(options.times === undefined && baseline
+        ? {
+            times: analysisBaselineSchema
+              .parse(baseline)
+              .frames.map((f) => f.time),
+          }
+        : {}),
+    });
+    analysisTimes(snapshot.project, parsed);
+    const destination = out ? await this.store.path(out, false) : undefined;
+    const files = await render(snapshot.project, { analysis: parsed }),
+      analysis = JSON.parse(
+        files["analysis.json"].toString(),
+      ) as AnalysisReport;
+    const comparison = baseline
+      ? compareAnalysis(analysis, baseline)
+      : undefined;
+    const report = {
+      ...analysis,
+      file,
+      revision: snapshot.revision,
+      ok: analysis.parity.passed !== false && comparison?.passed !== false,
+      ...(comparison ? { baseline: comparison } : {}),
+      renderer: renderStats(),
+    };
+    if (destination)
+      await fs.writeFile(destination, JSON.stringify(report, null, 2) + "\n", {
+        flag: "wx",
+      });
+    return { ...report, ...(out ? { out } : {}) };
+  }
+  async prepareBatch(input: unknown): Promise<BatchPreparation> {
+    const tasks = batchSchema.parse(input),
+      ready: BatchPreparation["ready"] = [],
+      results: BatchItemResult[] = [],
+      seen = new Set<string>();
+    let snapshotBytes = 0;
+    const duplicates: string[] = [];
+    for (const [index, task] of tasks.entries()) {
+      try {
+        const paths = [
+          await this.store.path(task.file, task.action !== "create"),
+          ...(task.out ? [await this.store.path(task.out, false)] : []),
+        ];
+        for (const path of paths) {
+          if (seen.has(path)) duplicates.push(path);
+          seen.add(path);
+        }
+        if (task.options && !task.out)
+          throw Error("Export options require an output directory");
+        let project: Project, sourceRevision: string | undefined;
+        if (task.action === "create") {
+          if (task.project !== undefined && task.preset)
+            throw Error("Choose project or preset, not both");
+          project =
+            task.project !== undefined
+              ? parseProject(task.project)
+              : getPreset(task.preset);
+          if (task.seed !== undefined)
+            project = parseProject({ ...project, seed: task.seed });
+          if (task.edits) project = applyEdits(project, task.edits);
+        } else {
+          const snapshot = await this.store.read(task.file);
+          if (snapshot.revision !== task.revision)
+            throw Error("Revision conflict");
+          sourceRevision = snapshot.revision;
+          project =
+            task.action === "edit"
+              ? applyEdits(snapshot.project, task.edits)
+              : snapshot.project;
+        }
+        if (task.out) exportPlan(project, task.options ?? {});
+        const text = serialize(project),
+          revision = hash(text);
+        snapshotBytes += Buffer.byteLength(text);
+        if (Buffer.byteLength(text) > 4194304)
+          throw Error("Project exceeds 4 MiB");
+        ready.push({
+          index,
+          task,
+          project,
+          revision: task.action === "export" ? sourceRevision! : revision,
+          sourceRevision,
+        });
+        results.push({
+          index,
+          file: task.file,
+          action: task.action,
+          status: "ready",
+          revision: task.action === "export" ? sourceRevision : revision,
+        });
+      } catch (e) {
+        results.push({
+          index,
+          file: task.file,
+          action: task.action,
+          status: "failed",
+          error: toolError(e).error,
+        });
+      }
+    }
+    if (duplicates.length)
+      throw Error("Batch paths must be distinct: " + duplicates.join(", "));
+    if (snapshotBytes > MAX_BATCH_SOURCE_BYTES)
+      throw Error("Batch snapshots exceed 16 MiB; split the batch");
+    return { ready, results, snapshotBytes };
+  }
+  async executeBatch(
+    prepared: BatchPreparation,
+    signal?: AbortSignal,
+    progress?: (a: number, b: number) => void,
+  ) {
+    const results = structuredClone(prepared.results),
+      total = results.length;
+    let completed = results.filter((r) => r.status === "failed").length;
+    progress?.(completed, total);
+    for (const item of prepared.ready) {
+      const result = results[item.index],
+        task = item.task;
+      if (signal?.aborted) {
+        result.status = "cancelled";
+        completed++;
+        progress?.(completed, total);
+        continue;
+      }
+      let written = false;
+      try {
+        signal?.throwIfAborted();
+        if (task.action === "create") {
+          const saved = await this.store.create(task.file, item.project);
+          result.revision = saved.revision;
+          written = true;
+        } else if (task.action === "edit") {
+          const saved = await this.store.edit(
+            task.file,
+            item.sourceRevision!,
+            () => item.project,
+          );
+          result.revision = saved.revision;
+          written = true;
+        }
+        if (task.out)
+          result.export = await this.exportSnapshot(
+            item.project,
+            result.revision!,
+            task.out,
+            task.options ?? {},
+            signal,
+          );
+        result.status = "succeeded";
+      } catch (e) {
+        result.status = written
+          ? "partial"
+          : signal?.aborted
+            ? "cancelled"
+            : "failed";
+        result.error = toolError(e).error;
+      }
+      completed++;
+      progress?.(completed, total);
+    }
+    return {
+      kind: "project-batch",
+      cancelled: signal?.aborted ?? false,
+      ok: results.every((r) => r.status === "succeeded"),
+      atomicAcrossProjects: false,
+      results,
+    };
+  }
   presets() {
     return PRESETS.map(({ id, name, description, tags }) => ({
       id,
@@ -67,7 +303,9 @@ export class Service {
       | "modifier"
       | "control"
       | "edits"
-      | "observation",
+      | "observation"
+      | "analysis"
+      | "batch",
   ) {
     return z.toJSONSchema(
       {
@@ -81,6 +319,8 @@ export class Service {
         control: controlSchema,
         edits: editBatchSchema,
         observation: observationSchema,
+        analysis: analysisSchema,
+        batch: batchSchema,
       }[kind],
     );
   }
@@ -452,6 +692,7 @@ export class Service {
     progress?: (a: number, b: number) => void,
   ) {
     exportPlan(project, options);
+    await this.store.path(out, false);
     const files = await render(project, { options }, signal, progress);
     return { ...(await this.store.publish(out, files, signal)), revision };
   }

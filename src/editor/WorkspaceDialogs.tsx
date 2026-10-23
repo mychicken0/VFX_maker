@@ -1,11 +1,16 @@
 import { useMemo, useState } from "react";
 import { exportPlan, type ExportOptions } from "../core/export-options.js";
-import { recolorProject, resizeProject } from "../core/authoring.js";
+import {
+  recolorProject,
+  resizeProject,
+  setProjectGradient,
+} from "../core/authoring.js";
 import { parseText, type Project } from "../core/model.js";
 import { readableError } from "../core/errors.js";
 import { Viewport } from "./Viewport.js";
 import { Modal } from "./Modal.js";
-import { NumberField, Select, Check } from "./controls.js";
+import { NumberField, Select, Check, GradientEditor } from "./controls.js";
+import type { Gradient } from "../core/model.js";
 import { type RecentProject, removeRecent } from "./recent.js";
 
 export function ExportDialog({
@@ -471,23 +476,34 @@ export function RecolorDialog({
   onClose: () => void;
 }) {
   const [hue, setHue] = useState(0),
+    [colorMode, setColorMode] = useState("Rotate hue"),
+    [gradient, setGradient] = useState<Gradient>([{ t: 0, color: "#804cff" }]),
     [includeLocked, setIncludeLocked] = useState(false),
     [scope, setScope] = useState("all");
   const next = useMemo(
     () =>
-      recolorProject(
-        project,
-        hue,
-        includeLocked,
-        scope === "selected" && selected ? [selected] : undefined,
-      ),
-    [project, hue, includeLocked, scope, selected],
+      colorMode === "Set gradient"
+        ? setProjectGradient(
+            project,
+            gradient,
+            includeLocked,
+            scope === "selected" && selected ? [selected] : undefined,
+          )
+        : recolorProject(
+            project,
+            hue,
+            includeLocked,
+            scope === "selected" && selected ? [selected] : undefined,
+          ),
+    [project, hue, includeLocked, scope, selected, colorMode, gradient],
   );
   const swatches = [
     ...new Map(
       project.layers.flatMap((l, j) =>
         l.colors.map((s, i) => {
-          const to = next.layers[j].colors[i].color;
+          const to =
+            next.layers[j].colors[Math.min(i, next.layers[j].colors.length - 1)]
+              .color;
           return [s.color + to, { from: s.color, to }] as const;
         }),
       ),
@@ -497,7 +513,7 @@ export function RecolorDialog({
   return (
     <Modal title="Recolor effect" wide onClose={onClose}>
       <p>
-        Turn all gradient and tint colors together while keeping their shading.
+        Rotate existing colors, or set a new gradient to color gray smoke too.
         Texture pixels and canvas background stay unchanged.
       </p>
       <div className="recolor-layout">
@@ -517,23 +533,41 @@ export function RecolorDialog({
             options={selected ? ["all", "selected"] : ["all"]}
             onChange={setScope}
           />
-          <NumberField
-            label="Hue rotation"
-            value={hue}
-            min={-180}
-            max={180}
-            onChange={setHue}
-            unit="°"
+          <Select
+            label="Color action"
+            value={colorMode}
+            options={["Rotate hue", "Set gradient"]}
+            onChange={setColorMode}
           />
-          <input
-            aria-label="Hue slider"
-            type="range"
-            min={-180}
-            max={180}
-            step={1}
-            value={hue}
-            onChange={(e) => setHue(Number(e.target.value))}
-          />
+          {colorMode === "Set gradient" ? (
+            <>
+              <GradientEditor stops={gradient} onChange={setGradient} />
+              <p className="hint">
+                Sets gradient/tint colors directly. Hue controls are neutralized
+                for changed layers so the requested colors stay exact.
+              </p>
+            </>
+          ) : (
+            <>
+              <NumberField
+                label="Hue rotation"
+                value={hue}
+                min={-180}
+                max={180}
+                onChange={setHue}
+                unit="°"
+              />
+              <input
+                aria-label="Hue slider"
+                type="range"
+                min={-180}
+                max={180}
+                step={1}
+                value={hue}
+                onChange={(e) => setHue(Number(e.target.value))}
+              />
+            </>
+          )}
           <Check
             label="Include locked layers"
             value={includeLocked}

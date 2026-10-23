@@ -1,5 +1,8 @@
 # An effect authored through MCP
 
+Captured with 0.7.2. For current batch/color/QA workflows, see
+[the 0.7.3 examples](../workflows-0.7.3/README.md).
+
 ![MCP-authored crimson sigil](gif/animation.gif)
 
 This editable result was made through the official MCP SDK over stdio, using

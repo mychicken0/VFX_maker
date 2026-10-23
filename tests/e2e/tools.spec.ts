@@ -32,7 +32,7 @@ test("installed-style CLI works outside the repository with portable TypeScript 
     p.fps = 10;
     await writeFile(join(dir, "custom.json"), JSON.stringify(p));
     const info = await cli("inspect", "custom.json");
-    expect(info.project.version).toBe("0.7.2");
+    expect(info.project.version).toBe("0.7.3");
     await cli(
       "set",
       "custom.json",
@@ -152,7 +152,7 @@ test("installed-style CLI works outside the repository with portable TypeScript 
     const version = await exec(process.execPath, [cliEntrypoint, "--version"], {
       cwd: dir,
     });
-    expect(version.stdout.trim()).toBe("0.7.2");
+    expect(version.stdout.trim()).toBe("0.7.3");
   } finally {
     await rm(dir, { recursive: true, force: true });
   }
@@ -187,7 +187,7 @@ test("official MCP client authors without graph wiring, returns real image and m
   };
   try {
     await client.connect(transport);
-    expect((await client.listTools()).tools).toHaveLength(34);
+    expect((await client.listTools()).tools).toHaveLength(38);
     const project = getPreset("spark_burst");
     project.duration = 0.31;
     project.fps = 10;

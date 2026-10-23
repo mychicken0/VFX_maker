@@ -7,9 +7,19 @@ import { z } from "zod";
 import { exportVariants } from "./variants.js";
 import { observe } from "./observation.js";
 import type { ObservationInput } from "../core/observation.js";
+import { analyze } from "./analysis.js";
+import type { AnalysisInput } from "../core/analysis.js";
 const renderer = await VfxRenderer.create();
 document.body.append(renderer.canvas);
 const bridge = {
+  async analyze(value: unknown, options: AnalysisInput = {}) {
+    const report = await analyze(renderer, parseProject(value), options);
+    return {
+      "analysis.json": toBase64(
+        new TextEncoder().encode(JSON.stringify(report)),
+      ),
+    };
+  },
   async observe(value: unknown, options: ObservationInput, draft = false) {
     const result = await observe(renderer, parseProject(value), options, draft);
     return Object.fromEntries(

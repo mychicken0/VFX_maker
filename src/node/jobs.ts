@@ -1,4 +1,5 @@
 export interface Job {
+  progressUnit: "frames" | "projects";
   id: string;
   status:
     "queued" | "running" | "cancelling" | "cancelled" | "succeeded" | "failed";
@@ -19,6 +20,7 @@ export class Jobs {
       signal: AbortSignal,
       progress: (completed: number, total: number) => void,
     ) => Promise<unknown>,
+    progressUnit: "frames" | "projects" = "frames",
   ): Job {
     if (this.entries.size >= 16) {
       const done = [...this.entries].find(([, e]) =>
@@ -28,6 +30,7 @@ export class Jobs {
       else throw new Error("16 jobs are already active");
     }
     const job: Job = {
+        progressUnit,
         id: `export-${++this.serial}`,
         status: "queued",
         completed: 0,
@@ -48,7 +51,18 @@ export class Jobs {
             job.completed = completed;
             job.total = total;
           });
-          job.status = "succeeded";
+          const result = job.result as
+            { kind?: string; cancelled?: boolean; ok?: boolean } | undefined;
+          job.status =
+            result?.kind === "project-batch"
+              ? result.cancelled
+                ? "cancelled"
+                : result.ok
+                  ? "succeeded"
+                  : "failed"
+              : "succeeded";
+          if (job.status === "failed")
+            job.error = "Some batch items failed; inspect result.results.";
         } catch (e) {
           if (controller.signal.aborted) job.status = "cancelled";
           else {

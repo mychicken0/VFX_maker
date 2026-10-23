@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { EditBatchError } from "../core/operations.js";
 import { readableError } from "../core/errors.js";
+import { ExportBudgetError } from "../core/export-options.js";
 export function toolError(error: unknown) {
   const batch = error instanceof EditBatchError ? error : undefined;
   const cause = batch ? batch.original : error;
@@ -10,7 +11,8 @@ export function toolError(error: unknown) {
       ? cause.code
       : undefined;
   let code = "INVALID_OPERATION";
-  if (cause instanceof z.ZodError) code = "VALIDATION_ERROR";
+  if (cause instanceof ExportBudgetError) code = "LIMIT_EXCEEDED";
+  else if (cause instanceof z.ZodError) code = "VALIDATION_ERROR";
   else if (errno === "ENOENT") code = "FILE_NOT_FOUND";
   else if (/revision conflict/i.test(message)) code = "REVISION_CONFLICT";
   else if (/unlock the layer|unlocked layer|locked layer/i.test(message))
@@ -55,6 +57,9 @@ export function toolError(error: unknown) {
         recoveries[code] ??
         "Inspect the scene and get_schema for valid IDs, operation fields and limits; correct the request before retrying.",
       retryable: code === "RENDERER_BUSY" || code === "PROJECT_LOCKED",
+      ...(cause instanceof ExportBudgetError
+        ? { budget: cause.preflight }
+        : {}),
       ...(batch
         ? {
             operationIndex: batch.index,

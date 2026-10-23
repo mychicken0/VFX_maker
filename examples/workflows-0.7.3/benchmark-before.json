@@ -1,0 +1,58 @@
+{
+  "version": "0.7.2",
+  "platform": "linux",
+  "node": "v24.19.0",
+  "workload": "128x128 Crimson cross; six identical explicit times; default guides/grid; separate stdio process",
+  "samples": [
+    {
+      "operation": "storyboard",
+      "phase": "cold",
+      "ms": 1850.899057,
+      "inlinePngSha256": "c2416e0052f179a3a254a0b487b958b137c90dbae845aa06828604427727ad7e",
+      "bytes": 85183
+    },
+    {
+      "operation": "storyboard",
+      "phase": "warm",
+      "ms": 1804.0328179999997,
+      "inlinePngSha256": "c2416e0052f179a3a254a0b487b958b137c90dbae845aa06828604427727ad7e",
+      "bytes": 85183
+    },
+    {
+      "operation": "storyboard",
+      "phase": "warm",
+      "ms": 1736.4783720000005,
+      "inlinePngSha256": "c2416e0052f179a3a254a0b487b958b137c90dbae845aa06828604427727ad7e",
+      "bytes": 85183
+    },
+    {
+      "operation": "storyboard",
+      "phase": "warm",
+      "ms": 1765.1938410000002,
+      "inlinePngSha256": "c2416e0052f179a3a254a0b487b958b137c90dbae845aa06828604427727ad7e",
+      "bytes": 85183
+    },
+    {
+      "operation": "preview",
+      "phase": "warm",
+      "time": 0.3,
+      "ms": 1202.9819779999998,
+      "inlinePngSha256": "33a5b9e3805f059d818916beebf688a1457b596dbdb89a1aa380a275c3878d32"
+    },
+    {
+      "operation": "preview",
+      "phase": "warm",
+      "time": 0.4,
+      "ms": 1278.426676000001,
+      "inlinePngSha256": "b4dfa4ceedcee1959116a1db15d1183671cacb4b9270c0c6f190edfbbd8ae405"
+    },
+    {
+      "operation": "preview",
+      "phase": "warm",
+      "time": 0.5,
+      "ms": 1186.7789219999995,
+      "inlinePngSha256": "0d5cb381dcc9732193f125af40732ae260191d67b2d20aa80639098969f48acf"
+    }
+  ],
+  "renderer": null
+}

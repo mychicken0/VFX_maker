@@ -1,0 +1,102 @@
+{
+  "kind": "vfx-analysis",
+  "formatVersion": 1,
+  "canvas": {
+    "width": 128,
+    "height": 128
+  },
+  "duration": 1.2,
+  "fps": 30,
+  "frames": [
+    {
+      "time": 0.1,
+      "frameIndex": 3,
+      "sha256": "7feaa555dd4c4c6eadf9641a5804c1f9857dd45a3a22634aaa08951ccabdb754",
+      "visiblePixels": 2819,
+      "alphaMass": 611.494,
+      "bounds": {
+        "x": 38,
+        "y": 41,
+        "width": 53,
+        "height": 68
+      },
+      "touches": []
+    },
+    {
+      "time": 0.35,
+      "frameIndex": 10,
+      "sha256": "273eec8766e12f0edf2d118a9211b7ce723f1504ddc5791a7583f7f308b33eac",
+      "visiblePixels": 2752,
+      "alphaMass": 558.839,
+      "bounds": {
+        "x": 38,
+        "y": 44,
+        "width": 52,
+        "height": 64
+      },
+      "touches": []
+    },
+    {
+      "time": 0.6,
+      "frameIndex": 18,
+      "sha256": "457e5018a39096353a8dc5a222e8c65f75e80c7a904a5641e31eaa16f6315c1f",
+      "visiblePixels": 2409,
+      "alphaMass": 526.643,
+      "bounds": {
+        "x": 39,
+        "y": 48,
+        "width": 48,
+        "height": 60
+      },
+      "touches": []
+    },
+    {
+      "time": 0.9,
+      "frameIndex": 27,
+      "sha256": "4cb30c45b62893f16d35f9e4c11ad8ebf47e58cbd6a9173b0ac7f0e0fc85a1b7",
+      "visiblePixels": 2638,
+      "alphaMass": 572.89,
+      "bounds": {
+        "x": 38,
+        "y": 46,
+        "width": 53,
+        "height": 62
+      },
+      "touches": []
+    }
+  ],
+  "summary": {
+    "sampledFrames": 4,
+    "visibleFrames": 4,
+    "emptyFrames": 0,
+    "firstVisibleTime": 0.1,
+    "lastVisibleTime": 0.9,
+    "peakAlphaMass": {
+      "time": 0.1,
+      "value": 611.494
+    },
+    "peakVisiblePixels": {
+      "time": 0.1,
+      "value": 2819
+    },
+    "edgeTimes": []
+  },
+  "parity": {
+    "checked": true,
+    "passed": true,
+    "order": "reverse",
+    "mismatches": []
+  },
+  "file": "1.vfx.json",
+  "revision": "ab1a226b3ae8280b1a72221ce8caab890bfb4960f9e23f6b222964f74e283204",
+  "ok": true,
+  "renderer": {
+    "launches": 1,
+    "requests": 34,
+    "reuses": 33,
+    "active": 0,
+    "idle": 1,
+    "maxWorkers": 2,
+    "idleSeconds": 30
+  }
+}
