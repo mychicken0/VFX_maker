@@ -105,3 +105,26 @@ actual exports and agent preflight. `node/batch.ts` validates independent tasks;
 the service pins source snapshots before queueing, with one revision/backup per
 edited file, distinct paths, 32 items and a 16-MiB aggregate snapshot cap.
 Batch failures retain explicit per-item results and completed writes.
+
+## 0.7.4 authoring surfaces
+
+`editor/Blueprint.tsx` uses the MIT React Flow dependency for graph navigation and
+ports. Numeric wires serialize as existing controls/bindings; modifier chains are
+the existing renderer order. `parameters.ts` owns connect/disconnect validation and
+compact graph description, shared with MCP `get_blueprint` and edit batches.
+`geometry.ts` maintains Bezier anchor/handle alignment for point edits.
+`editor.blueprint` saves optional node positions; it is never renderer state.
+
+Canvas transform handles, direct curve edits and pen strokes keep transient drafts
+inside React and commit once at pointerup. Pointer cancellation discards them.
+The canvas uses its measured available dimensions; timeline height and time zoom
+are independent of project FPS/duration. Blueprint is lazy-loaded on demand.
+
+`core/stage.ts` defines optional camera/plane placement data, independent from 2D
+layer geometry. `render/stage.ts` renders each deterministic Pixi layer onto a
+Three.js textured plane, then uses an orthographic or perspective camera. The
+common renderer interface feeds preview, parity analysis and all image/game
+encoders. Stage is lazy-loaded in a separate `StageStudio` dialog and headless
+render bridge; the default 2D renderer never applies camera metadata. Export
+preflight additionally checks source-layer pixel work. Node layout and preview
+guides are not exported. `view` distinguishes 2D and Stage QA baselines.

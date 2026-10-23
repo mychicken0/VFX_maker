@@ -1,0 +1,417 @@
+{
+  "format": "vfx-maker",
+  "version": "0.7.4",
+  "name": "Arcane bloom",
+  "seed": 74,
+  "canvas": {
+    "width": 128,
+    "height": 128,
+    "pixelArt": true,
+    "background": "#110f19"
+  },
+  "duration": 1.2,
+  "fps": 30,
+  "loop": true,
+  "layers": [
+    {
+      "id": "shockwave",
+      "name": "Impact ring",
+      "visible": true,
+      "locked": false,
+      "modifiers": [
+        {
+          "id": "violet-edge",
+          "enabled": true,
+          "type": "outline",
+          "thickness": 1,
+          "color": "#ab7bff",
+          "alpha": 0.7
+        }
+      ],
+      "start": 0,
+      "duration": 0.6,
+      "repeat": false,
+      "position": {
+        "x": 64,
+        "y": 64
+      },
+      "rotation": 0,
+      "scale": 1,
+      "opacity": [
+        {
+          "t": 0,
+          "value": 0.8,
+          "ease": "linear"
+        },
+        {
+          "t": 1,
+          "value": 0,
+          "ease": "linear"
+        }
+      ],
+      "motion": {
+        "x": [
+          {
+            "t": 0,
+            "value": 0,
+            "ease": "linear"
+          },
+          {
+            "t": 1,
+            "value": 0,
+            "ease": "linear"
+          }
+        ],
+        "y": [
+          {
+            "t": 0,
+            "value": 0,
+            "ease": "linear"
+          },
+          {
+            "t": 1,
+            "value": 0,
+            "ease": "linear"
+          }
+        ],
+        "rotation": [
+          {
+            "t": 0,
+            "value": 0,
+            "ease": "linear"
+          },
+          {
+            "t": 1,
+            "value": 0,
+            "ease": "linear"
+          }
+        ],
+        "scale": [
+          {
+            "t": 0,
+            "value": 1,
+            "ease": "linear"
+          },
+          {
+            "t": 1,
+            "value": 1,
+            "ease": "linear"
+          }
+        ]
+      },
+      "blend": "add",
+      "glow": {
+        "strength": 0.8,
+        "blur": 3
+      },
+      "type": "ring",
+      "radius": [
+        {
+          "t": 0,
+          "value": 3,
+          "ease": "linear"
+        },
+        {
+          "t": 1,
+          "value": 46,
+          "ease": "linear"
+        }
+      ],
+      "width": [
+        {
+          "t": 0,
+          "value": 5,
+          "ease": "linear"
+        },
+        {
+          "t": 1,
+          "value": 0,
+          "ease": "linear"
+        }
+      ],
+      "arc": 360,
+      "segments": 64,
+      "colors": [
+        {
+          "t": 0,
+          "color": "#e9dfff"
+        },
+        {
+          "t": 1,
+          "color": "#8c40f3"
+        }
+      ]
+    },
+    {
+      "id": "sparks",
+      "name": "Flying sparks",
+      "visible": true,
+      "locked": false,
+      "modifiers": [],
+      "start": 0,
+      "duration": 1,
+      "repeat": false,
+      "position": {
+        "x": 64,
+        "y": 64
+      },
+      "rotation": 0,
+      "scale": 1,
+      "opacity": [
+        {
+          "t": 0,
+          "value": 1,
+          "ease": "linear"
+        },
+        {
+          "t": 1,
+          "value": 0,
+          "ease": "linear"
+        }
+      ],
+      "motion": {
+        "x": [
+          {
+            "t": 0,
+            "value": 0,
+            "ease": "linear"
+          },
+          {
+            "t": 1,
+            "value": 0,
+            "ease": "linear"
+          }
+        ],
+        "y": [
+          {
+            "t": 0,
+            "value": 0,
+            "ease": "linear"
+          },
+          {
+            "t": 1,
+            "value": 0,
+            "ease": "linear"
+          }
+        ],
+        "rotation": [
+          {
+            "t": 0,
+            "value": 0,
+            "ease": "linear"
+          },
+          {
+            "t": 1,
+            "value": 0,
+            "ease": "linear"
+          }
+        ],
+        "scale": [
+          {
+            "t": 0,
+            "value": 1,
+            "ease": "linear"
+          },
+          {
+            "t": 1,
+            "value": 1,
+            "ease": "linear"
+          }
+        ]
+      },
+      "blend": "add",
+      "glow": {
+        "strength": 1,
+        "blur": 4
+      },
+      "type": "particles",
+      "mode": "burst",
+      "count": 120,
+      "rate": 60,
+      "life": [
+        0.25,
+        0.75
+      ],
+      "speed": [
+        25,
+        105
+      ],
+      "angle": -90,
+      "spread": 360,
+      "spawn": {
+        "shape": "point",
+        "threshold": 0.1,
+        "radius": 10,
+        "width": 20,
+        "height": 20
+      },
+      "trail": {
+        "samples": 0,
+        "seconds": 0.12,
+        "width": 1,
+        "opacity": 0.5
+      },
+      "points": [
+        {
+          "x": -35,
+          "y": -35
+        },
+        {
+          "x": 35,
+          "y": 35
+        }
+      ],
+      "travel": 0.2,
+      "gravity": {
+        "x": 0,
+        "y": 0
+      },
+      "drag": 0.6,
+      "turbulence": 60,
+      "frequency": 4,
+      "shape": "circle",
+      "size": [
+        {
+          "t": 0,
+          "value": 1.8,
+          "ease": "linear"
+        },
+        {
+          "t": 1,
+          "value": 0,
+          "ease": "linear"
+        }
+      ],
+      "colors": [
+        {
+          "t": 0,
+          "color": "#e9dfff"
+        },
+        {
+          "t": 1,
+          "color": "#8c40f3"
+        }
+      ],
+      "spin": [
+        -180,
+        180
+      ],
+      "stretch": 2,
+      "frameMode": "life",
+      "frameFps": 12
+    }
+  ],
+  "assets": [],
+  "groups": [],
+  "controls": [
+    {
+      "id": "size",
+      "name": "Size",
+      "min": 0.25,
+      "max": 3,
+      "value": 1,
+      "step": 0.05,
+      "bindings": [
+        {
+          "layer": "shockwave",
+          "target": "scale",
+          "mode": "multiply",
+          "factor": 1,
+          "offset": 0
+        },
+        {
+          "layer": "sparks",
+          "target": "scale",
+          "mode": "multiply",
+          "factor": 1,
+          "offset": 0
+        }
+      ]
+    },
+    {
+      "id": "intensity",
+      "name": "Intensity",
+      "min": 0.1,
+      "max": 2,
+      "value": 1,
+      "step": 0.05,
+      "bindings": [
+        {
+          "layer": "shockwave",
+          "target": "width",
+          "mode": "multiply",
+          "factor": 1,
+          "offset": 0
+        },
+        {
+          "layer": "sparks",
+          "target": "size",
+          "mode": "multiply",
+          "factor": 1,
+          "offset": 0
+        }
+      ]
+    },
+    {
+      "id": "hue",
+      "name": "Hue",
+      "min": -180,
+      "max": 180,
+      "value": 0,
+      "step": 1,
+      "bindings": [
+        {
+          "layer": "shockwave",
+          "target": "colors.hue",
+          "mode": "set",
+          "factor": 1,
+          "offset": 0
+        },
+        {
+          "layer": "sparks",
+          "target": "colors.hue",
+          "mode": "set",
+          "factor": 1,
+          "offset": 0
+        }
+      ]
+    },
+    {
+      "id": "direction",
+      "name": "Direction",
+      "min": -180,
+      "max": 180,
+      "value": 35,
+      "step": 1,
+      "bindings": [
+        {
+          "layer": "shockwave",
+          "target": "rotation",
+          "mode": "add",
+          "factor": 1,
+          "offset": 0
+        }
+      ]
+    }
+  ],
+  "variants": [],
+  "editor": {
+    "blueprint": {
+      "control:direction": {
+        "x": -80,
+        "y": 480
+      },
+      "layer:shockwave": {
+        "x": 370,
+        "y": 60
+      }
+    }
+  },
+  "output": {
+    "scale": 1,
+    "colors": 0,
+    "dither": false,
+    "pixelSize": 1,
+    "alphaLevels": 0
+  }
+}

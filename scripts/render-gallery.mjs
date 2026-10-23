@@ -122,14 +122,18 @@ try {
   await studio.getByRole("button", { name: "Pause", exact: true }).click();
   await studio.getByLabel("Playhead", { exact: true }).fill("0.4");
   await studio
-    .locator(".layer-select")
+    .locator(".timeline-row > button")
     .filter({ hasText: "First slash" })
     .click();
-  await studio.getByRole("button", { name: "effects", exact: true }).click();
   await studio.waitForTimeout(300);
   await studio.screenshot({ path: join(out, "studio.png") });
+  await studio.getByRole("button", { name: "Blueprint", exact: true }).click();
+  await studio.locator(".react-flow__node").first().waitFor();
+  await studio.waitForTimeout(300);
+  await studio.screenshot({ path: join(out, "blueprint.png") });
   if (values.thumbnails) {
     await copyFile(join(out, "studio.png"), "examples/studio.png");
+    await copyFile(join(out, "blueprint.png"), "examples/blueprint.png");
     await copyFile(
       join(out, "red_magic_cross/gif/animation.gif"),
       "examples/red-magic-cross.gif",

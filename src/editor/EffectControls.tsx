@@ -134,7 +134,8 @@ export function EffectControls({
   const selected = p.controls.find((c) => c.id === editing),
     firstLayer = p.layers[0];
   return (
-    <section className="effect-controls" aria-label="Effect controls">
+    <details className="effect-controls" aria-label="Effect controls">
+      <summary>Make it yours · size & color</summary>
       <div className="quick-heading">
         <strong>Make it yours</strong>
         <small>{p.controls.length} controls</small>
@@ -377,6 +378,6 @@ export function EffectControls({
           {error}
         </p>
       )}
-    </section>
+    </details>
   );
 }

@@ -172,6 +172,25 @@ export const Inspector = memo(function Inspector({
                     onChange={(blend) => update({ blend })}
                   />
                 </details>
+                {l.type === "path" && (
+                  <NumberField
+                    label="Stroke thickness"
+                    value={Math.max(...l.width.map((k) => k.value))}
+                    min={0.1}
+                    max={4096}
+                    step={0.1}
+                    unit="px"
+                    onChange={(value) => {
+                      const peak = Math.max(...l.width.map((k) => k.value));
+                      update({
+                        width: l.width.map((k) => ({
+                          ...k,
+                          value: peak > 0 ? (k.value * value) / peak : value,
+                        })),
+                      });
+                    }}
+                  />
+                )}
                 <details>
                   <summary>Timing</summary>
                   <div className="two-fields">
@@ -219,7 +238,7 @@ export const Inspector = memo(function Inspector({
                 </details>
                 {l.type === "particles" && (
                   <>
-                    <details open>
+                    <details>
                       <summary>Emission</summary>
                       <Select
                         label="Emission mode"
@@ -402,7 +421,7 @@ export const Inspector = memo(function Inspector({
                         />
                       </div>
                     </details>
-                    <details open>
+                    <details>
                       <summary>Particle appearance</summary>
                       <Select
                         label="Particle shape"
@@ -489,7 +508,7 @@ export const Inspector = memo(function Inspector({
                   </>
                 )}
                 {l.type === "path" && (
-                  <details open>
+                  <details>
                     <summary>Stroke</summary>
                     <Check
                       label="Bezier stroke"
@@ -526,7 +545,7 @@ export const Inspector = memo(function Inspector({
                   </details>
                 )}
                 {l.type === "ring" && (
-                  <details open>
+                  <details>
                     <summary>Ring geometry</summary>
                     <CurveEditor
                       label="Radius"
@@ -546,7 +565,7 @@ export const Inspector = memo(function Inspector({
                 )}
                 {(l.type === "sprite" ||
                   (l.type === "particles" && l.shape === "sprite")) && (
-                  <details open>
+                  <details>
                     <summary>Sprite / flipbook</summary>
                     <label className="field">
                       <span>Texture</span>
@@ -588,7 +607,7 @@ export const Inspector = memo(function Inspector({
                   </details>
                 )}
                 {l.type === "field" && (
-                  <details open>
+                  <details>
                     <summary>Procedural texture</summary>
                     <Select
                       label="Texture pattern"
@@ -685,7 +704,7 @@ export const Inspector = memo(function Inspector({
                 )}
                 <MaskPanel layer={l} update={update} />
                 <ModifierPanel layer={l} project={p} update={updateProject} />
-                <details open>
+                <details>
                   <summary>Color & opacity</summary>
                   <GradientEditor
                     stops={l.colors}

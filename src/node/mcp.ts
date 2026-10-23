@@ -25,6 +25,8 @@ import { creativeEditSchema } from "../core/creative.js";
 import { observationSchema } from "../core/observation.js";
 import { editBatchSchema } from "../core/operations.js";
 import { COORDINATES } from "../core/spatial.js";
+import { describeBlueprint } from "../core/parameters.js";
+import { stageDefaults, STAGE_COORDINATES } from "../core/stage.js";
 import { ImageCache, type CachedImage } from "./image-cache.js";
 import { toolError } from "./tool-errors.js";
 import { AGENT_INSTRUCTIONS, AGENT_GUIDE } from "./agent-guide.js";
@@ -182,11 +184,14 @@ tool(
     ],
     creative:
       "inspect_creative lists macro controls, variants and valid layer binding targets. edit_creative edits modifiers, controls, variants and timing. save_component and insert_component reuse selected layers across projects. start_variant_export queues a batch of 1..8 variants.",
+    stage:
+      "Optional separate camera scene: get_stage and get_schema stage/stage_placement, apply_edits configure_stage/place_stage_layer, render_preview and analyze_project view=stage, export options.view=stage. Same source layer frames on ground/upright/billboard planes; camera-baked output, not volumetric XYZ particles.",
     formats: ["gif", "spritesheet", "sequence", "godot", "unity"],
     limits: {
       layers: MAX_LAYERS,
       particleBirths: 4000,
       frames: 300,
+      stageLayerPixels: 67108864,
       sourcePixels: 16777216,
       fileBytes: 4194304,
       pngInputSide: 1024,
@@ -202,8 +207,41 @@ tool(
     imageProcessing:
       "Local PNG optimization needs no browser. Palette, scale, block and alpha reductions are lossy; default PNG recompression preserves decoded RGBA.",
     editing:
-      "No graph wiring. Merge fields directly on named layers; curves are arrays of {t,value,ease}; colors are {t,color} stops.",
+      "get_blueprint discovers control outputs, typed layer inputs, connections and ordered modifiers. apply_edits connect_control/disconnect_control routes parameters; edit_path_point maintains Bezier anchors and handles. Merge base fields directly when appropriate; curves are {t,value,ease} arrays, colors are {t,color} stops.",
   }),
+  true,
+);
+tool(
+  "get_stage",
+  "Inspect the separate 2.5D/3D camera stage, world axes, plane placements and editable layer IDs. apply_edits configure_stage changes camera/defaults; place_stage_layer edits an unlocked plane. render_preview view=stage returns a real camera PNG, analyze_project view=stage verifies parity, and export options.view=stage bakes that camera into normal game assets. Default effect authoring/export remains 2D. No volumetric XYZ particles are simulated.",
+  { file },
+  async (a) => {
+    const { project, revision } = await s.store.read(a.file);
+    return {
+      revision,
+      configured: !!project.stage,
+      stage: project.stage ?? stageDefaults(),
+      coordinates: STAGE_COORDINATES,
+      layers: project.layers.map((l) => ({
+        id: l.id,
+        name: l.name,
+        locked: l.locked,
+        visible: l.visible,
+      })),
+      render: { tool: "render_preview", file: a.file, view: "stage" },
+      export: { options: { view: "stage" } },
+    };
+  },
+  true,
+);
+tool(
+  "get_blueprint",
+  "Read the same control/layer graph used by Studio Blueprint: stable node IDs, typed valid parameter ports, binding modes/factors/offsets, lock state, modifier order and ready-to-use disconnect edits. No browser or asset payload. Use apply_edits connect_control/disconnect_control or creative operations; preview those edits with observe_project before committing. Binding indices are valid only for the returned revision.",
+  { file },
+  async (a) => {
+    const { project, revision } = await s.store.read(a.file);
+    return { revision, ...describeBlueprint(project) };
+  },
   true,
 );
 tool(
@@ -237,6 +275,8 @@ tool(
       "observation",
       "analysis",
       "batch",
+      "stage",
+      "stage_placement",
     ]),
   },
   (a) => s.schema(a.kind),
@@ -442,7 +482,7 @@ tool(
   (a) =>
     s.analyze(
       a.file,
-      { times: a.times, parity: a.parity },
+      { times: a.times, parity: a.parity, view: a.view },
       a.revision,
       a.baseline,
       a.out,
@@ -481,18 +521,30 @@ server.registerTool(
   "render_preview",
   {
     description:
-      "Return a clean inline PNG, actual pixel bounds, coordinates, revision and a reusable image URI. Omit time to sample a visible frame. Prefer observe_project for annotated views and layer positions.",
-    inputSchema: { file, time: z.number().min(0).max(10).optional() },
+      "Return a clean inline PNG, actual pixel bounds, coordinates, revision and a reusable image URI. Omit time to sample a visible frame. Prefer observe_project for annotated 2D views and layer positions. view=stage uses the saved 3D camera. Optional revision+edits renders an uncommitted draft without writing.",
+    inputSchema: {
+      file,
+      revision: revision.optional(),
+      edits: editBatchSchema.optional(),
+      time: z.number().min(0).max(10).optional(),
+      view: z.enum(["effect", "stage"]).default("effect"),
+    },
     annotations: { readOnlyHint: true, openWorldHint: false },
   },
   async (a) => {
     try {
-      const result = await s.preview(a.file, a.time);
+      const result = await s.preview(
+        a.file,
+        a.time,
+        a.view,
+        a.revision,
+        a.edits,
+      );
       const image = images.put({
         name: "preview.png",
         file: a.file,
         revision: result.revision,
-        draft: false,
+        draft: result.metadata.draft,
         role: "frame",
         width: result.metadata.canvas.width,
         height: result.metadata.canvas.height,

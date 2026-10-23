@@ -1,7 +1,7 @@
 import { GIFEncoder, quantize, applyPalette } from "gifenc";
 import { zipSync } from "fflate";
 import { VERSION, parseProject, type Project } from "../core/model.js";
-import { VfxRenderer } from "./pixi.js";
+import type { EffectRenderer } from "./types.js";
 import {
   createPalette,
   processPixels,
@@ -25,7 +25,7 @@ export function schedule(duration: number, fps: number) {
   }));
 }
 export async function preview(
-  renderer: VfxRenderer,
+  renderer: EffectRenderer,
   project: Project,
   time: number,
 ): Promise<Uint8Array> {
@@ -89,7 +89,7 @@ function drawPadded(
     }
 }
 export async function exportEffect(
-  renderer: VfxRenderer,
+  renderer: EffectRenderer,
   value: Project,
   input: ExportOptions = {},
   progress?: Progress,
@@ -97,6 +97,16 @@ export async function exportEffect(
 ): Promise<ExportFiles> {
   const project = parseProject(value),
     plan = exportPlan(project, input);
+  if (plan.options.view === "stage" && renderer.view !== "stage") {
+    const { StageRenderer } = await import("./stage.js");
+    const staged = await StageRenderer.create();
+    try {
+      await staged.setProject(project);
+      return await exportEffect(staged, project, input, progress, signal);
+    } finally {
+      staged.destroy();
+    }
+  }
   const { options, pixels, fps, width, height } = plan;
   const times = schedule(plan.duration, fps),
     files: ExportFiles = {};
@@ -240,7 +250,9 @@ export async function exportEffect(
         format: "vfx-maker.export",
         version: VERSION,
         name: project.name,
-        renderer: "pixi-webgl",
+        renderer:
+          options.view === "stage" ? "three-stage-pixi-planes" : "pixi-webgl",
+        view: options.view,
         canvas: { ...project.canvas, width, height },
         sourceCanvas: project.canvas,
         output: pixels,

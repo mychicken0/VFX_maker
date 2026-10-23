@@ -1,6 +1,6 @@
 # Project compatibility
 
-Version 0.7.3 opens 0.4.0, 0.5.0, 0.6.0, 0.7.0, 0.7.1 and 0.7.2 `.vfx.json` projects and supplies defaults for
+Version 0.7.4 opens 0.4.0, 0.5.0, 0.6.0, 0.7.0, 0.7.1, 0.7.2 and 0.7.3 `.vfx.json` projects and supplies defaults for
 output settings, groups, editor settings, controls, variants, modifiers and particle trails. Reading does not overwrite the source file. Saving or editing writes
 the current version. Unknown formats and future versions are rejected.
 
@@ -24,10 +24,21 @@ New projects may also use `field` layers, `controls`, `variants`, per-layer
 trails preserve the behavior of existing projects. Component files use a separate
 `vfx-component` wrapper and are imported through **Saved → Import component**,
 not the normal project Open action. Saving a component excludes preview references.
-Version 0.7.3 accepts saved-library items and portable components from 0.7.0,
-0.7.1 and 0.7.2, normalizing their wrapper and embedded project to 0.7.3 when read.
+Version 0.7.4 accepts saved-library items and portable components from 0.7.0,
+0.7.1, 0.7.2 and 0.7.3, normalizing their wrapper and embedded project to 0.7.4 when read.
 
 0.7.3 raises the layer/group selection budget to 64 and control bindings to 256.
 The 32-key curve limit and particle, texture, file and export pixel budgets remain
 separate. Automatic storyboards prefer sampled activity; use timeline mode or
 explicit times for full-duration context. Export duration/timing is unaffected.
+
+0.7.4 adds optional `editor.blueprint` node positions. Connections remain ordinary
+controls/bindings; no separate graph evaluator or effect conversion is needed.
+Editor pixel positions do not change rendering. Previous versions may reject this
+new optional metadata if asked to read a newly saved file. Existing panel layout
+is preserved; choose Reset layout to adopt the new folded Library defaults.
+
+Optional `stage` data stores camera and plane placement for the separate 2.5D /
+3D workspace. Opening a normal 2D project does not add it. The default renderer
+ignores camera metadata; use explicit `view:"stage"` for baked camera output and
+Stage QA. Removing layers also removes their plane placements.

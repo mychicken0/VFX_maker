@@ -1,0 +1,547 @@
+{
+  "revision": "c0990459a5b35db5ecdd87d826ae3e26ed13485f02ae1f133f06989a108ccad0",
+  "kind": "vfx-blueprint",
+  "stage": null,
+  "coordinates": "Node positions are editor pixels. Layer parameters use original canvas pixels, clockwise degrees and normalized layer-life curves.",
+  "controlOrder": [
+    "size",
+    "intensity",
+    "hue",
+    "direction"
+  ],
+  "controls": [
+    {
+      "id": "size",
+      "name": "Size",
+      "min": 0.25,
+      "max": 3,
+      "value": 1,
+      "step": 0.05,
+      "bindings": [
+        {
+          "layer": "shockwave",
+          "target": "scale",
+          "mode": "multiply",
+          "factor": 1,
+          "offset": 0
+        },
+        {
+          "layer": "sparks",
+          "target": "scale",
+          "mode": "multiply",
+          "factor": 1,
+          "offset": 0
+        }
+      ],
+      "nodeId": "control:size"
+    },
+    {
+      "id": "intensity",
+      "name": "Intensity",
+      "min": 0.1,
+      "max": 2,
+      "value": 1,
+      "step": 0.05,
+      "bindings": [
+        {
+          "layer": "shockwave",
+          "target": "width",
+          "mode": "multiply",
+          "factor": 1,
+          "offset": 0
+        },
+        {
+          "layer": "sparks",
+          "target": "size",
+          "mode": "multiply",
+          "factor": 1,
+          "offset": 0
+        }
+      ],
+      "nodeId": "control:intensity"
+    },
+    {
+      "id": "hue",
+      "name": "Hue",
+      "min": -180,
+      "max": 180,
+      "value": 0,
+      "step": 1,
+      "bindings": [
+        {
+          "layer": "shockwave",
+          "target": "colors.hue",
+          "mode": "set",
+          "factor": 1,
+          "offset": 0
+        },
+        {
+          "layer": "sparks",
+          "target": "colors.hue",
+          "mode": "set",
+          "factor": 1,
+          "offset": 0
+        }
+      ],
+      "nodeId": "control:hue"
+    },
+    {
+      "id": "direction",
+      "name": "Direction",
+      "min": -180,
+      "max": 180,
+      "value": 35,
+      "step": 1,
+      "bindings": [
+        {
+          "layer": "shockwave",
+          "target": "rotation",
+          "mode": "add",
+          "factor": 1,
+          "offset": 0
+        }
+      ],
+      "nodeId": "control:direction"
+    }
+  ],
+  "layers": [
+    {
+      "id": "shockwave",
+      "nodeId": "layer:shockwave",
+      "name": "Impact ring",
+      "type": "ring",
+      "locked": false,
+      "visible": true,
+      "inputs": [
+        {
+          "path": "position.x",
+          "kind": "number",
+          "integer": false
+        },
+        {
+          "path": "position.y",
+          "kind": "number",
+          "integer": false
+        },
+        {
+          "path": "rotation",
+          "kind": "number",
+          "integer": false
+        },
+        {
+          "path": "scale",
+          "kind": "number",
+          "integer": false
+        },
+        {
+          "path": "glow.strength",
+          "kind": "number",
+          "integer": false
+        },
+        {
+          "path": "glow.blur",
+          "kind": "number",
+          "integer": false
+        },
+        {
+          "path": "arc",
+          "kind": "number",
+          "integer": false
+        },
+        {
+          "path": "segments",
+          "kind": "number",
+          "integer": true
+        },
+        {
+          "path": "modifiers.violet-edge.thickness",
+          "kind": "number",
+          "integer": false
+        },
+        {
+          "path": "modifiers.violet-edge.alpha",
+          "kind": "number",
+          "integer": false
+        },
+        {
+          "path": "opacity",
+          "kind": "curve"
+        },
+        {
+          "path": "motion.x",
+          "kind": "curve"
+        },
+        {
+          "path": "motion.y",
+          "kind": "curve"
+        },
+        {
+          "path": "motion.rotation",
+          "kind": "curve"
+        },
+        {
+          "path": "motion.scale",
+          "kind": "curve"
+        },
+        {
+          "path": "radius",
+          "kind": "curve"
+        },
+        {
+          "path": "width",
+          "kind": "curve"
+        },
+        {
+          "path": "colors.hue",
+          "kind": "hue"
+        }
+      ],
+      "modifiers": [
+        {
+          "id": "violet-edge",
+          "enabled": true,
+          "type": "outline",
+          "thickness": 1,
+          "color": "#ab7bff",
+          "alpha": 0.7
+        }
+      ]
+    },
+    {
+      "id": "sparks",
+      "nodeId": "layer:sparks",
+      "name": "Flying sparks",
+      "type": "particles",
+      "locked": false,
+      "visible": true,
+      "inputs": [
+        {
+          "path": "position.x",
+          "kind": "number",
+          "integer": false
+        },
+        {
+          "path": "position.y",
+          "kind": "number",
+          "integer": false
+        },
+        {
+          "path": "rotation",
+          "kind": "number",
+          "integer": false
+        },
+        {
+          "path": "scale",
+          "kind": "number",
+          "integer": false
+        },
+        {
+          "path": "glow.strength",
+          "kind": "number",
+          "integer": false
+        },
+        {
+          "path": "glow.blur",
+          "kind": "number",
+          "integer": false
+        },
+        {
+          "path": "count",
+          "kind": "number",
+          "integer": true
+        },
+        {
+          "path": "rate",
+          "kind": "number",
+          "integer": false
+        },
+        {
+          "path": "speed.0",
+          "kind": "number",
+          "integer": false
+        },
+        {
+          "path": "speed.1",
+          "kind": "number",
+          "integer": false
+        },
+        {
+          "path": "angle",
+          "kind": "number",
+          "integer": false
+        },
+        {
+          "path": "spread",
+          "kind": "number",
+          "integer": false
+        },
+        {
+          "path": "spawn.radius",
+          "kind": "number",
+          "integer": false
+        },
+        {
+          "path": "spawn.width",
+          "kind": "number",
+          "integer": false
+        },
+        {
+          "path": "spawn.height",
+          "kind": "number",
+          "integer": false
+        },
+        {
+          "path": "gravity.x",
+          "kind": "number",
+          "integer": false
+        },
+        {
+          "path": "gravity.y",
+          "kind": "number",
+          "integer": false
+        },
+        {
+          "path": "drag",
+          "kind": "number",
+          "integer": false
+        },
+        {
+          "path": "turbulence",
+          "kind": "number",
+          "integer": false
+        },
+        {
+          "path": "frequency",
+          "kind": "number",
+          "integer": false
+        },
+        {
+          "path": "stretch",
+          "kind": "number",
+          "integer": false
+        },
+        {
+          "path": "trail.seconds",
+          "kind": "number",
+          "integer": false
+        },
+        {
+          "path": "trail.width",
+          "kind": "number",
+          "integer": false
+        },
+        {
+          "path": "trail.opacity",
+          "kind": "number",
+          "integer": false
+        },
+        {
+          "path": "opacity",
+          "kind": "curve"
+        },
+        {
+          "path": "motion.x",
+          "kind": "curve"
+        },
+        {
+          "path": "motion.y",
+          "kind": "curve"
+        },
+        {
+          "path": "motion.rotation",
+          "kind": "curve"
+        },
+        {
+          "path": "motion.scale",
+          "kind": "curve"
+        },
+        {
+          "path": "size",
+          "kind": "curve"
+        },
+        {
+          "path": "colors.hue",
+          "kind": "hue"
+        }
+      ],
+      "modifiers": []
+    }
+  ],
+  "connections": [
+    {
+      "control": "size",
+      "index": 0,
+      "source": "control:size",
+      "sourcePort": "value",
+      "destination": "layer:shockwave",
+      "layer": "shockwave",
+      "target": "scale",
+      "mode": "multiply",
+      "factor": 1,
+      "offset": 0,
+      "editable": true,
+      "disconnectEdit": {
+        "action": "disconnect_control",
+        "control": "size",
+        "index": 0
+      }
+    },
+    {
+      "control": "size",
+      "index": 1,
+      "source": "control:size",
+      "sourcePort": "value",
+      "destination": "layer:sparks",
+      "layer": "sparks",
+      "target": "scale",
+      "mode": "multiply",
+      "factor": 1,
+      "offset": 0,
+      "editable": true,
+      "disconnectEdit": {
+        "action": "disconnect_control",
+        "control": "size",
+        "index": 1
+      }
+    },
+    {
+      "control": "intensity",
+      "index": 0,
+      "source": "control:intensity",
+      "sourcePort": "value",
+      "destination": "layer:shockwave",
+      "layer": "shockwave",
+      "target": "width",
+      "mode": "multiply",
+      "factor": 1,
+      "offset": 0,
+      "editable": true,
+      "disconnectEdit": {
+        "action": "disconnect_control",
+        "control": "intensity",
+        "index": 0
+      }
+    },
+    {
+      "control": "intensity",
+      "index": 1,
+      "source": "control:intensity",
+      "sourcePort": "value",
+      "destination": "layer:sparks",
+      "layer": "sparks",
+      "target": "size",
+      "mode": "multiply",
+      "factor": 1,
+      "offset": 0,
+      "editable": true,
+      "disconnectEdit": {
+        "action": "disconnect_control",
+        "control": "intensity",
+        "index": 1
+      }
+    },
+    {
+      "control": "hue",
+      "index": 0,
+      "source": "control:hue",
+      "sourcePort": "value",
+      "destination": "layer:shockwave",
+      "layer": "shockwave",
+      "target": "colors.hue",
+      "mode": "set",
+      "factor": 1,
+      "offset": 0,
+      "editable": true,
+      "disconnectEdit": {
+        "action": "disconnect_control",
+        "control": "hue",
+        "index": 0
+      }
+    },
+    {
+      "control": "hue",
+      "index": 1,
+      "source": "control:hue",
+      "sourcePort": "value",
+      "destination": "layer:sparks",
+      "layer": "sparks",
+      "target": "colors.hue",
+      "mode": "set",
+      "factor": 1,
+      "offset": 0,
+      "editable": true,
+      "disconnectEdit": {
+        "action": "disconnect_control",
+        "control": "hue",
+        "index": 1
+      }
+    },
+    {
+      "control": "direction",
+      "index": 0,
+      "source": "control:direction",
+      "sourcePort": "value",
+      "destination": "layer:shockwave",
+      "layer": "shockwave",
+      "target": "rotation",
+      "mode": "add",
+      "factor": 1,
+      "offset": 0,
+      "editable": true,
+      "disconnectEdit": {
+        "action": "disconnect_control",
+        "control": "direction",
+        "index": 0
+      }
+    }
+  ],
+  "imagePipeline": [
+    {
+      "layer": "shockwave",
+      "order": [
+        "layer:shockwave",
+        "modifier:shockwave:violet-edge",
+        "output"
+      ]
+    },
+    {
+      "layer": "sparks",
+      "order": [
+        "layer:sparks",
+        "output"
+      ]
+    }
+  ],
+  "positions": {
+    "control:direction": {
+      "x": -80,
+      "y": 480
+    },
+    "layer:shockwave": {
+      "x": 370,
+      "y": 60
+    }
+  },
+  "editing": {
+    "tool": "apply_edits",
+    "connect": {
+      "action": "connect_control",
+      "control": "CONTROL_ID",
+      "layer": "LAYER_ID",
+      "target": "INPUT_PATH",
+      "mode": "multiply",
+      "factor": 1,
+      "offset": 0
+    },
+    "controlValue": {
+      "action": "creative",
+      "operation": {
+        "action": "set_control",
+        "id": "CONTROL_ID",
+        "value": 1
+      }
+    },
+    "draft": "Use the same edits in observe_project with the source revision before committing. Binding indices refer to this revision only.",
+    "pipeline": "Image wires show ordered modifiers then composition. Reorder modifiers through creative put_modifier index; arbitrary image graph rewiring is not supported."
+  }
+}

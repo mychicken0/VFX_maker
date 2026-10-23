@@ -1,3 +1,4 @@
+import { editingWorkspace } from "./workspace-helpers.js";
 import { expect, test, type Page, type TestInfo } from "@playwright/test";
 import {
   PRESETS,
@@ -15,6 +16,7 @@ async function capture(page: Page, info: TestInfo, name: string) {
 }
 async function start(page: Page) {
   await page.goto("/");
+  await editingWorkspace(page);
   await button(page, "Pause").click();
   await page.getByLabel("Playhead", { exact: true }).fill("0.4");
   await expect(page.locator(".pixi-host canvas")).toBeVisible();
@@ -223,6 +225,9 @@ test("Play and Space replay a non-looping effect after its end; Restart uses the
   p.loop = false;
   p.duration = 0.5;
   await open(page, p);
+  // Test the restart transition independently of elapsed wall time on busy render hosts.
+  await page.clock.install();
+  await page.clock.pauseAt(new Date(Date.now() + 1000));
   const playhead = page.getByLabel("Playhead", { exact: true });
   for (const keyboard of [false, true]) {
     await playhead.fill("0.5");
@@ -248,6 +253,7 @@ test("short-window keyframes show editable keys before advanced tools", async ({
 }, info) => {
   await page.setViewportSize({ width: 640, height: 360 });
   await start(page);
+  await button(page, "Focus timeline").click();
   await button(page, "Keyframes").click();
   await button(page, "All channels").click();
   const tools = page.locator(".dope-toolbar");
@@ -272,7 +278,7 @@ test("resizing the library to its limits keeps tab names readable and every tab 
   await start(page);
   const divider = page.getByRole("separator", { name: "Resize library" });
   await divider.focus();
-  for (let i = 0; i < 7; i++) await page.keyboard.press("ArrowLeft");
+  for (let i = 0; i < 10; i++) await page.keyboard.press("ArrowLeft");
   await expect(divider).toHaveAttribute("aria-valuenow", "180");
   expect(
     await page
@@ -283,8 +289,8 @@ test("resizing the library to its limits keeps tab names readable and every tab 
   await expect(button(page, "Import reference PNG")).toBeVisible();
   await capture(page, info, "minimum-library");
   await divider.focus();
-  for (let i = 0; i < 20; i++) await page.keyboard.press("ArrowRight");
-  await expect(divider).toHaveAttribute("aria-valuenow", "380");
+  for (let i = 0; i < 40; i++) await page.keyboard.press("ArrowRight");
+  await expect(divider).toHaveAttribute("aria-valuenow", "520");
   await button(page, "effects").click();
   expect(
     await page

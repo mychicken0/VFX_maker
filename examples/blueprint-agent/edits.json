@@ -1,0 +1,51 @@
+[
+  {
+    "action": "creative",
+    "operation": {
+      "action": "put_control",
+      "control": {
+        "id": "direction",
+        "name": "Direction",
+        "min": -180,
+        "max": 180,
+        "value": 35,
+        "step": 1,
+        "bindings": []
+      }
+    }
+  },
+  {
+    "action": "connect_control",
+    "control": "direction",
+    "layer": "shockwave",
+    "target": "rotation",
+    "mode": "add"
+  },
+  {
+    "action": "set_gradient",
+    "colors": [
+      {
+        "t": 0,
+        "color": "#e9dfff"
+      },
+      {
+        "t": 1,
+        "color": "#8c40f3"
+      }
+    ]
+  },
+  {
+    "action": "creative",
+    "operation": {
+      "action": "put_modifier",
+      "layer": "shockwave",
+      "modifier": {
+        "id": "violet-edge",
+        "type": "outline",
+        "thickness": 1,
+        "color": "#ab7bff",
+        "alpha": 0.7
+      }
+    }
+  }
+]

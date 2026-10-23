@@ -9,6 +9,48 @@ export function defaultHandles(points: Vec[], closed = false) {
     return { in: { x: -x, y: -y }, out: { x, y } };
   });
 }
+/** Editing a path must keep its optional Bezier handles aligned with anchors. */
+export function editPathPoints(
+  layer: PathLayer,
+  index: number,
+  action: "insert" | "remove" | "smooth" | "corner",
+): PathLayer {
+  if (!Number.isInteger(index) || !layer.points[index])
+    throw Error("Choose a valid path point");
+  if (layer.locked) throw Error("Unlock the path before editing its points");
+  const next = structuredClone(layer);
+  if (action === "insert") {
+    if (next.points.length >= 64)
+      throw Error("A path can have up to 64 points");
+    const a = next.points[index],
+      b =
+        next.points[index + 1] ??
+        (next.closed ? next.points[0] : { x: a.x + 12, y: a.y });
+    next.points.splice(index + 1, 0, {
+      x: (a.x + b.x) / 2,
+      y: (a.y + b.y) / 2,
+    });
+    next.handles?.splice(index + 1, 0, {
+      in: { x: 0, y: 0 },
+      out: { x: 0, y: 0 },
+    });
+  } else if (action === "remove") {
+    if (next.points.length <= 2)
+      throw Error("A path needs at least two points");
+    next.points.splice(index, 1);
+    next.handles?.splice(index, 1);
+  } else {
+    next.handles ??= next.points.map(() => ({
+      in: { x: 0, y: 0 },
+      out: { x: 0, y: 0 },
+    }));
+    next.handles[index] =
+      action === "smooth"
+        ? defaultHandles(next.points, next.closed)[index]
+        : { in: { x: 0, y: 0 }, out: { x: 0, y: 0 } };
+  }
+  return next;
+}
 export function pathPolyline(layer: PathLayer): Vec[] {
   if (!layer.handles)
     return layer.closed ? [...layer.points, layer.points[0]] : layer.points;

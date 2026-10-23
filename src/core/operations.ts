@@ -8,10 +8,16 @@ import {
   putKeyframe,
 } from "./editing.js";
 import { creativeEditSchema, editCreative } from "./creative.js";
-import { resolveControls } from "./parameters.js";
+import {
+  resolveControls,
+  connectControl,
+  disconnectControl,
+} from "./parameters.js";
+import { editPathPoints } from "./geometry.js";
 import { pointToLocal } from "./spatial.js";
 import { setProjectGradient } from "./authoring.js";
 import { gradientSchema, colorSchema } from "./model.js";
+import { stageDefaults, stagePlacementSchema, stageSchema } from "./stage.js";
 
 /** The same merge semantics are used by single edits and transactions. */
 export function merge<T>(base: T, patch: unknown): T {
@@ -31,6 +37,34 @@ const id = z.string().min(1).max(64),
   patch = z.record(z.string(), z.unknown()),
   ids = z.array(id).min(1).max(MAX_LAYERS);
 export const editOperationSchema = z.discriminatedUnion("action", [
+  z.object({ action: z.literal("configure_stage"), patch }).strict(),
+  z.object({ action: z.literal("place_stage_layer"), id, patch }).strict(),
+  z
+    .object({
+      action: z.literal("connect_control"),
+      control: id,
+      layer: id,
+      target: z.string().min(1).max(160),
+      mode: z.enum(["set", "multiply", "add"]).default("multiply"),
+      factor: z.number().finite().min(-4096).max(4096).default(1),
+      offset: z.number().finite().min(-4096).max(4096).default(0),
+    })
+    .strict(),
+  z
+    .object({
+      action: z.literal("disconnect_control"),
+      control: id,
+      index: z.number().int().min(0).max(255),
+    })
+    .strict(),
+  z
+    .object({
+      action: z.literal("edit_path_point"),
+      id,
+      index: z.number().int().min(0).max(63),
+      operation: z.enum(["insert", "remove", "smooth", "corner"]),
+    })
+    .strict(),
   z
     .object({
       action: z.literal("set_gradient"),
@@ -169,6 +203,49 @@ export function reorderLayerData(p: Project, ids: string[]): Project {
 }
 export function applyEdit(p: Project, op: EditOperation): Project {
   switch (op.action) {
+    case "configure_stage": {
+      const stage = stageSchema.parse(
+        merge(p.stage ?? stageDefaults(), op.patch),
+      );
+      for (const l of p.layers.filter((l) => l.locked))
+        if (
+          JSON.stringify(stage.layers[l.id]) !==
+          JSON.stringify(p.stage?.layers[l.id])
+        )
+          throw Error(
+            `Unlock the layer before changing its stage placement: ${l.id}`,
+          );
+      return parseProject({ ...p, stage });
+    }
+    case "place_stage_layer": {
+      const l = p.layers.find((l) => l.id === op.id);
+      if (!l || l.locked) throw Error("Choose an unlocked layer");
+      const stage = p.stage ?? stageDefaults(),
+        placement = stagePlacementSchema.parse(
+          merge(
+            stage.layers[l.id] ??
+              stagePlacementSchema.parse({ plane: stage.plane }),
+            op.patch,
+          ),
+        );
+      return parseProject({
+        ...p,
+        stage: { ...stage, layers: { ...stage.layers, [l.id]: placement } },
+      });
+    }
+    case "connect_control":
+      return connectControl(p, op.control, op.layer, op.target, op);
+    case "disconnect_control":
+      return disconnectControl(p, op.control, op.index);
+    case "edit_path_point": {
+      const l = p.layers.find((value) => value.id === op.id);
+      if (!l || l.type !== "path") throw Error("Choose a path layer");
+      const next = editPathPoints(l, op.index, op.operation);
+      return updateLayerData(p, op.id, {
+        points: next.points,
+        handles: next.handles,
+      });
+    }
     case "set_gradient":
       return setProjectGradient(p, op.colors, op.includeLocked, op.ids);
     case "update_project":

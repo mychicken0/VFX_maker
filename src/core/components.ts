@@ -41,7 +41,7 @@ export function parseComponent(value: unknown): Component {
   const wrapper = z
     .object({
       format: z.literal("vfx-component"),
-      version: z.enum(["0.7.0", "0.7.1", "0.7.2", VERSION]),
+      version: z.enum(["0.7.0", "0.7.1", "0.7.2", "0.7.3", VERSION]),
       name: z.string().min(1).max(100),
       project: z.unknown(),
     })

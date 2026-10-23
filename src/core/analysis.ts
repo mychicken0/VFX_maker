@@ -9,6 +9,7 @@ export const analysisSchema = z
       .max(300)
       .optional(),
     parity: z.boolean().default(true),
+    view: z.enum(["effect", "stage"]).default("effect"),
   })
   .strict();
 export type AnalysisInput = z.input<typeof analysisSchema>;
@@ -26,6 +27,17 @@ export function analysisTimes(p: Project, input: AnalysisInput = {}) {
     throw Error("Analysis times must be distinct");
   if (times.length * p.canvas.width * p.canvas.height > 16777216)
     throw Error("Analysis exceeds 16777216 source pixels; choose fewer times");
+  if (
+    options.view === "stage" &&
+    times.length *
+      p.canvas.width *
+      p.canvas.height *
+      p.layers.filter((l) => l.visible).length >
+      67108864
+  )
+    throw Error(
+      "Stage analysis exceeds 67108864 layer pixels; choose fewer times",
+    );
   return times;
 }
 const frame = z
@@ -38,6 +50,7 @@ export const analysisBaselineSchema = z
   .object({
     kind: z.literal("vfx-analysis"),
     formatVersion: z.literal(1),
+    view: z.enum(["effect", "stage"]).default("effect"),
     canvas: z
       .object({
         width: z.number().int().positive(),
@@ -55,6 +68,7 @@ export interface AnalysisFrame extends PixelMetrics {
 export interface AnalysisReport {
   kind: "vfx-analysis";
   formatVersion: 1;
+  view?: "effect" | "stage";
   canvas: { width: number; height: number };
   duration: number;
   fps: number;
@@ -96,7 +110,12 @@ export function compareAnalysis(actual: AnalysisReport, value: unknown) {
       actual: f.sha256,
     }));
   return {
-    passed: dimensionMatch && !missingTimes.length && !mismatches.length,
+    passed:
+      dimensionMatch &&
+      (actual.view ?? "effect") === baseline.view &&
+      !missingTimes.length &&
+      !mismatches.length,
+    viewMatch: (actual.view ?? "effect") === baseline.view,
     dimensionMatch,
     comparedFrames: frames.length,
     missingTimes,

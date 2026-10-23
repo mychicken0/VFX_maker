@@ -1,0 +1,89 @@
+{
+  "kind": "vfx-analysis",
+  "formatVersion": 1,
+  "view": "stage",
+  "canvas": {
+    "width": 128,
+    "height": 128
+  },
+  "duration": 1.2,
+  "fps": 30,
+  "frames": [
+    {
+      "time": 0.15,
+      "frameIndex": 4,
+      "sha256": "35ab2733fcba43340954b9d504381c9a162088fdd59850e3d445aa43db0998fc",
+      "visiblePixels": 738,
+      "alphaMass": 226.933,
+      "bounds": {
+        "x": 44,
+        "y": 44,
+        "width": 40,
+        "height": 32
+      },
+      "touches": []
+    },
+    {
+      "time": 0.35,
+      "frameIndex": 10,
+      "sha256": "03834cec3533362d9128591510b11766af3710a3cc61f01577d30f273306fb07",
+      "visiblePixels": 1256,
+      "alphaMass": 115.976,
+      "bounds": {
+        "x": 34,
+        "y": 29,
+        "width": 60,
+        "height": 52
+      },
+      "touches": []
+    },
+    {
+      "time": 0.55,
+      "frameIndex": 16,
+      "sha256": "40639992ff45f4446f6986104fb5518bbee44090643d2a218fd01d835c7ba9ad",
+      "visiblePixels": 370,
+      "alphaMass": 4.886,
+      "bounds": {
+        "x": 28,
+        "y": 43,
+        "width": 72,
+        "height": 42
+      },
+      "touches": []
+    }
+  ],
+  "summary": {
+    "sampledFrames": 3,
+    "visibleFrames": 3,
+    "emptyFrames": 0,
+    "firstVisibleTime": 0.15,
+    "lastVisibleTime": 0.55,
+    "peakAlphaMass": {
+      "time": 0.15,
+      "value": 226.933
+    },
+    "peakVisiblePixels": {
+      "time": 0.35,
+      "value": 1256
+    },
+    "edgeTimes": []
+  },
+  "parity": {
+    "checked": true,
+    "passed": true,
+    "order": "reverse",
+    "mismatches": []
+  },
+  "file": "isometric-heal/effect.vfx.json",
+  "revision": "0fbd0b22b208e6db582662c7582643e09ffcf1c0a9751feeeb42bee7ac3fc672",
+  "ok": true,
+  "renderer": {
+    "launches": 1,
+    "requests": 3,
+    "reuses": 2,
+    "active": 0,
+    "idle": 1,
+    "maxWorkers": 2,
+    "idleSeconds": 30
+  }
+}

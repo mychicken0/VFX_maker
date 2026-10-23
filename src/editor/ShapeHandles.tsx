@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Layer, Vec } from "../core/model.js";
 import { clamp } from "../core/math.js";
 export function svgDrag(
@@ -81,7 +81,7 @@ export function CurveHandles({
               aria-label={`Bezier ${side} handle`}
               cx={p.x}
               cy={p.y}
-              r={5 / zoom}
+              r={9 / zoom}
               fill="#e8b897"
               className="drag-handle"
               onPointerDown={(e) => {
@@ -120,6 +120,110 @@ export function CurveHandles({
           </g>
         );
       })}
+    </g>
+  );
+}
+export function PenSurface({
+  width,
+  height,
+  zoom,
+  onStroke,
+}: {
+  width: number;
+  height: number;
+  zoom: number;
+  onStroke: (points: Vec[]) => void;
+}) {
+  const [points, setPoints] = useState<Vec[]>([]),
+    pending = useRef(points);
+  pending.current = points;
+  const finish = useRef(onStroke);
+  finish.current = onStroke;
+  const commit = () => {
+    if (pending.current.length >= 2) finish.current(pending.current);
+    pending.current = [];
+    setPoints([]);
+  };
+  useEffect(() => {
+    const key = (e: KeyboardEvent) => {
+      if ((e.target as HTMLElement).closest("input,textarea,select")) return;
+      if (!["Enter", "Escape", "Backspace"].includes(e.key)) return;
+      e.preventDefault();
+      e.stopPropagation();
+      if (e.key === "Enter") commit();
+      else if (e.key === "Escape") {
+        pending.current = [];
+        setPoints([]);
+      } else setPoints((p) => p.slice(0, -1));
+    };
+    window.addEventListener("keydown", key, true);
+    return () => window.removeEventListener("keydown", key, true);
+  }, []);
+  return (
+    <g>
+      <rect
+        aria-label="Pen drawing surface"
+        width={width}
+        height={height}
+        fill="transparent"
+        style={{ cursor: "crosshair" }}
+        onPointerDown={(e) => {
+          if (e.button !== 0 || e.detail > 1) return;
+          e.stopPropagation();
+          const b = e.currentTarget
+              .closest(".canvas-stack")!
+              .getBoundingClientRect(),
+            p = {
+              x: clamp(
+                Math.round(((e.clientX - b.left) / b.width) * width),
+                0,
+                width,
+              ),
+              y: clamp(
+                Math.round(((e.clientY - b.top) / b.height) * height),
+                0,
+                height,
+              ),
+            };
+          setPoints((value) =>
+            value.length < 64 &&
+            (!value.length ||
+              Math.hypot(value.at(-1)!.x - p.x, value.at(-1)!.y - p.y) > 0)
+              ? [...value, p]
+              : value,
+          );
+        }}
+        onDoubleClick={(e) => {
+          e.stopPropagation();
+          commit();
+        }}
+      />
+      <polyline
+        points={points.map((p) => `${p.x},${p.y}`).join(" ")}
+        stroke="#ffd590"
+        strokeWidth={2 / zoom}
+        fill="none"
+        pointerEvents="none"
+      />
+      {points.map((p, i) => (
+        <circle
+          key={i}
+          cx={p.x}
+          cy={p.y}
+          r={5 / zoom}
+          fill="#ffd590"
+          pointerEvents="none"
+        />
+      ))}
+      <text
+        x={8 / zoom}
+        y={20 / zoom}
+        fontSize={13 / zoom}
+        fill="#ffd590"
+        pointerEvents="none"
+      >
+        Click points · Enter to finish · Esc to cancel
+      </text>
     </g>
   );
 }

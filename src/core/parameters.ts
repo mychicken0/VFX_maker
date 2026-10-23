@@ -230,6 +230,123 @@ export function setControl(p: Project, id: string, value: number): Project {
     controls: p.controls.map((c) => (c.id === id ? { ...c, value } : c)),
   });
 }
+export function connectControl(
+  p: Project,
+  control: string,
+  layer: string,
+  target: string,
+  options: Partial<Pick<Binding, "mode" | "factor" | "offset">> = {},
+): Project {
+  const c = p.controls.find((value) => value.id === control),
+    l = p.layers.find((value) => value.id === layer);
+  if (!c || !l) throw Error("Choose an existing control and layer");
+  if (l.locked) throw Error("Unlock the layer before connecting controls");
+  if (!parameterTargets(l).some((value) => value.path === target))
+    throw Error(`Unknown parameter ${layer}.${target}`);
+  if (c.bindings.some((b) => b.layer === layer && b.target === target))
+    throw Error("These ports are already connected");
+  return parseProject({
+    ...p,
+    controls: p.controls.map((value) =>
+      value.id === control
+        ? {
+            ...value,
+            bindings: [
+              ...value.bindings,
+              {
+                layer,
+                target,
+                mode: options.mode ?? "multiply",
+                factor: options.factor ?? 1,
+                offset: options.offset ?? 0,
+              },
+            ],
+          }
+        : value,
+    ),
+  });
+}
+export function disconnectControl(
+  p: Project,
+  control: string,
+  index: number,
+): Project {
+  const c = p.controls.find((value) => value.id === control);
+  if (!c || !Number.isInteger(index) || !c.bindings[index])
+    throw Error("Choose an existing connection");
+  const l = p.layers.find((value) => value.id === c.bindings[index].layer);
+  if (l?.locked) throw Error("Unlock the layer before disconnecting controls");
+  return parseProject({
+    ...p,
+    controls: p.controls.map((value) =>
+      value.id === control
+        ? { ...value, bindings: value.bindings.filter((_, i) => i !== index) }
+        : value,
+    ),
+  });
+}
+/** Compact graph inspection deliberately omits embedded assets and renderer work. */
+export function describeBlueprint(p: Project) {
+  return {
+    kind: "vfx-blueprint" as const,
+    stage: p.stage ?? null,
+    coordinates:
+      "Node positions are editor pixels. Layer parameters use original canvas pixels, clockwise degrees and normalized layer-life curves.",
+    controlOrder: p.controls.map((c) => c.id),
+    controls: p.controls.map((c) => ({ ...c, nodeId: `control:${c.id}` })),
+    layers: p.layers.map((l) => ({
+      id: l.id,
+      nodeId: `layer:${l.id}`,
+      name: l.name,
+      type: l.type,
+      locked: l.locked,
+      visible: l.visible,
+      inputs: parameterTargets(l),
+      modifiers: l.modifiers,
+    })),
+    connections: p.controls.flatMap((c) =>
+      c.bindings.map((b, index) => ({
+        control: c.id,
+        index,
+        source: `control:${c.id}`,
+        sourcePort: "value",
+        destination: `layer:${b.layer}`,
+        ...b,
+        editable: !p.layers.find((l) => l.id === b.layer)?.locked,
+        disconnectEdit: { action: "disconnect_control", control: c.id, index },
+      })),
+    ),
+    imagePipeline: p.layers.map((l) => ({
+      layer: l.id,
+      order: [
+        `layer:${l.id}`,
+        ...l.modifiers.map((m) => `modifier:${l.id}:${m.id}`),
+        "output",
+      ],
+    })),
+    positions: p.editor.blueprint ?? {},
+    editing: {
+      tool: "apply_edits",
+      connect: {
+        action: "connect_control",
+        control: "CONTROL_ID",
+        layer: "LAYER_ID",
+        target: "INPUT_PATH",
+        mode: "multiply",
+        factor: 1,
+        offset: 0,
+      },
+      controlValue: {
+        action: "creative",
+        operation: { action: "set_control", id: "CONTROL_ID", value: 1 },
+      },
+      draft:
+        "Use the same edits in observe_project with the source revision before committing. Binding indices refer to this revision only.",
+      pipeline:
+        "Image wires show ordered modifiers then composition. Reorder modifiers through creative put_modifier index; arbitrary image graph rewiring is not supported.",
+    },
+  };
+}
 export function captureVariant(p: Project, id: string, name: string): Project {
   const variant = {
     id,

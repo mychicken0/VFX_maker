@@ -32,7 +32,7 @@ test("installed-style CLI works outside the repository with portable TypeScript 
     p.fps = 10;
     await writeFile(join(dir, "custom.json"), JSON.stringify(p));
     const info = await cli("inspect", "custom.json");
-    expect(info.project.version).toBe("0.7.3");
+    expect(info.project.version).toBe("0.7.4");
     await cli(
       "set",
       "custom.json",
@@ -68,6 +68,22 @@ test("installed-style CLI works outside the repository with portable TypeScript 
           .frames,
       ).toHaveLength(4);
     }
+    expect((await cli("schema", "stage")).properties.projection).toBeDefined();
+    await cli(
+      "export",
+      "custom.json",
+      "--format",
+      "sequence",
+      "--view",
+      "stage",
+      "--out",
+      "camera",
+    );
+    const cameraMeta = JSON.parse(
+      await readFile(join(dir, "camera", "metadata.json"), "utf8"),
+    );
+    expect(cameraMeta.view).toBe("stage");
+    expect(cameraMeta.renderer).toBe("three-stage-pixi-planes");
     await writeFile(
       join(dir, "custom.ts"),
       `import {defineEffect, particles, curve, colors} from 'vfx-maker'; export default defineEffect({name:'Scripted',duration:0.3,fps:10,layers:[particles({id:'custom',name:'Custom',count:7,colors:colors('#55ffaa'),size:curve(3,0)})]});`,
@@ -152,7 +168,7 @@ test("installed-style CLI works outside the repository with portable TypeScript 
     const version = await exec(process.execPath, [cliEntrypoint, "--version"], {
       cwd: dir,
     });
-    expect(version.stdout.trim()).toBe("0.7.3");
+    expect(version.stdout.trim()).toBe("0.7.4");
   } finally {
     await rm(dir, { recursive: true, force: true });
   }
@@ -187,7 +203,7 @@ test("official MCP client authors without graph wiring, returns real image and m
   };
   try {
     await client.connect(transport);
-    expect((await client.listTools()).tools).toHaveLength(38);
+    expect((await client.listTools()).tools).toHaveLength(40);
     const project = getPreset("spark_burst");
     project.duration = 0.31;
     project.fps = 10;

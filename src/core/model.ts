@@ -1,3 +1,4 @@
+import { stageSchema } from "./stage.js";
 import { MAX_LAYERS } from "./limits.js";
 import { z } from "zod";
 import { inspectPng } from "./pixels.js";
@@ -10,7 +11,7 @@ import {
 import { validateControls } from "./parameters.js";
 import { emissionPixels } from "./emission.js";
 
-export const VERSION = "0.7.3" as const;
+export const VERSION = "0.7.4" as const;
 const finite = z.number().finite();
 const bounded = (min: number, max: number) => finite.min(min).max(max);
 export const vecSchema = z
@@ -301,6 +302,18 @@ export const groupSchema = z
   .strict();
 export const editorSchema = z
   .object({
+    blueprint: z
+      .record(
+        z.string().min(1).max(180),
+        z
+          .object({ x: bounded(-100000, 100000), y: bounded(-100000, 100000) })
+          .strict(),
+      )
+      .refine(
+        (value) => Object.keys(value).length <= 640,
+        "At most 640 saved node positions",
+      )
+      .optional(),
     range: z
       .object({ start: bounded(0, 10), end: bounded(0, 10) })
       .strict()
@@ -351,6 +364,7 @@ export const projectSchema = z
     controls: z.array(controlSchema).max(16).default([]),
     variants: z.array(variantSchema).max(12).default([]),
     editor: editorSchema.default({}),
+    stage: stageSchema.optional(),
     output: pixelOptionsSchema.default({
       scale: 1,
       colors: 0,
@@ -495,7 +509,7 @@ export function parseProject(value: unknown): Project {
     value &&
     typeof value === "object" &&
     "version" in value &&
-    ["0.4.0", "0.5.0", "0.6.0", "0.7.0", "0.7.1", "0.7.2"].includes(
+    ["0.4.0", "0.5.0", "0.6.0", "0.7.0", "0.7.1", "0.7.2", "0.7.3"].includes(
       String(value.version),
     )
   )

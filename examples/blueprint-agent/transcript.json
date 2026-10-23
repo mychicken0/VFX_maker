@@ -1,0 +1,6420 @@
+[
+  {
+    "tool": "capabilities",
+    "arguments": {},
+    "result": {
+      "version": "0.7.4",
+      "root": "/workspace/vfx-blueprint-agent-0.7.4-release",
+      "renderer": {
+        "launches": 0,
+        "requests": 0,
+        "reuses": 0,
+        "active": 0,
+        "idle": 0,
+        "maxWorkers": 2,
+        "idleSeconds": 30
+      },
+      "projectBatch": "batch_projects prepares independent projects, edits and optional exports. dryRun writes nothing; real runs return a background job. Inspect result.ok and each item, even when the job completes. Transactions are per file, not across files.",
+      "qa": "analyze_project hashes straight RGBA at each requested frame (all export frames by default), rerenders in reverse order for parity, and optionally compares a root-scoped saved baseline. Peak activity is not a game hit marker.",
+      "coordinates": {
+        "origin": "top-left",
+        "x": "right",
+        "y": "down",
+        "units": "canvas pixels before export scaling",
+        "rotation": "clockwise degrees; zero points right",
+        "position": "layer anchor in canvas pixels, before animated motion",
+        "points": "layer-local offsets from the animated anchor",
+        "geometry": "width/radius/handle offsets and masks are layer-local; worldPoints and pixel bounds are canvas coordinates",
+        "normalized": "x * canvas.width, y * canvas.height",
+        "time": "project seconds; keyframe t is normalized within each layer",
+        "layerOrder": "bottom to top; the last layer is in front"
+      },
+      "agentWorkflow": {
+        "observe": "observe_project returns an annotated image, scene positions, isolated pixel bounds, timing, picks and revision. Try view=storyboard before editing.",
+        "edit": "apply_edits performs 1..64 atomic operations with one backup. Preview the same edits through observe_project with file/revision/edits; drafts do not write.",
+        "visionFallback": "images[].uri can be read through resources/read or saved by save_preview for a host image viewer. If no image viewer is available, use structured scene metadata; do not claim to have seen an image.",
+        "guide": "vfx://guide",
+        "schemas": [
+          "observation",
+          "edits"
+        ],
+        "resources": {
+          "maxImages": 16,
+          "maxBytes": 25165824,
+          "sessionLocal": true
+        }
+      },
+      "layerTypes": [
+        "particles",
+        "path",
+        "ring",
+        "sprite",
+        "field"
+      ],
+      "modifiers": [
+        "outline",
+        "pixelate",
+        "color-replace",
+        "ramp",
+        "shockwave",
+        "noise-warp",
+        "dissolve"
+      ],
+      "creative": "inspect_creative lists macro controls, variants and valid layer binding targets. edit_creative edits modifiers, controls, variants and timing. save_component and insert_component reuse selected layers across projects. start_variant_export queues a batch of 1..8 variants.",
+      "stage": "Optional separate camera scene: get_stage and get_schema stage/stage_placement, apply_edits configure_stage/place_stage_layer, render_preview and analyze_project view=stage, export options.view=stage. Same source layer frames on ground/upright/billboard planes; camera-baked output, not volumetric XYZ particles.",
+      "formats": [
+        "gif",
+        "spritesheet",
+        "sequence",
+        "godot",
+        "unity"
+      ],
+      "limits": {
+        "layers": 64,
+        "particleBirths": 4000,
+        "frames": 300,
+        "stageLayerPixels": 67108864,
+        "sourcePixels": 16777216,
+        "fileBytes": 4194304,
+        "pngInputSide": 1024,
+        "outputScale": [
+          0.125,
+          8
+        ],
+        "pngOutputPixels": 16777216,
+        "gifOutputPixels": 33554432,
+        "paletteColors": [
+          2,
+          256
+        ],
+        "observationInlinePngBytes": 2097152,
+        "observationTimes": 9,
+        "editOperations": 64,
+        "batchProjects": 32
+      },
+      "imageProcessing": "Local PNG optimization needs no browser. Palette, scale, block and alpha reductions are lossy; default PNG recompression preserves decoded RGBA.",
+      "editing": "get_blueprint discovers control outputs, typed layer inputs, connections and ordered modifiers. apply_edits connect_control/disconnect_control routes parameters; edit_path_point maintains Bezier anchors and handles. Merge base fields directly when appropriate; curves are {t,value,ease} arrays, colors are {t,color} stops."
+    }
+  },
+  {
+    "tool": "new_project",
+    "arguments": {
+      "file": "blueprint.vfx.json",
+      "preset": "blue_magic",
+      "seed": 74
+    },
+    "result": {
+      "project": {
+        "format": "vfx-maker",
+        "version": "0.7.4",
+        "name": "Arcane bloom",
+        "seed": 74,
+        "canvas": {
+          "width": 128,
+          "height": 128,
+          "pixelArt": true,
+          "background": "#110f19"
+        },
+        "duration": 1.2,
+        "fps": 30,
+        "loop": true,
+        "layers": [
+          {
+            "id": "shockwave",
+            "name": "Impact ring",
+            "visible": true,
+            "locked": false,
+            "modifiers": [],
+            "start": 0,
+            "duration": 0.6,
+            "repeat": false,
+            "position": {
+              "x": 64,
+              "y": 64
+            },
+            "rotation": 0,
+            "scale": 1,
+            "opacity": [
+              {
+                "t": 0,
+                "value": 0.8,
+                "ease": "linear"
+              },
+              {
+                "t": 1,
+                "value": 0,
+                "ease": "linear"
+              }
+            ],
+            "motion": {
+              "x": [
+                {
+                  "t": 0,
+                  "value": 0,
+                  "ease": "linear"
+                },
+                {
+                  "t": 1,
+                  "value": 0,
+                  "ease": "linear"
+                }
+              ],
+              "y": [
+                {
+                  "t": 0,
+                  "value": 0,
+                  "ease": "linear"
+                },
+                {
+                  "t": 1,
+                  "value": 0,
+                  "ease": "linear"
+                }
+              ],
+              "rotation": [
+                {
+                  "t": 0,
+                  "value": 0,
+                  "ease": "linear"
+                },
+                {
+                  "t": 1,
+                  "value": 0,
+                  "ease": "linear"
+                }
+              ],
+              "scale": [
+                {
+                  "t": 0,
+                  "value": 1,
+                  "ease": "linear"
+                },
+                {
+                  "t": 1,
+                  "value": 1,
+                  "ease": "linear"
+                }
+              ]
+            },
+            "blend": "add",
+            "glow": {
+              "strength": 0.8,
+              "blur": 3
+            },
+            "type": "ring",
+            "radius": [
+              {
+                "t": 0,
+                "value": 3,
+                "ease": "linear"
+              },
+              {
+                "t": 1,
+                "value": 46,
+                "ease": "linear"
+              }
+            ],
+            "width": [
+              {
+                "t": 0,
+                "value": 5,
+                "ease": "linear"
+              },
+              {
+                "t": 1,
+                "value": 0,
+                "ease": "linear"
+              }
+            ],
+            "arc": 360,
+            "segments": 64,
+            "colors": [
+              {
+                "t": 0,
+                "color": "#fff5df"
+              },
+              {
+                "t": 1,
+                "color": "#4e8cff"
+              }
+            ]
+          },
+          {
+            "id": "sparks",
+            "name": "Flying sparks",
+            "visible": true,
+            "locked": false,
+            "modifiers": [],
+            "start": 0,
+            "duration": 1,
+            "repeat": false,
+            "position": {
+              "x": 64,
+              "y": 64
+            },
+            "rotation": 0,
+            "scale": 1,
+            "opacity": [
+              {
+                "t": 0,
+                "value": 1,
+                "ease": "linear"
+              },
+              {
+                "t": 1,
+                "value": 0,
+                "ease": "linear"
+              }
+            ],
+            "motion": {
+              "x": [
+                {
+                  "t": 0,
+                  "value": 0,
+                  "ease": "linear"
+                },
+                {
+                  "t": 1,
+                  "value": 0,
+                  "ease": "linear"
+                }
+              ],
+              "y": [
+                {
+                  "t": 0,
+                  "value": 0,
+                  "ease": "linear"
+                },
+                {
+                  "t": 1,
+                  "value": 0,
+                  "ease": "linear"
+                }
+              ],
+              "rotation": [
+                {
+                  "t": 0,
+                  "value": 0,
+                  "ease": "linear"
+                },
+                {
+                  "t": 1,
+                  "value": 0,
+                  "ease": "linear"
+                }
+              ],
+              "scale": [
+                {
+                  "t": 0,
+                  "value": 1,
+                  "ease": "linear"
+                },
+                {
+                  "t": 1,
+                  "value": 1,
+                  "ease": "linear"
+                }
+              ]
+            },
+            "blend": "add",
+            "glow": {
+              "strength": 1,
+              "blur": 4
+            },
+            "type": "particles",
+            "mode": "burst",
+            "count": 120,
+            "rate": 60,
+            "life": [
+              0.25,
+              0.75
+            ],
+            "speed": [
+              25,
+              105
+            ],
+            "angle": -90,
+            "spread": 360,
+            "spawn": {
+              "shape": "point",
+              "threshold": 0.1,
+              "radius": 10,
+              "width": 20,
+              "height": 20
+            },
+            "trail": {
+              "samples": 0,
+              "seconds": 0.12,
+              "width": 1,
+              "opacity": 0.5
+            },
+            "points": [
+              {
+                "x": -35,
+                "y": -35
+              },
+              {
+                "x": 35,
+                "y": 35
+              }
+            ],
+            "travel": 0.2,
+            "gravity": {
+              "x": 0,
+              "y": 0
+            },
+            "drag": 0.6,
+            "turbulence": 60,
+            "frequency": 4,
+            "shape": "circle",
+            "size": [
+              {
+                "t": 0,
+                "value": 1.8,
+                "ease": "linear"
+              },
+              {
+                "t": 1,
+                "value": 0,
+                "ease": "linear"
+              }
+            ],
+            "colors": [
+              {
+                "t": 0,
+                "color": "#fff7d0"
+              },
+              {
+                "t": 1,
+                "color": "#4363ff"
+              }
+            ],
+            "spin": [
+              -180,
+              180
+            ],
+            "stretch": 2,
+            "frameMode": "life",
+            "frameFps": 12
+          }
+        ],
+        "assets": [],
+        "groups": [],
+        "controls": [
+          {
+            "id": "size",
+            "name": "Size",
+            "min": 0.25,
+            "max": 3,
+            "value": 1,
+            "step": 0.05,
+            "bindings": [
+              {
+                "layer": "shockwave",
+                "target": "scale",
+                "mode": "multiply",
+                "factor": 1,
+                "offset": 0
+              },
+              {
+                "layer": "sparks",
+                "target": "scale",
+                "mode": "multiply",
+                "factor": 1,
+                "offset": 0
+              }
+            ]
+          },
+          {
+            "id": "intensity",
+            "name": "Intensity",
+            "min": 0.1,
+            "max": 2,
+            "value": 1,
+            "step": 0.05,
+            "bindings": [
+              {
+                "layer": "shockwave",
+                "target": "width",
+                "mode": "multiply",
+                "factor": 1,
+                "offset": 0
+              },
+              {
+                "layer": "sparks",
+                "target": "size",
+                "mode": "multiply",
+                "factor": 1,
+                "offset": 0
+              }
+            ]
+          },
+          {
+            "id": "hue",
+            "name": "Hue",
+            "min": -180,
+            "max": 180,
+            "value": 0,
+            "step": 1,
+            "bindings": [
+              {
+                "layer": "shockwave",
+                "target": "colors.hue",
+                "mode": "set",
+                "factor": 1,
+                "offset": 0
+              },
+              {
+                "layer": "sparks",
+                "target": "colors.hue",
+                "mode": "set",
+                "factor": 1,
+                "offset": 0
+              }
+            ]
+          }
+        ],
+        "variants": [],
+        "editor": {},
+        "output": {
+          "scale": 1,
+          "colors": 0,
+          "dither": false,
+          "pixelSize": 1,
+          "alphaLevels": 0
+        }
+      },
+      "revision": "3e78f2fb8acefdb11a53aef324296ba9909fc1ec1b6ef15eae9f728f7ca73a8c"
+    }
+  },
+  {
+    "tool": "get_blueprint",
+    "arguments": {
+      "file": "blueprint.vfx.json"
+    },
+    "result": {
+      "revision": "3e78f2fb8acefdb11a53aef324296ba9909fc1ec1b6ef15eae9f728f7ca73a8c",
+      "kind": "vfx-blueprint",
+      "stage": null,
+      "coordinates": "Node positions are editor pixels. Layer parameters use original canvas pixels, clockwise degrees and normalized layer-life curves.",
+      "controlOrder": [
+        "size",
+        "intensity",
+        "hue"
+      ],
+      "controls": [
+        {
+          "id": "size",
+          "name": "Size",
+          "min": 0.25,
+          "max": 3,
+          "value": 1,
+          "step": 0.05,
+          "bindings": [
+            {
+              "layer": "shockwave",
+              "target": "scale",
+              "mode": "multiply",
+              "factor": 1,
+              "offset": 0
+            },
+            {
+              "layer": "sparks",
+              "target": "scale",
+              "mode": "multiply",
+              "factor": 1,
+              "offset": 0
+            }
+          ],
+          "nodeId": "control:size"
+        },
+        {
+          "id": "intensity",
+          "name": "Intensity",
+          "min": 0.1,
+          "max": 2,
+          "value": 1,
+          "step": 0.05,
+          "bindings": [
+            {
+              "layer": "shockwave",
+              "target": "width",
+              "mode": "multiply",
+              "factor": 1,
+              "offset": 0
+            },
+            {
+              "layer": "sparks",
+              "target": "size",
+              "mode": "multiply",
+              "factor": 1,
+              "offset": 0
+            }
+          ],
+          "nodeId": "control:intensity"
+        },
+        {
+          "id": "hue",
+          "name": "Hue",
+          "min": -180,
+          "max": 180,
+          "value": 0,
+          "step": 1,
+          "bindings": [
+            {
+              "layer": "shockwave",
+              "target": "colors.hue",
+              "mode": "set",
+              "factor": 1,
+              "offset": 0
+            },
+            {
+              "layer": "sparks",
+              "target": "colors.hue",
+              "mode": "set",
+              "factor": 1,
+              "offset": 0
+            }
+          ],
+          "nodeId": "control:hue"
+        }
+      ],
+      "layers": [
+        {
+          "id": "shockwave",
+          "nodeId": "layer:shockwave",
+          "name": "Impact ring",
+          "type": "ring",
+          "locked": false,
+          "visible": true,
+          "inputs": [
+            {
+              "path": "position.x",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "position.y",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "rotation",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "scale",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "glow.strength",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "glow.blur",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "arc",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "segments",
+              "kind": "number",
+              "integer": true
+            },
+            {
+              "path": "opacity",
+              "kind": "curve"
+            },
+            {
+              "path": "motion.x",
+              "kind": "curve"
+            },
+            {
+              "path": "motion.y",
+              "kind": "curve"
+            },
+            {
+              "path": "motion.rotation",
+              "kind": "curve"
+            },
+            {
+              "path": "motion.scale",
+              "kind": "curve"
+            },
+            {
+              "path": "radius",
+              "kind": "curve"
+            },
+            {
+              "path": "width",
+              "kind": "curve"
+            },
+            {
+              "path": "colors.hue",
+              "kind": "hue"
+            }
+          ],
+          "modifiers": []
+        },
+        {
+          "id": "sparks",
+          "nodeId": "layer:sparks",
+          "name": "Flying sparks",
+          "type": "particles",
+          "locked": false,
+          "visible": true,
+          "inputs": [
+            {
+              "path": "position.x",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "position.y",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "rotation",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "scale",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "glow.strength",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "glow.blur",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "count",
+              "kind": "number",
+              "integer": true
+            },
+            {
+              "path": "rate",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "speed.0",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "speed.1",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "angle",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "spread",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "spawn.radius",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "spawn.width",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "spawn.height",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "gravity.x",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "gravity.y",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "drag",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "turbulence",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "frequency",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "stretch",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "trail.seconds",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "trail.width",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "trail.opacity",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "opacity",
+              "kind": "curve"
+            },
+            {
+              "path": "motion.x",
+              "kind": "curve"
+            },
+            {
+              "path": "motion.y",
+              "kind": "curve"
+            },
+            {
+              "path": "motion.rotation",
+              "kind": "curve"
+            },
+            {
+              "path": "motion.scale",
+              "kind": "curve"
+            },
+            {
+              "path": "size",
+              "kind": "curve"
+            },
+            {
+              "path": "colors.hue",
+              "kind": "hue"
+            }
+          ],
+          "modifiers": []
+        }
+      ],
+      "connections": [
+        {
+          "control": "size",
+          "index": 0,
+          "source": "control:size",
+          "sourcePort": "value",
+          "destination": "layer:shockwave",
+          "layer": "shockwave",
+          "target": "scale",
+          "mode": "multiply",
+          "factor": 1,
+          "offset": 0,
+          "editable": true,
+          "disconnectEdit": {
+            "action": "disconnect_control",
+            "control": "size",
+            "index": 0
+          }
+        },
+        {
+          "control": "size",
+          "index": 1,
+          "source": "control:size",
+          "sourcePort": "value",
+          "destination": "layer:sparks",
+          "layer": "sparks",
+          "target": "scale",
+          "mode": "multiply",
+          "factor": 1,
+          "offset": 0,
+          "editable": true,
+          "disconnectEdit": {
+            "action": "disconnect_control",
+            "control": "size",
+            "index": 1
+          }
+        },
+        {
+          "control": "intensity",
+          "index": 0,
+          "source": "control:intensity",
+          "sourcePort": "value",
+          "destination": "layer:shockwave",
+          "layer": "shockwave",
+          "target": "width",
+          "mode": "multiply",
+          "factor": 1,
+          "offset": 0,
+          "editable": true,
+          "disconnectEdit": {
+            "action": "disconnect_control",
+            "control": "intensity",
+            "index": 0
+          }
+        },
+        {
+          "control": "intensity",
+          "index": 1,
+          "source": "control:intensity",
+          "sourcePort": "value",
+          "destination": "layer:sparks",
+          "layer": "sparks",
+          "target": "size",
+          "mode": "multiply",
+          "factor": 1,
+          "offset": 0,
+          "editable": true,
+          "disconnectEdit": {
+            "action": "disconnect_control",
+            "control": "intensity",
+            "index": 1
+          }
+        },
+        {
+          "control": "hue",
+          "index": 0,
+          "source": "control:hue",
+          "sourcePort": "value",
+          "destination": "layer:shockwave",
+          "layer": "shockwave",
+          "target": "colors.hue",
+          "mode": "set",
+          "factor": 1,
+          "offset": 0,
+          "editable": true,
+          "disconnectEdit": {
+            "action": "disconnect_control",
+            "control": "hue",
+            "index": 0
+          }
+        },
+        {
+          "control": "hue",
+          "index": 1,
+          "source": "control:hue",
+          "sourcePort": "value",
+          "destination": "layer:sparks",
+          "layer": "sparks",
+          "target": "colors.hue",
+          "mode": "set",
+          "factor": 1,
+          "offset": 0,
+          "editable": true,
+          "disconnectEdit": {
+            "action": "disconnect_control",
+            "control": "hue",
+            "index": 1
+          }
+        }
+      ],
+      "imagePipeline": [
+        {
+          "layer": "shockwave",
+          "order": [
+            "layer:shockwave",
+            "output"
+          ]
+        },
+        {
+          "layer": "sparks",
+          "order": [
+            "layer:sparks",
+            "output"
+          ]
+        }
+      ],
+      "positions": {},
+      "editing": {
+        "tool": "apply_edits",
+        "connect": {
+          "action": "connect_control",
+          "control": "CONTROL_ID",
+          "layer": "LAYER_ID",
+          "target": "INPUT_PATH",
+          "mode": "multiply",
+          "factor": 1,
+          "offset": 0
+        },
+        "controlValue": {
+          "action": "creative",
+          "operation": {
+            "action": "set_control",
+            "id": "CONTROL_ID",
+            "value": 1
+          }
+        },
+        "draft": "Use the same edits in observe_project with the source revision before committing. Binding indices refer to this revision only.",
+        "pipeline": "Image wires show ordered modifiers then composition. Reorder modifiers through creative put_modifier index; arbitrary image graph rewiring is not supported."
+      }
+    }
+  },
+  {
+    "tool": "observe_project",
+    "arguments": {
+      "file": "blueprint.vfx.json",
+      "time": 0.35
+    },
+    "result": {
+      "file": "blueprint.vfx.json",
+      "revision": "3e78f2fb8acefdb11a53aef324296ba9909fc1ec1b6ef15eae9f728f7ca73a8c",
+      "draft": false,
+      "scene": {
+        "version": "0.7.4",
+        "name": "Arcane bloom",
+        "seed": 74,
+        "canvas": {
+          "width": 128,
+          "height": 128,
+          "pixelArt": true,
+          "background": "#110f19"
+        },
+        "duration": 1.2,
+        "fps": 30,
+        "loop": true,
+        "coordinates": {
+          "origin": "top-left",
+          "x": "right",
+          "y": "down",
+          "units": "canvas pixels before export scaling",
+          "rotation": "clockwise degrees; zero points right",
+          "position": "layer anchor in canvas pixels, before animated motion",
+          "points": "layer-local offsets from the animated anchor",
+          "geometry": "width/radius/handle offsets and masks are layer-local; worldPoints and pixel bounds are canvas coordinates",
+          "normalized": "x * canvas.width, y * canvas.height",
+          "time": "project seconds; keyframe t is normalized within each layer",
+          "layerOrder": "bottom to top; the last layer is in front"
+        },
+        "time": 0.35,
+        "layerCount": 2,
+        "scope": [
+          "shockwave",
+          "sparks"
+        ],
+        "controls": [
+          {
+            "id": "size",
+            "name": "Size",
+            "value": 1,
+            "min": 0.25,
+            "max": 3
+          },
+          {
+            "id": "intensity",
+            "name": "Intensity",
+            "value": 1,
+            "min": 0.1,
+            "max": 2
+          },
+          {
+            "id": "hue",
+            "name": "Hue",
+            "value": 0,
+            "min": -180,
+            "max": 180
+          }
+        ],
+        "layers": [
+          {
+            "id": "shockwave",
+            "name": "Impact ring",
+            "type": "ring",
+            "order": 0,
+            "visible": true,
+            "locked": false,
+            "baseTransform": {
+              "position": {
+                "x": 64,
+                "y": 64
+              },
+              "rotation": 0,
+              "scale": 1
+            },
+            "resolvedTransform": {
+              "position": {
+                "x": 64,
+                "y": 64
+              },
+              "rotation": 0,
+              "scale": 1
+            },
+            "transform": {
+              "anchor": {
+                "x": 64,
+                "y": 64
+              },
+              "rotation": 0,
+              "scale": 1,
+              "localTime": 0.35,
+              "progress": 0.5833333333333334,
+              "localToCanvas": [
+                1,
+                0,
+                0,
+                1,
+                64,
+                64
+              ],
+              "canvasToLocal": [
+                1,
+                0,
+                0,
+                1,
+                -64,
+                -64
+              ]
+            },
+            "timing": {
+              "start": 0,
+              "end": 0.6,
+              "duration": 0.6,
+              "repeat": false,
+              "active": true
+            },
+            "opacity": 0.3333333333333333,
+            "geometry": {
+              "type": "ring",
+              "radius": 28.083333333333336,
+              "width": 2.083333333333333,
+              "arc": 360
+            },
+            "mask": null,
+            "modifiers": [],
+            "drivenBy": [
+              {
+                "control": "size",
+                "value": 1,
+                "target": "scale",
+                "mode": "multiply",
+                "factor": 1,
+                "offset": 0
+              },
+              {
+                "control": "intensity",
+                "value": 1,
+                "target": "width",
+                "mode": "multiply",
+                "factor": 1,
+                "offset": 0
+              },
+              {
+                "control": "hue",
+                "value": 0,
+                "target": "colors.hue",
+                "mode": "set",
+                "factor": 1,
+                "offset": 0
+              }
+            ],
+            "pixels": {
+              "visiblePixels": 3276,
+              "alphaMass": 228.376,
+              "bounds": {
+                "x": 28,
+                "y": 28,
+                "width": 72,
+                "height": 72
+              },
+              "touches": []
+            },
+            "geometryBounds": {
+              "x": 34.875,
+              "y": 34.875,
+              "width": 58.25,
+              "height": 58.25
+            },
+            "state": "visible"
+          },
+          {
+            "id": "sparks",
+            "name": "Flying sparks",
+            "type": "particles",
+            "order": 1,
+            "visible": true,
+            "locked": false,
+            "baseTransform": {
+              "position": {
+                "x": 64,
+                "y": 64
+              },
+              "rotation": 0,
+              "scale": 1
+            },
+            "resolvedTransform": {
+              "position": {
+                "x": 64,
+                "y": 64
+              },
+              "rotation": 0,
+              "scale": 1
+            },
+            "transform": {
+              "anchor": {
+                "x": 64,
+                "y": 64
+              },
+              "rotation": 0,
+              "scale": 1,
+              "localTime": 0.35,
+              "progress": 0.35,
+              "localToCanvas": [
+                1,
+                0,
+                0,
+                1,
+                64,
+                64
+              ],
+              "canvasToLocal": [
+                1,
+                0,
+                0,
+                1,
+                -64,
+                -64
+              ]
+            },
+            "timing": {
+              "start": 0,
+              "end": 1,
+              "duration": 1,
+              "repeat": false,
+              "active": true
+            },
+            "opacity": "per-particle age",
+            "geometry": {
+              "type": "particles",
+              "mode": "burst",
+              "alive": 96,
+              "sampleLimit": 12,
+              "samples": [
+                {
+                  "id": 0,
+                  "x": 92.8816,
+                  "y": 49.6646,
+                  "size": 0.8771,
+                  "alpha": 0.4873,
+                  "color": "#9fabe8"
+                },
+                {
+                  "id": 1,
+                  "x": 47.1773,
+                  "y": 77.7419,
+                  "size": 0.9068,
+                  "alpha": 0.5038,
+                  "color": "#a2aee7"
+                },
+                {
+                  "id": 2,
+                  "x": 66.7615,
+                  "y": 57.5342,
+                  "size": 0.7178,
+                  "alpha": 0.3988,
+                  "color": "#8e9eec"
+                },
+                {
+                  "id": 3,
+                  "x": 57.247,
+                  "y": 32.5811,
+                  "size": 0.8883,
+                  "alpha": 0.4935,
+                  "color": "#a0ace8"
+                },
+                {
+                  "id": 4,
+                  "x": 45.5359,
+                  "y": 85.2251,
+                  "size": 0.8544,
+                  "alpha": 0.4747,
+                  "color": "#9ca9e9"
+                },
+                {
+                  "id": 5,
+                  "x": 54.9718,
+                  "y": 38.9959,
+                  "size": 0.4856,
+                  "alpha": 0.2698,
+                  "color": "#768bf2"
+                },
+                {
+                  "id": 6,
+                  "x": 67.4541,
+                  "y": 54.2516,
+                  "size": 0.6469,
+                  "alpha": 0.3594,
+                  "color": "#8798ee"
+                },
+                {
+                  "id": 7,
+                  "x": 62.2,
+                  "y": 76.8529,
+                  "size": 0.5264,
+                  "alpha": 0.2925,
+                  "color": "#7a8ef1"
+                },
+                {
+                  "id": 10,
+                  "x": 66.4017,
+                  "y": 46.187,
+                  "size": 0.7517,
+                  "alpha": 0.4176,
+                  "color": "#92a1eb"
+                },
+                {
+                  "id": 11,
+                  "x": 85.0292,
+                  "y": 57.0554,
+                  "size": 0.5789,
+                  "alpha": 0.3216,
+                  "color": "#7f93f0"
+                },
+                {
+                  "id": 12,
+                  "x": 50.0093,
+                  "y": 82.6531,
+                  "size": 0.7632,
+                  "alpha": 0.424,
+                  "color": "#93a2eb"
+                },
+                {
+                  "id": 13,
+                  "x": 71.5967,
+                  "y": 33.7874,
+                  "size": 0.8711,
+                  "alpha": 0.4839,
+                  "color": "#9eabe8"
+                }
+              ]
+            },
+            "mask": null,
+            "modifiers": [],
+            "drivenBy": [
+              {
+                "control": "size",
+                "value": 1,
+                "target": "scale",
+                "mode": "multiply",
+                "factor": 1,
+                "offset": 0
+              },
+              {
+                "control": "intensity",
+                "value": 1,
+                "target": "size",
+                "mode": "multiply",
+                "factor": 1,
+                "offset": 0
+              },
+              {
+                "control": "hue",
+                "value": 0,
+                "target": "colors.hue",
+                "mode": "set",
+                "factor": 1,
+                "offset": 0
+              }
+            ],
+            "pixels": {
+              "visiblePixels": 4701,
+              "alphaMass": 151.502,
+              "bounds": {
+                "x": 24,
+                "y": 24,
+                "width": 81,
+                "height": 81
+              },
+              "touches": []
+            },
+            "geometryBounds": {
+              "x": 32.43062075694715,
+              "y": 32.11174709871838,
+              "width": 64.51197886043843,
+              "height": 66.18951820945873
+            },
+            "state": "visible"
+          }
+        ],
+        "view": "frame",
+        "draft": false,
+        "frames": [
+          {
+            "time": 0.35,
+            "frameIndex": 10,
+            "visiblePixels": 5063,
+            "alphaMass": 376.561,
+            "bounds": {
+              "x": 24,
+              "y": 24,
+              "width": 81,
+              "height": 81
+            },
+            "touches": [],
+            "cropPixels": 5063
+          }
+        ],
+        "sampling": {
+          "automatic": false,
+          "times": [
+            0.35
+          ],
+          "basis": "largest rendered alpha mass among sampled times; not an exhaustive proof of visibility",
+          "storyboardMode": "active",
+          "emptySamplesOmitted": 0
+        },
+        "reference": {
+          "displayed": false,
+          "excludedFromPixels": true
+        },
+        "warnings": [],
+        "tiles": [
+          {
+            "image": "frame-0.png",
+            "time": 0.35,
+            "viewport": {
+              "x": 38,
+              "y": 56,
+              "width": 384,
+              "height": 384
+            },
+            "crop": {
+              "x": 0,
+              "y": 0,
+              "width": 128,
+              "height": 128
+            },
+            "pixelsPerCanvasPixel": 3
+          }
+        ],
+        "omittedLayerIds": []
+      },
+      "images": [
+        {
+          "name": "observation.png",
+          "role": "annotated",
+          "width": 628,
+          "height": 480,
+          "file": "blueprint.vfx.json",
+          "revision": "3e78f2fb8acefdb11a53aef324296ba9909fc1ec1b6ef15eae9f728f7ca73a8c",
+          "draft": false,
+          "uri": "vfx://images/c94ccd03642bb018bb10264fcd6402e6cfb1fe05ed19fef63cefa3095f8037a5",
+          "sha256": "7822a5f5a6b13fe303792d0b2111db7f834fad201330df25c90d40a571dd5401",
+          "mimeType": "image/png",
+          "bytes": 29605
+        },
+        {
+          "name": "frame-0.png",
+          "role": "frame",
+          "width": 128,
+          "height": 128,
+          "time": 0.35,
+          "file": "blueprint.vfx.json",
+          "revision": "3e78f2fb8acefdb11a53aef324296ba9909fc1ec1b6ef15eae9f728f7ca73a8c",
+          "draft": false,
+          "uri": "vfx://images/7b5c1f121edbf6a011fd4acbb2e6fb675449ab2cb307da33e5df775f45683a96",
+          "sha256": "0c182a0505c69ee2739524616e78c6aadde3d47e11f4b65dc2bbcd90abcc7b3c",
+          "mimeType": "image/png",
+          "bytes": 7180
+        }
+      ],
+      "imageDelivery": {
+        "inline": true,
+        "reason": "inline-and-resources"
+      }
+    }
+  },
+  {
+    "tool": "save_preview",
+    "arguments": {
+      "uri": "vfx://images/7b5c1f121edbf6a011fd4acbb2e6fb675449ab2cb307da33e5df775f45683a96",
+      "out": "before.png"
+    },
+    "result": {
+      "name": "frame-0.png",
+      "role": "frame",
+      "width": 128,
+      "height": 128,
+      "time": 0.35,
+      "file": "blueprint.vfx.json",
+      "revision": "3e78f2fb8acefdb11a53aef324296ba9909fc1ec1b6ef15eae9f728f7ca73a8c",
+      "draft": false,
+      "uri": "vfx://images/7b5c1f121edbf6a011fd4acbb2e6fb675449ab2cb307da33e5df775f45683a96",
+      "sha256": "0c182a0505c69ee2739524616e78c6aadde3d47e11f4b65dc2bbcd90abcc7b3c",
+      "mimeType": "image/png",
+      "bytes": 7180,
+      "out": "before.png",
+      "absolutePath": "/workspace/vfx-blueprint-agent-0.7.4-release/before.png"
+    }
+  },
+  {
+    "tool": "apply_edits",
+    "arguments": {
+      "file": "blueprint.vfx.json",
+      "revision": "3e78f2fb8acefdb11a53aef324296ba9909fc1ec1b6ef15eae9f728f7ca73a8c",
+      "edits": [
+        {
+          "action": "creative",
+          "operation": {
+            "action": "put_control",
+            "control": {
+              "id": "direction",
+              "name": "Direction",
+              "min": -180,
+              "max": 180,
+              "value": 35,
+              "step": 1,
+              "bindings": []
+            }
+          }
+        },
+        {
+          "action": "connect_control",
+          "control": "direction",
+          "layer": "shockwave",
+          "target": "rotation",
+          "mode": "add"
+        },
+        {
+          "action": "set_gradient",
+          "colors": [
+            {
+              "t": 0,
+              "color": "#e9dfff"
+            },
+            {
+              "t": 1,
+              "color": "#8c40f3"
+            }
+          ]
+        },
+        {
+          "action": "creative",
+          "operation": {
+            "action": "put_modifier",
+            "layer": "shockwave",
+            "modifier": {
+              "id": "violet-edge",
+              "type": "outline",
+              "thickness": 1,
+              "color": "#ab7bff",
+              "alpha": 0.7
+            }
+          }
+        }
+      ],
+      "dryRun": true
+    },
+    "result": {
+      "file": "blueprint.vfx.json",
+      "revision": "3e78f2fb8acefdb11a53aef324296ba9909fc1ec1b6ef15eae9f728f7ca73a8c",
+      "dryRun": true,
+      "proposedRevision": "a30c38cd1d7d1a8d538b0ba8349916658b02878df4ebcd11520e0297f55b33d7",
+      "operations": 4,
+      "changes": {
+        "added": [],
+        "removed": [],
+        "changed": [
+          "shockwave",
+          "sparks"
+        ],
+        "reordered": false,
+        "controlsChanged": true
+      }
+    }
+  },
+  {
+    "tool": "observe_project",
+    "arguments": {
+      "file": "blueprint.vfx.json",
+      "revision": "3e78f2fb8acefdb11a53aef324296ba9909fc1ec1b6ef15eae9f728f7ca73a8c",
+      "edits": [
+        {
+          "action": "creative",
+          "operation": {
+            "action": "put_control",
+            "control": {
+              "id": "direction",
+              "name": "Direction",
+              "min": -180,
+              "max": 180,
+              "value": 35,
+              "step": 1,
+              "bindings": []
+            }
+          }
+        },
+        {
+          "action": "connect_control",
+          "control": "direction",
+          "layer": "shockwave",
+          "target": "rotation",
+          "mode": "add"
+        },
+        {
+          "action": "set_gradient",
+          "colors": [
+            {
+              "t": 0,
+              "color": "#e9dfff"
+            },
+            {
+              "t": 1,
+              "color": "#8c40f3"
+            }
+          ]
+        },
+        {
+          "action": "creative",
+          "operation": {
+            "action": "put_modifier",
+            "layer": "shockwave",
+            "modifier": {
+              "id": "violet-edge",
+              "type": "outline",
+              "thickness": 1,
+              "color": "#ab7bff",
+              "alpha": 0.7
+            }
+          }
+        }
+      ],
+      "time": 0.35
+    },
+    "result": {
+      "file": "blueprint.vfx.json",
+      "revision": "3e78f2fb8acefdb11a53aef324296ba9909fc1ec1b6ef15eae9f728f7ca73a8c",
+      "draft": true,
+      "proposedRevision": "a30c38cd1d7d1a8d538b0ba8349916658b02878df4ebcd11520e0297f55b33d7",
+      "changes": {
+        "added": [],
+        "removed": [],
+        "changed": [
+          "shockwave",
+          "sparks"
+        ],
+        "reordered": false,
+        "controlsChanged": true
+      },
+      "nextAction": "This is a draft. Commit the same edits with apply_edits using this source revision, then observe the saved result.",
+      "scene": {
+        "version": "0.7.4",
+        "name": "Arcane bloom",
+        "seed": 74,
+        "canvas": {
+          "width": 128,
+          "height": 128,
+          "pixelArt": true,
+          "background": "#110f19"
+        },
+        "duration": 1.2,
+        "fps": 30,
+        "loop": true,
+        "coordinates": {
+          "origin": "top-left",
+          "x": "right",
+          "y": "down",
+          "units": "canvas pixels before export scaling",
+          "rotation": "clockwise degrees; zero points right",
+          "position": "layer anchor in canvas pixels, before animated motion",
+          "points": "layer-local offsets from the animated anchor",
+          "geometry": "width/radius/handle offsets and masks are layer-local; worldPoints and pixel bounds are canvas coordinates",
+          "normalized": "x * canvas.width, y * canvas.height",
+          "time": "project seconds; keyframe t is normalized within each layer",
+          "layerOrder": "bottom to top; the last layer is in front"
+        },
+        "time": 0.35,
+        "layerCount": 2,
+        "scope": [
+          "shockwave",
+          "sparks"
+        ],
+        "controls": [
+          {
+            "id": "size",
+            "name": "Size",
+            "value": 1,
+            "min": 0.25,
+            "max": 3
+          },
+          {
+            "id": "intensity",
+            "name": "Intensity",
+            "value": 1,
+            "min": 0.1,
+            "max": 2
+          },
+          {
+            "id": "hue",
+            "name": "Hue",
+            "value": 0,
+            "min": -180,
+            "max": 180
+          },
+          {
+            "id": "direction",
+            "name": "Direction",
+            "value": 35,
+            "min": -180,
+            "max": 180
+          }
+        ],
+        "layers": [
+          {
+            "id": "shockwave",
+            "name": "Impact ring",
+            "type": "ring",
+            "order": 0,
+            "visible": true,
+            "locked": false,
+            "baseTransform": {
+              "position": {
+                "x": 64,
+                "y": 64
+              },
+              "rotation": 0,
+              "scale": 1
+            },
+            "resolvedTransform": {
+              "position": {
+                "x": 64,
+                "y": 64
+              },
+              "rotation": 35,
+              "scale": 1
+            },
+            "transform": {
+              "anchor": {
+                "x": 64,
+                "y": 64
+              },
+              "rotation": 35,
+              "scale": 1,
+              "localTime": 0.35,
+              "progress": 0.5833333333333334,
+              "localToCanvas": [
+                0.8191520442889918,
+                0.573576436351046,
+                -0.573576436351046,
+                0.8191520442889918,
+                64,
+                64
+              ],
+              "canvasToLocal": [
+                0.8191520442889919,
+                -0.5735764363510462,
+                0.5735764363510462,
+                0.8191520442889919,
+                -89.13462276096244,
+                -15.71683890802853
+              ]
+            },
+            "timing": {
+              "start": 0,
+              "end": 0.6,
+              "duration": 0.6,
+              "repeat": false,
+              "active": true
+            },
+            "opacity": 0.3333333333333333,
+            "geometry": {
+              "type": "ring",
+              "radius": 28.083333333333336,
+              "width": 2.083333333333333,
+              "arc": 360
+            },
+            "mask": null,
+            "modifiers": [
+              {
+                "id": "violet-edge",
+                "type": "outline",
+                "enabled": true
+              }
+            ],
+            "drivenBy": [
+              {
+                "control": "size",
+                "value": 1,
+                "target": "scale",
+                "mode": "multiply",
+                "factor": 1,
+                "offset": 0
+              },
+              {
+                "control": "intensity",
+                "value": 1,
+                "target": "width",
+                "mode": "multiply",
+                "factor": 1,
+                "offset": 0
+              },
+              {
+                "control": "hue",
+                "value": 0,
+                "target": "colors.hue",
+                "mode": "set",
+                "factor": 1,
+                "offset": 0
+              },
+              {
+                "control": "direction",
+                "value": 35,
+                "target": "rotation",
+                "mode": "add",
+                "factor": 1,
+                "offset": 0
+              }
+            ],
+            "pixels": {
+              "visiblePixels": 3648,
+              "alphaMass": 440.69,
+              "bounds": {
+                "x": 26,
+                "y": 26,
+                "width": 76,
+                "height": 76
+              },
+              "touches": []
+            },
+            "geometryBounds": {
+              "x": 23.43678300135889,
+              "y": 23.43678300135889,
+              "width": 81.12643399728222,
+              "height": 81.12643399728222
+            },
+            "state": "visible"
+          },
+          {
+            "id": "sparks",
+            "name": "Flying sparks",
+            "type": "particles",
+            "order": 1,
+            "visible": true,
+            "locked": false,
+            "baseTransform": {
+              "position": {
+                "x": 64,
+                "y": 64
+              },
+              "rotation": 0,
+              "scale": 1
+            },
+            "resolvedTransform": {
+              "position": {
+                "x": 64,
+                "y": 64
+              },
+              "rotation": 0,
+              "scale": 1
+            },
+            "transform": {
+              "anchor": {
+                "x": 64,
+                "y": 64
+              },
+              "rotation": 0,
+              "scale": 1,
+              "localTime": 0.35,
+              "progress": 0.35,
+              "localToCanvas": [
+                1,
+                0,
+                0,
+                1,
+                64,
+                64
+              ],
+              "canvasToLocal": [
+                1,
+                0,
+                0,
+                1,
+                -64,
+                -64
+              ]
+            },
+            "timing": {
+              "start": 0,
+              "end": 1,
+              "duration": 1,
+              "repeat": false,
+              "active": true
+            },
+            "opacity": "per-particle age",
+            "geometry": {
+              "type": "particles",
+              "mode": "burst",
+              "alive": 96,
+              "sampleLimit": 12,
+              "samples": [
+                {
+                  "id": 0,
+                  "x": 92.8816,
+                  "y": 49.6646,
+                  "size": 0.8771,
+                  "alpha": 0.4873,
+                  "color": "#b98df9"
+                },
+                {
+                  "id": 1,
+                  "x": 47.1773,
+                  "y": 77.7419,
+                  "size": 0.9068,
+                  "alpha": 0.5038,
+                  "color": "#bb90f9"
+                },
+                {
+                  "id": 2,
+                  "x": 66.7615,
+                  "y": 57.5342,
+                  "size": 0.7178,
+                  "alpha": 0.3988,
+                  "color": "#b17ff8"
+                },
+                {
+                  "id": 3,
+                  "x": 57.247,
+                  "y": 32.5811,
+                  "size": 0.8883,
+                  "alpha": 0.4935,
+                  "color": "#ba8ef9"
+                },
+                {
+                  "id": 4,
+                  "x": 45.5359,
+                  "y": 85.2251,
+                  "size": 0.8544,
+                  "alpha": 0.4747,
+                  "color": "#b88bf9"
+                },
+                {
+                  "id": 5,
+                  "x": 54.9718,
+                  "y": 38.9959,
+                  "size": 0.4856,
+                  "alpha": 0.2698,
+                  "color": "#a56bf6"
+                },
+                {
+                  "id": 6,
+                  "x": 67.4541,
+                  "y": 54.2516,
+                  "size": 0.6469,
+                  "alpha": 0.3594,
+                  "color": "#ad79f7"
+                },
+                {
+                  "id": 7,
+                  "x": 62.2,
+                  "y": 76.8529,
+                  "size": 0.5264,
+                  "alpha": 0.2925,
+                  "color": "#a76ff7"
+                },
+                {
+                  "id": 10,
+                  "x": 66.4017,
+                  "y": 46.187,
+                  "size": 0.7517,
+                  "alpha": 0.4176,
+                  "color": "#b382f8"
+                },
+                {
+                  "id": 11,
+                  "x": 85.0292,
+                  "y": 57.0554,
+                  "size": 0.5789,
+                  "alpha": 0.3216,
+                  "color": "#aa73f7"
+                },
+                {
+                  "id": 12,
+                  "x": 50.0093,
+                  "y": 82.6531,
+                  "size": 0.7632,
+                  "alpha": 0.424,
+                  "color": "#b383f8"
+                },
+                {
+                  "id": 13,
+                  "x": 71.5967,
+                  "y": 33.7874,
+                  "size": 0.8711,
+                  "alpha": 0.4839,
+                  "color": "#b98df9"
+                }
+              ]
+            },
+            "mask": null,
+            "modifiers": [],
+            "drivenBy": [
+              {
+                "control": "size",
+                "value": 1,
+                "target": "scale",
+                "mode": "multiply",
+                "factor": 1,
+                "offset": 0
+              },
+              {
+                "control": "intensity",
+                "value": 1,
+                "target": "size",
+                "mode": "multiply",
+                "factor": 1,
+                "offset": 0
+              },
+              {
+                "control": "hue",
+                "value": 0,
+                "target": "colors.hue",
+                "mode": "set",
+                "factor": 1,
+                "offset": 0
+              }
+            ],
+            "pixels": {
+              "visiblePixels": 4701,
+              "alphaMass": 151.502,
+              "bounds": {
+                "x": 24,
+                "y": 24,
+                "width": 81,
+                "height": 81
+              },
+              "touches": []
+            },
+            "geometryBounds": {
+              "x": 32.43062075694715,
+              "y": 32.11174709871838,
+              "width": 64.51197886043843,
+              "height": 66.18951820945873
+            },
+            "state": "visible"
+          }
+        ],
+        "view": "frame",
+        "draft": true,
+        "frames": [
+          {
+            "time": 0.35,
+            "frameIndex": 10,
+            "visiblePixels": 5144,
+            "alphaMass": 585.263,
+            "bounds": {
+              "x": 24,
+              "y": 24,
+              "width": 81,
+              "height": 81
+            },
+            "touches": [],
+            "cropPixels": 5144
+          }
+        ],
+        "sampling": {
+          "automatic": false,
+          "times": [
+            0.35
+          ],
+          "basis": "largest rendered alpha mass among sampled times; not an exhaustive proof of visibility",
+          "storyboardMode": "active",
+          "emptySamplesOmitted": 0
+        },
+        "reference": {
+          "displayed": false,
+          "excludedFromPixels": true
+        },
+        "warnings": [],
+        "tiles": [
+          {
+            "image": "frame-0.png",
+            "time": 0.35,
+            "viewport": {
+              "x": 38,
+              "y": 56,
+              "width": 384,
+              "height": 384
+            },
+            "crop": {
+              "x": 0,
+              "y": 0,
+              "width": 128,
+              "height": 128
+            },
+            "pixelsPerCanvasPixel": 3
+          }
+        ],
+        "omittedLayerIds": []
+      },
+      "images": [
+        {
+          "name": "observation.png",
+          "role": "annotated",
+          "width": 628,
+          "height": 480,
+          "file": "blueprint.vfx.json",
+          "revision": "3e78f2fb8acefdb11a53aef324296ba9909fc1ec1b6ef15eae9f728f7ca73a8c",
+          "draft": true,
+          "uri": "vfx://images/12c4af1d26b00ac7f0a1d164c433d710e9dca08da4d58bb8efd8cbe82e48a41d",
+          "sha256": "6a7e4e5c230c04d0c3f657d9adc5c4aaf99eec1820f02103f432634b59be0c40",
+          "mimeType": "image/png",
+          "bytes": 31747
+        },
+        {
+          "name": "frame-0.png",
+          "role": "frame",
+          "width": 128,
+          "height": 128,
+          "time": 0.35,
+          "file": "blueprint.vfx.json",
+          "revision": "3e78f2fb8acefdb11a53aef324296ba9909fc1ec1b6ef15eae9f728f7ca73a8c",
+          "draft": true,
+          "uri": "vfx://images/7006305fe50801c60c759a2818a40e320414219a0258308a138d1613ce6ea25a",
+          "sha256": "ae42828a2d0f293e35838e3ebc542844e20afa836fe24b0df6161e9d5a74dc6e",
+          "mimeType": "image/png",
+          "bytes": 8207
+        }
+      ],
+      "imageDelivery": {
+        "inline": true,
+        "reason": "inline-and-resources"
+      }
+    }
+  },
+  {
+    "tool": "save_preview",
+    "arguments": {
+      "uri": "vfx://images/12c4af1d26b00ac7f0a1d164c433d710e9dca08da4d58bb8efd8cbe82e48a41d",
+      "out": "draft.png"
+    },
+    "result": {
+      "name": "observation.png",
+      "role": "annotated",
+      "width": 628,
+      "height": 480,
+      "file": "blueprint.vfx.json",
+      "revision": "3e78f2fb8acefdb11a53aef324296ba9909fc1ec1b6ef15eae9f728f7ca73a8c",
+      "draft": true,
+      "uri": "vfx://images/12c4af1d26b00ac7f0a1d164c433d710e9dca08da4d58bb8efd8cbe82e48a41d",
+      "sha256": "6a7e4e5c230c04d0c3f657d9adc5c4aaf99eec1820f02103f432634b59be0c40",
+      "mimeType": "image/png",
+      "bytes": 31747,
+      "out": "draft.png",
+      "absolutePath": "/workspace/vfx-blueprint-agent-0.7.4-release/draft.png"
+    }
+  },
+  {
+    "tool": "apply_edits",
+    "arguments": {
+      "file": "blueprint.vfx.json",
+      "revision": "3e78f2fb8acefdb11a53aef324296ba9909fc1ec1b6ef15eae9f728f7ca73a8c",
+      "edits": [
+        {
+          "action": "creative",
+          "operation": {
+            "action": "put_control",
+            "control": {
+              "id": "direction",
+              "name": "Direction",
+              "min": -180,
+              "max": 180,
+              "value": 35,
+              "step": 1,
+              "bindings": []
+            }
+          }
+        },
+        {
+          "action": "connect_control",
+          "control": "direction",
+          "layer": "shockwave",
+          "target": "rotation",
+          "mode": "add"
+        },
+        {
+          "action": "set_gradient",
+          "colors": [
+            {
+              "t": 0,
+              "color": "#e9dfff"
+            },
+            {
+              "t": 1,
+              "color": "#8c40f3"
+            }
+          ]
+        },
+        {
+          "action": "creative",
+          "operation": {
+            "action": "put_modifier",
+            "layer": "shockwave",
+            "modifier": {
+              "id": "violet-edge",
+              "type": "outline",
+              "thickness": 1,
+              "color": "#ab7bff",
+              "alpha": 0.7
+            }
+          }
+        }
+      ]
+    },
+    "result": {
+      "file": "blueprint.vfx.json",
+      "revision": "a30c38cd1d7d1a8d538b0ba8349916658b02878df4ebcd11520e0297f55b33d7",
+      "dryRun": false,
+      "operations": 4,
+      "changes": {
+        "added": [],
+        "removed": [],
+        "changed": [
+          "shockwave",
+          "sparks"
+        ],
+        "reordered": false,
+        "controlsChanged": true
+      }
+    }
+  },
+  {
+    "tool": "observe_project",
+    "arguments": {
+      "file": "blueprint.vfx.json",
+      "time": 0.35
+    },
+    "result": {
+      "file": "blueprint.vfx.json",
+      "revision": "a30c38cd1d7d1a8d538b0ba8349916658b02878df4ebcd11520e0297f55b33d7",
+      "draft": false,
+      "scene": {
+        "version": "0.7.4",
+        "name": "Arcane bloom",
+        "seed": 74,
+        "canvas": {
+          "width": 128,
+          "height": 128,
+          "pixelArt": true,
+          "background": "#110f19"
+        },
+        "duration": 1.2,
+        "fps": 30,
+        "loop": true,
+        "coordinates": {
+          "origin": "top-left",
+          "x": "right",
+          "y": "down",
+          "units": "canvas pixels before export scaling",
+          "rotation": "clockwise degrees; zero points right",
+          "position": "layer anchor in canvas pixels, before animated motion",
+          "points": "layer-local offsets from the animated anchor",
+          "geometry": "width/radius/handle offsets and masks are layer-local; worldPoints and pixel bounds are canvas coordinates",
+          "normalized": "x * canvas.width, y * canvas.height",
+          "time": "project seconds; keyframe t is normalized within each layer",
+          "layerOrder": "bottom to top; the last layer is in front"
+        },
+        "time": 0.35,
+        "layerCount": 2,
+        "scope": [
+          "shockwave",
+          "sparks"
+        ],
+        "controls": [
+          {
+            "id": "size",
+            "name": "Size",
+            "value": 1,
+            "min": 0.25,
+            "max": 3
+          },
+          {
+            "id": "intensity",
+            "name": "Intensity",
+            "value": 1,
+            "min": 0.1,
+            "max": 2
+          },
+          {
+            "id": "hue",
+            "name": "Hue",
+            "value": 0,
+            "min": -180,
+            "max": 180
+          },
+          {
+            "id": "direction",
+            "name": "Direction",
+            "value": 35,
+            "min": -180,
+            "max": 180
+          }
+        ],
+        "layers": [
+          {
+            "id": "shockwave",
+            "name": "Impact ring",
+            "type": "ring",
+            "order": 0,
+            "visible": true,
+            "locked": false,
+            "baseTransform": {
+              "position": {
+                "x": 64,
+                "y": 64
+              },
+              "rotation": 0,
+              "scale": 1
+            },
+            "resolvedTransform": {
+              "position": {
+                "x": 64,
+                "y": 64
+              },
+              "rotation": 35,
+              "scale": 1
+            },
+            "transform": {
+              "anchor": {
+                "x": 64,
+                "y": 64
+              },
+              "rotation": 35,
+              "scale": 1,
+              "localTime": 0.35,
+              "progress": 0.5833333333333334,
+              "localToCanvas": [
+                0.8191520442889918,
+                0.573576436351046,
+                -0.573576436351046,
+                0.8191520442889918,
+                64,
+                64
+              ],
+              "canvasToLocal": [
+                0.8191520442889919,
+                -0.5735764363510462,
+                0.5735764363510462,
+                0.8191520442889919,
+                -89.13462276096244,
+                -15.71683890802853
+              ]
+            },
+            "timing": {
+              "start": 0,
+              "end": 0.6,
+              "duration": 0.6,
+              "repeat": false,
+              "active": true
+            },
+            "opacity": 0.3333333333333333,
+            "geometry": {
+              "type": "ring",
+              "radius": 28.083333333333336,
+              "width": 2.083333333333333,
+              "arc": 360
+            },
+            "mask": null,
+            "modifiers": [
+              {
+                "id": "violet-edge",
+                "type": "outline",
+                "enabled": true
+              }
+            ],
+            "drivenBy": [
+              {
+                "control": "size",
+                "value": 1,
+                "target": "scale",
+                "mode": "multiply",
+                "factor": 1,
+                "offset": 0
+              },
+              {
+                "control": "intensity",
+                "value": 1,
+                "target": "width",
+                "mode": "multiply",
+                "factor": 1,
+                "offset": 0
+              },
+              {
+                "control": "hue",
+                "value": 0,
+                "target": "colors.hue",
+                "mode": "set",
+                "factor": 1,
+                "offset": 0
+              },
+              {
+                "control": "direction",
+                "value": 35,
+                "target": "rotation",
+                "mode": "add",
+                "factor": 1,
+                "offset": 0
+              }
+            ],
+            "pixels": {
+              "visiblePixels": 3648,
+              "alphaMass": 440.69,
+              "bounds": {
+                "x": 26,
+                "y": 26,
+                "width": 76,
+                "height": 76
+              },
+              "touches": []
+            },
+            "geometryBounds": {
+              "x": 23.43678300135889,
+              "y": 23.43678300135889,
+              "width": 81.12643399728222,
+              "height": 81.12643399728222
+            },
+            "state": "visible"
+          },
+          {
+            "id": "sparks",
+            "name": "Flying sparks",
+            "type": "particles",
+            "order": 1,
+            "visible": true,
+            "locked": false,
+            "baseTransform": {
+              "position": {
+                "x": 64,
+                "y": 64
+              },
+              "rotation": 0,
+              "scale": 1
+            },
+            "resolvedTransform": {
+              "position": {
+                "x": 64,
+                "y": 64
+              },
+              "rotation": 0,
+              "scale": 1
+            },
+            "transform": {
+              "anchor": {
+                "x": 64,
+                "y": 64
+              },
+              "rotation": 0,
+              "scale": 1,
+              "localTime": 0.35,
+              "progress": 0.35,
+              "localToCanvas": [
+                1,
+                0,
+                0,
+                1,
+                64,
+                64
+              ],
+              "canvasToLocal": [
+                1,
+                0,
+                0,
+                1,
+                -64,
+                -64
+              ]
+            },
+            "timing": {
+              "start": 0,
+              "end": 1,
+              "duration": 1,
+              "repeat": false,
+              "active": true
+            },
+            "opacity": "per-particle age",
+            "geometry": {
+              "type": "particles",
+              "mode": "burst",
+              "alive": 96,
+              "sampleLimit": 12,
+              "samples": [
+                {
+                  "id": 0,
+                  "x": 92.8816,
+                  "y": 49.6646,
+                  "size": 0.8771,
+                  "alpha": 0.4873,
+                  "color": "#b98df9"
+                },
+                {
+                  "id": 1,
+                  "x": 47.1773,
+                  "y": 77.7419,
+                  "size": 0.9068,
+                  "alpha": 0.5038,
+                  "color": "#bb90f9"
+                },
+                {
+                  "id": 2,
+                  "x": 66.7615,
+                  "y": 57.5342,
+                  "size": 0.7178,
+                  "alpha": 0.3988,
+                  "color": "#b17ff8"
+                },
+                {
+                  "id": 3,
+                  "x": 57.247,
+                  "y": 32.5811,
+                  "size": 0.8883,
+                  "alpha": 0.4935,
+                  "color": "#ba8ef9"
+                },
+                {
+                  "id": 4,
+                  "x": 45.5359,
+                  "y": 85.2251,
+                  "size": 0.8544,
+                  "alpha": 0.4747,
+                  "color": "#b88bf9"
+                },
+                {
+                  "id": 5,
+                  "x": 54.9718,
+                  "y": 38.9959,
+                  "size": 0.4856,
+                  "alpha": 0.2698,
+                  "color": "#a56bf6"
+                },
+                {
+                  "id": 6,
+                  "x": 67.4541,
+                  "y": 54.2516,
+                  "size": 0.6469,
+                  "alpha": 0.3594,
+                  "color": "#ad79f7"
+                },
+                {
+                  "id": 7,
+                  "x": 62.2,
+                  "y": 76.8529,
+                  "size": 0.5264,
+                  "alpha": 0.2925,
+                  "color": "#a76ff7"
+                },
+                {
+                  "id": 10,
+                  "x": 66.4017,
+                  "y": 46.187,
+                  "size": 0.7517,
+                  "alpha": 0.4176,
+                  "color": "#b382f8"
+                },
+                {
+                  "id": 11,
+                  "x": 85.0292,
+                  "y": 57.0554,
+                  "size": 0.5789,
+                  "alpha": 0.3216,
+                  "color": "#aa73f7"
+                },
+                {
+                  "id": 12,
+                  "x": 50.0093,
+                  "y": 82.6531,
+                  "size": 0.7632,
+                  "alpha": 0.424,
+                  "color": "#b383f8"
+                },
+                {
+                  "id": 13,
+                  "x": 71.5967,
+                  "y": 33.7874,
+                  "size": 0.8711,
+                  "alpha": 0.4839,
+                  "color": "#b98df9"
+                }
+              ]
+            },
+            "mask": null,
+            "modifiers": [],
+            "drivenBy": [
+              {
+                "control": "size",
+                "value": 1,
+                "target": "scale",
+                "mode": "multiply",
+                "factor": 1,
+                "offset": 0
+              },
+              {
+                "control": "intensity",
+                "value": 1,
+                "target": "size",
+                "mode": "multiply",
+                "factor": 1,
+                "offset": 0
+              },
+              {
+                "control": "hue",
+                "value": 0,
+                "target": "colors.hue",
+                "mode": "set",
+                "factor": 1,
+                "offset": 0
+              }
+            ],
+            "pixels": {
+              "visiblePixels": 4701,
+              "alphaMass": 151.502,
+              "bounds": {
+                "x": 24,
+                "y": 24,
+                "width": 81,
+                "height": 81
+              },
+              "touches": []
+            },
+            "geometryBounds": {
+              "x": 32.43062075694715,
+              "y": 32.11174709871838,
+              "width": 64.51197886043843,
+              "height": 66.18951820945873
+            },
+            "state": "visible"
+          }
+        ],
+        "view": "frame",
+        "draft": false,
+        "frames": [
+          {
+            "time": 0.35,
+            "frameIndex": 10,
+            "visiblePixels": 5144,
+            "alphaMass": 585.263,
+            "bounds": {
+              "x": 24,
+              "y": 24,
+              "width": 81,
+              "height": 81
+            },
+            "touches": [],
+            "cropPixels": 5144
+          }
+        ],
+        "sampling": {
+          "automatic": false,
+          "times": [
+            0.35
+          ],
+          "basis": "largest rendered alpha mass among sampled times; not an exhaustive proof of visibility",
+          "storyboardMode": "active",
+          "emptySamplesOmitted": 0
+        },
+        "reference": {
+          "displayed": false,
+          "excludedFromPixels": true
+        },
+        "warnings": [],
+        "tiles": [
+          {
+            "image": "frame-0.png",
+            "time": 0.35,
+            "viewport": {
+              "x": 38,
+              "y": 56,
+              "width": 384,
+              "height": 384
+            },
+            "crop": {
+              "x": 0,
+              "y": 0,
+              "width": 128,
+              "height": 128
+            },
+            "pixelsPerCanvasPixel": 3
+          }
+        ],
+        "omittedLayerIds": []
+      },
+      "images": [
+        {
+          "name": "observation.png",
+          "role": "annotated",
+          "width": 628,
+          "height": 480,
+          "file": "blueprint.vfx.json",
+          "revision": "a30c38cd1d7d1a8d538b0ba8349916658b02878df4ebcd11520e0297f55b33d7",
+          "draft": false,
+          "uri": "vfx://images/ecbd83d6a384497e161dd51b8eb0172393a533694487de6846bd827b1794838f",
+          "sha256": "4ef284a8b7610599f427794198545688376523f07784786743d2806ac1b34425",
+          "mimeType": "image/png",
+          "bytes": 31344
+        },
+        {
+          "name": "frame-0.png",
+          "role": "frame",
+          "width": 128,
+          "height": 128,
+          "time": 0.35,
+          "file": "blueprint.vfx.json",
+          "revision": "a30c38cd1d7d1a8d538b0ba8349916658b02878df4ebcd11520e0297f55b33d7",
+          "draft": false,
+          "uri": "vfx://images/0b924faed1b203cc99c0c1d01d6886f2e7c16484f1daa09de5fdc6feb6efd4cd",
+          "sha256": "ae42828a2d0f293e35838e3ebc542844e20afa836fe24b0df6161e9d5a74dc6e",
+          "mimeType": "image/png",
+          "bytes": 8207
+        }
+      ],
+      "imageDelivery": {
+        "inline": true,
+        "reason": "inline-and-resources"
+      }
+    }
+  },
+  {
+    "tool": "save_preview",
+    "arguments": {
+      "uri": "vfx://images/0b924faed1b203cc99c0c1d01d6886f2e7c16484f1daa09de5fdc6feb6efd4cd",
+      "out": "after.png"
+    },
+    "result": {
+      "name": "frame-0.png",
+      "role": "frame",
+      "width": 128,
+      "height": 128,
+      "time": 0.35,
+      "file": "blueprint.vfx.json",
+      "revision": "a30c38cd1d7d1a8d538b0ba8349916658b02878df4ebcd11520e0297f55b33d7",
+      "draft": false,
+      "uri": "vfx://images/0b924faed1b203cc99c0c1d01d6886f2e7c16484f1daa09de5fdc6feb6efd4cd",
+      "sha256": "ae42828a2d0f293e35838e3ebc542844e20afa836fe24b0df6161e9d5a74dc6e",
+      "mimeType": "image/png",
+      "bytes": 8207,
+      "out": "after.png",
+      "absolutePath": "/workspace/vfx-blueprint-agent-0.7.4-release/after.png"
+    }
+  },
+  {
+    "tool": "analyze_project",
+    "arguments": {
+      "file": "blueprint.vfx.json",
+      "times": [
+        0.15,
+        0.35,
+        0.55
+      ],
+      "out": "baseline.json"
+    },
+    "result": {
+      "kind": "vfx-analysis",
+      "formatVersion": 1,
+      "view": "effect",
+      "canvas": {
+        "width": 128,
+        "height": 128
+      },
+      "duration": 1.2,
+      "fps": 30,
+      "frames": [
+        {
+          "time": 0.15,
+          "frameIndex": 4,
+          "sha256": "7a4f8b038af0c0060b1d10841cbd3d2a7406f6fbf0b5f7ec8e01b6ea50cab7cc",
+          "visiblePixels": 2064,
+          "alphaMass": 838.2,
+          "bounds": {
+            "x": 41,
+            "y": 40,
+            "width": 47,
+            "height": 49
+          },
+          "touches": []
+        },
+        {
+          "time": 0.35,
+          "frameIndex": 10,
+          "sha256": "368c160fc82730f773402bc078703d73fa0183fe9458e3d4fa7bbd54d19f5462",
+          "visiblePixels": 5144,
+          "alphaMass": 585.263,
+          "bounds": {
+            "x": 24,
+            "y": 24,
+            "width": 81,
+            "height": 81
+          },
+          "touches": []
+        },
+        {
+          "time": 0.55,
+          "frameIndex": 16,
+          "sha256": "c303dd35bcd0442a8db13f3a81c0916620c0fa6e2a5d75e651609d67528886fe",
+          "visiblePixels": 1418,
+          "alphaMass": 37.576,
+          "bounds": {
+            "x": 15,
+            "y": 17,
+            "width": 98,
+            "height": 94
+          },
+          "touches": []
+        }
+      ],
+      "summary": {
+        "sampledFrames": 3,
+        "visibleFrames": 3,
+        "emptyFrames": 0,
+        "firstVisibleTime": 0.15,
+        "lastVisibleTime": 0.55,
+        "peakAlphaMass": {
+          "time": 0.15,
+          "value": 838.2
+        },
+        "peakVisiblePixels": {
+          "time": 0.35,
+          "value": 5144
+        },
+        "edgeTimes": []
+      },
+      "parity": {
+        "checked": true,
+        "passed": true,
+        "order": "reverse",
+        "mismatches": []
+      },
+      "file": "blueprint.vfx.json",
+      "revision": "a30c38cd1d7d1a8d538b0ba8349916658b02878df4ebcd11520e0297f55b33d7",
+      "ok": true,
+      "renderer": {
+        "launches": 1,
+        "requests": 4,
+        "reuses": 3,
+        "active": 0,
+        "idle": 1,
+        "maxWorkers": 2,
+        "idleSeconds": 30
+      },
+      "out": "baseline.json"
+    }
+  },
+  {
+    "tool": "get_blueprint",
+    "arguments": {
+      "file": "blueprint.vfx.json"
+    },
+    "result": {
+      "revision": "a30c38cd1d7d1a8d538b0ba8349916658b02878df4ebcd11520e0297f55b33d7",
+      "kind": "vfx-blueprint",
+      "stage": null,
+      "coordinates": "Node positions are editor pixels. Layer parameters use original canvas pixels, clockwise degrees and normalized layer-life curves.",
+      "controlOrder": [
+        "size",
+        "intensity",
+        "hue",
+        "direction"
+      ],
+      "controls": [
+        {
+          "id": "size",
+          "name": "Size",
+          "min": 0.25,
+          "max": 3,
+          "value": 1,
+          "step": 0.05,
+          "bindings": [
+            {
+              "layer": "shockwave",
+              "target": "scale",
+              "mode": "multiply",
+              "factor": 1,
+              "offset": 0
+            },
+            {
+              "layer": "sparks",
+              "target": "scale",
+              "mode": "multiply",
+              "factor": 1,
+              "offset": 0
+            }
+          ],
+          "nodeId": "control:size"
+        },
+        {
+          "id": "intensity",
+          "name": "Intensity",
+          "min": 0.1,
+          "max": 2,
+          "value": 1,
+          "step": 0.05,
+          "bindings": [
+            {
+              "layer": "shockwave",
+              "target": "width",
+              "mode": "multiply",
+              "factor": 1,
+              "offset": 0
+            },
+            {
+              "layer": "sparks",
+              "target": "size",
+              "mode": "multiply",
+              "factor": 1,
+              "offset": 0
+            }
+          ],
+          "nodeId": "control:intensity"
+        },
+        {
+          "id": "hue",
+          "name": "Hue",
+          "min": -180,
+          "max": 180,
+          "value": 0,
+          "step": 1,
+          "bindings": [
+            {
+              "layer": "shockwave",
+              "target": "colors.hue",
+              "mode": "set",
+              "factor": 1,
+              "offset": 0
+            },
+            {
+              "layer": "sparks",
+              "target": "colors.hue",
+              "mode": "set",
+              "factor": 1,
+              "offset": 0
+            }
+          ],
+          "nodeId": "control:hue"
+        },
+        {
+          "id": "direction",
+          "name": "Direction",
+          "min": -180,
+          "max": 180,
+          "value": 35,
+          "step": 1,
+          "bindings": [
+            {
+              "layer": "shockwave",
+              "target": "rotation",
+              "mode": "add",
+              "factor": 1,
+              "offset": 0
+            }
+          ],
+          "nodeId": "control:direction"
+        }
+      ],
+      "layers": [
+        {
+          "id": "shockwave",
+          "nodeId": "layer:shockwave",
+          "name": "Impact ring",
+          "type": "ring",
+          "locked": false,
+          "visible": true,
+          "inputs": [
+            {
+              "path": "position.x",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "position.y",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "rotation",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "scale",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "glow.strength",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "glow.blur",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "arc",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "segments",
+              "kind": "number",
+              "integer": true
+            },
+            {
+              "path": "modifiers.violet-edge.thickness",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "modifiers.violet-edge.alpha",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "opacity",
+              "kind": "curve"
+            },
+            {
+              "path": "motion.x",
+              "kind": "curve"
+            },
+            {
+              "path": "motion.y",
+              "kind": "curve"
+            },
+            {
+              "path": "motion.rotation",
+              "kind": "curve"
+            },
+            {
+              "path": "motion.scale",
+              "kind": "curve"
+            },
+            {
+              "path": "radius",
+              "kind": "curve"
+            },
+            {
+              "path": "width",
+              "kind": "curve"
+            },
+            {
+              "path": "colors.hue",
+              "kind": "hue"
+            }
+          ],
+          "modifiers": [
+            {
+              "id": "violet-edge",
+              "enabled": true,
+              "type": "outline",
+              "thickness": 1,
+              "color": "#ab7bff",
+              "alpha": 0.7
+            }
+          ]
+        },
+        {
+          "id": "sparks",
+          "nodeId": "layer:sparks",
+          "name": "Flying sparks",
+          "type": "particles",
+          "locked": false,
+          "visible": true,
+          "inputs": [
+            {
+              "path": "position.x",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "position.y",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "rotation",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "scale",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "glow.strength",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "glow.blur",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "count",
+              "kind": "number",
+              "integer": true
+            },
+            {
+              "path": "rate",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "speed.0",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "speed.1",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "angle",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "spread",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "spawn.radius",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "spawn.width",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "spawn.height",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "gravity.x",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "gravity.y",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "drag",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "turbulence",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "frequency",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "stretch",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "trail.seconds",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "trail.width",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "trail.opacity",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "opacity",
+              "kind": "curve"
+            },
+            {
+              "path": "motion.x",
+              "kind": "curve"
+            },
+            {
+              "path": "motion.y",
+              "kind": "curve"
+            },
+            {
+              "path": "motion.rotation",
+              "kind": "curve"
+            },
+            {
+              "path": "motion.scale",
+              "kind": "curve"
+            },
+            {
+              "path": "size",
+              "kind": "curve"
+            },
+            {
+              "path": "colors.hue",
+              "kind": "hue"
+            }
+          ],
+          "modifiers": []
+        }
+      ],
+      "connections": [
+        {
+          "control": "size",
+          "index": 0,
+          "source": "control:size",
+          "sourcePort": "value",
+          "destination": "layer:shockwave",
+          "layer": "shockwave",
+          "target": "scale",
+          "mode": "multiply",
+          "factor": 1,
+          "offset": 0,
+          "editable": true,
+          "disconnectEdit": {
+            "action": "disconnect_control",
+            "control": "size",
+            "index": 0
+          }
+        },
+        {
+          "control": "size",
+          "index": 1,
+          "source": "control:size",
+          "sourcePort": "value",
+          "destination": "layer:sparks",
+          "layer": "sparks",
+          "target": "scale",
+          "mode": "multiply",
+          "factor": 1,
+          "offset": 0,
+          "editable": true,
+          "disconnectEdit": {
+            "action": "disconnect_control",
+            "control": "size",
+            "index": 1
+          }
+        },
+        {
+          "control": "intensity",
+          "index": 0,
+          "source": "control:intensity",
+          "sourcePort": "value",
+          "destination": "layer:shockwave",
+          "layer": "shockwave",
+          "target": "width",
+          "mode": "multiply",
+          "factor": 1,
+          "offset": 0,
+          "editable": true,
+          "disconnectEdit": {
+            "action": "disconnect_control",
+            "control": "intensity",
+            "index": 0
+          }
+        },
+        {
+          "control": "intensity",
+          "index": 1,
+          "source": "control:intensity",
+          "sourcePort": "value",
+          "destination": "layer:sparks",
+          "layer": "sparks",
+          "target": "size",
+          "mode": "multiply",
+          "factor": 1,
+          "offset": 0,
+          "editable": true,
+          "disconnectEdit": {
+            "action": "disconnect_control",
+            "control": "intensity",
+            "index": 1
+          }
+        },
+        {
+          "control": "hue",
+          "index": 0,
+          "source": "control:hue",
+          "sourcePort": "value",
+          "destination": "layer:shockwave",
+          "layer": "shockwave",
+          "target": "colors.hue",
+          "mode": "set",
+          "factor": 1,
+          "offset": 0,
+          "editable": true,
+          "disconnectEdit": {
+            "action": "disconnect_control",
+            "control": "hue",
+            "index": 0
+          }
+        },
+        {
+          "control": "hue",
+          "index": 1,
+          "source": "control:hue",
+          "sourcePort": "value",
+          "destination": "layer:sparks",
+          "layer": "sparks",
+          "target": "colors.hue",
+          "mode": "set",
+          "factor": 1,
+          "offset": 0,
+          "editable": true,
+          "disconnectEdit": {
+            "action": "disconnect_control",
+            "control": "hue",
+            "index": 1
+          }
+        },
+        {
+          "control": "direction",
+          "index": 0,
+          "source": "control:direction",
+          "sourcePort": "value",
+          "destination": "layer:shockwave",
+          "layer": "shockwave",
+          "target": "rotation",
+          "mode": "add",
+          "factor": 1,
+          "offset": 0,
+          "editable": true,
+          "disconnectEdit": {
+            "action": "disconnect_control",
+            "control": "direction",
+            "index": 0
+          }
+        }
+      ],
+      "imagePipeline": [
+        {
+          "layer": "shockwave",
+          "order": [
+            "layer:shockwave",
+            "modifier:shockwave:violet-edge",
+            "output"
+          ]
+        },
+        {
+          "layer": "sparks",
+          "order": [
+            "layer:sparks",
+            "output"
+          ]
+        }
+      ],
+      "positions": {},
+      "editing": {
+        "tool": "apply_edits",
+        "connect": {
+          "action": "connect_control",
+          "control": "CONTROL_ID",
+          "layer": "LAYER_ID",
+          "target": "INPUT_PATH",
+          "mode": "multiply",
+          "factor": 1,
+          "offset": 0
+        },
+        "controlValue": {
+          "action": "creative",
+          "operation": {
+            "action": "set_control",
+            "id": "CONTROL_ID",
+            "value": 1
+          }
+        },
+        "draft": "Use the same edits in observe_project with the source revision before committing. Binding indices refer to this revision only.",
+        "pipeline": "Image wires show ordered modifiers then composition. Reorder modifiers through creative put_modifier index; arbitrary image graph rewiring is not supported."
+      }
+    }
+  },
+  {
+    "tool": "apply_edits",
+    "arguments": {
+      "file": "blueprint.vfx.json",
+      "revision": "a30c38cd1d7d1a8d538b0ba8349916658b02878df4ebcd11520e0297f55b33d7",
+      "edits": [
+        {
+          "action": "update_project",
+          "patch": {
+            "editor": {
+              "blueprint": {
+                "control:direction": {
+                  "x": -80,
+                  "y": 480
+                },
+                "layer:shockwave": {
+                  "x": 370,
+                  "y": 60
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "result": {
+      "file": "blueprint.vfx.json",
+      "revision": "c0990459a5b35db5ecdd87d826ae3e26ed13485f02ae1f133f06989a108ccad0",
+      "dryRun": false,
+      "operations": 1,
+      "changes": {
+        "added": [],
+        "removed": [],
+        "changed": [],
+        "reordered": false,
+        "controlsChanged": false
+      }
+    }
+  },
+  {
+    "tool": "analyze_project",
+    "arguments": {
+      "file": "blueprint.vfx.json",
+      "baseline": "baseline.json"
+    },
+    "result": {
+      "kind": "vfx-analysis",
+      "formatVersion": 1,
+      "view": "effect",
+      "canvas": {
+        "width": 128,
+        "height": 128
+      },
+      "duration": 1.2,
+      "fps": 30,
+      "frames": [
+        {
+          "time": 0.15,
+          "frameIndex": 4,
+          "sha256": "7a4f8b038af0c0060b1d10841cbd3d2a7406f6fbf0b5f7ec8e01b6ea50cab7cc",
+          "visiblePixels": 2064,
+          "alphaMass": 838.2,
+          "bounds": {
+            "x": 41,
+            "y": 40,
+            "width": 47,
+            "height": 49
+          },
+          "touches": []
+        },
+        {
+          "time": 0.35,
+          "frameIndex": 10,
+          "sha256": "368c160fc82730f773402bc078703d73fa0183fe9458e3d4fa7bbd54d19f5462",
+          "visiblePixels": 5144,
+          "alphaMass": 585.263,
+          "bounds": {
+            "x": 24,
+            "y": 24,
+            "width": 81,
+            "height": 81
+          },
+          "touches": []
+        },
+        {
+          "time": 0.55,
+          "frameIndex": 16,
+          "sha256": "c303dd35bcd0442a8db13f3a81c0916620c0fa6e2a5d75e651609d67528886fe",
+          "visiblePixels": 1418,
+          "alphaMass": 37.576,
+          "bounds": {
+            "x": 15,
+            "y": 17,
+            "width": 98,
+            "height": 94
+          },
+          "touches": []
+        }
+      ],
+      "summary": {
+        "sampledFrames": 3,
+        "visibleFrames": 3,
+        "emptyFrames": 0,
+        "firstVisibleTime": 0.15,
+        "lastVisibleTime": 0.55,
+        "peakAlphaMass": {
+          "time": 0.15,
+          "value": 838.2
+        },
+        "peakVisiblePixels": {
+          "time": 0.35,
+          "value": 5144
+        },
+        "edgeTimes": []
+      },
+      "parity": {
+        "checked": true,
+        "passed": true,
+        "order": "reverse",
+        "mismatches": []
+      },
+      "file": "blueprint.vfx.json",
+      "revision": "c0990459a5b35db5ecdd87d826ae3e26ed13485f02ae1f133f06989a108ccad0",
+      "ok": true,
+      "baseline": {
+        "passed": true,
+        "viewMatch": true,
+        "dimensionMatch": true,
+        "comparedFrames": 3,
+        "missingTimes": [],
+        "mismatches": []
+      },
+      "renderer": {
+        "launches": 1,
+        "requests": 5,
+        "reuses": 4,
+        "active": 0,
+        "idle": 1,
+        "maxWorkers": 2,
+        "idleSeconds": 30
+      }
+    }
+  },
+  {
+    "tool": "preflight_export",
+    "arguments": {
+      "file": "blueprint.vfx.json",
+      "options": {
+        "format": "gif",
+        "scale": 3
+      }
+    },
+    "result": {
+      "file": "blueprint.vfx.json",
+      "revision": "c0990459a5b35db5ecdd87d826ae3e26ed13485f02ae1f133f06989a108ccad0",
+      "ok": true,
+      "checks": [
+        {
+          "resource": "imageWidth",
+          "used": 384,
+          "limit": 4096,
+          "passed": true
+        },
+        {
+          "resource": "imageHeight",
+          "used": 384,
+          "limit": 4096,
+          "passed": true
+        },
+        {
+          "resource": "imagePixels",
+          "used": 147456,
+          "limit": 4194304,
+          "passed": true
+        },
+        {
+          "resource": "frames",
+          "used": 36,
+          "limit": 300,
+          "passed": true
+        },
+        {
+          "resource": "sourcePixels",
+          "used": 589824,
+          "limit": 16777216,
+          "passed": true
+        },
+        {
+          "resource": "outputPixels",
+          "used": 5308416,
+          "limit": 33554432,
+          "passed": true
+        }
+      ],
+      "plan": {
+        "options": {
+          "view": "effect",
+          "format": "gif",
+          "scale": 3,
+          "padding": 2,
+          "extrude": false
+        },
+        "pixels": {
+          "scale": 3,
+          "colors": 0,
+          "dither": false,
+          "pixelSize": 1,
+          "alphaLevels": 0
+        },
+        "fps": 30,
+        "count": 36,
+        "start": 0,
+        "end": 1.2,
+        "duration": 1.2,
+        "width": 384,
+        "height": 384,
+        "atlas": null
+      },
+      "estimatedSourceRgbaBytes": 2359296,
+      "estimatedOutputRgbaBytes": 21233664,
+      "suggestions": []
+    }
+  },
+  {
+    "tool": "start_export",
+    "arguments": {
+      "file": "blueprint.vfx.json",
+      "revision": "c0990459a5b35db5ecdd87d826ae3e26ed13485f02ae1f133f06989a108ccad0",
+      "out": "gif",
+      "options": {
+        "format": "gif",
+        "scale": 3
+      }
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "queued",
+      "completed": 0,
+      "total": 0
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 0,
+      "total": 0
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 4,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 7,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 11,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 15,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 20,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 24,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 30,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 34,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 36,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "succeeded",
+      "completed": 36,
+      "total": 36,
+      "result": {
+        "directory": "/workspace/vfx-blueprint-agent-0.7.4-release/gif",
+        "files": [
+          "animation.gif",
+          "effect.vfx.json",
+          "metadata.json"
+        ],
+        "revision": "c0990459a5b35db5ecdd87d826ae3e26ed13485f02ae1f133f06989a108ccad0"
+      }
+    }
+  },
+  {
+    "tool": "start_export",
+    "arguments": {
+      "file": "blueprint.vfx.json",
+      "revision": "c0990459a5b35db5ecdd87d826ae3e26ed13485f02ae1f133f06989a108ccad0",
+      "out": "godot",
+      "options": {
+        "format": "godot",
+        "scale": 1
+      }
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-2",
+      "status": "queued",
+      "completed": 0,
+      "total": 0
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-2"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-2",
+      "status": "running",
+      "completed": 0,
+      "total": 0
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-2"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-2",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-2"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-2",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-2"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-2",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-2"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-2",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-2"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-2",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-2"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-2",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-2"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-2",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-2"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-2",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-2"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-2",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-2"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-2",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-2"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-2",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-2"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-2",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-2"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-2",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-2"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-2",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-2"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-2",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-2"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-2",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-2"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-2",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-2"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-2",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-2"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-2",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-2"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-2",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-2"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-2",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-2"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-2",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-2"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-2",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-2"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-2",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-2"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-2",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-2"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-2",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-2"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-2",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-2"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-2",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-2"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-2",
+      "status": "running",
+      "completed": 3,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-2"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-2",
+      "status": "running",
+      "completed": 5,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-2"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-2",
+      "status": "running",
+      "completed": 9,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-2"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-2",
+      "status": "running",
+      "completed": 13,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-2"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-2",
+      "status": "running",
+      "completed": 17,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-2"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-2",
+      "status": "running",
+      "completed": 21,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-2"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-2",
+      "status": "running",
+      "completed": 25,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-2"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-2",
+      "status": "running",
+      "completed": 29,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-2"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-2",
+      "status": "running",
+      "completed": 34,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-2"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-2",
+      "status": "running",
+      "completed": 36,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-2"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-2",
+      "status": "running",
+      "completed": 36,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-2"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-2",
+      "status": "running",
+      "completed": 36,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-2"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-2",
+      "status": "running",
+      "completed": 36,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-2"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-2",
+      "status": "running",
+      "completed": 36,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-2"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-2",
+      "status": "running",
+      "completed": 36,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-2"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-2",
+      "status": "succeeded",
+      "completed": 36,
+      "total": 36,
+      "result": {
+        "directory": "/workspace/vfx-blueprint-agent-0.7.4-release/godot",
+        "files": [
+          "atlas.png",
+          "effect.tres",
+          "IMPORT.txt",
+          "effect.vfx.json",
+          "metadata.json"
+        ],
+        "revision": "c0990459a5b35db5ecdd87d826ae3e26ed13485f02ae1f133f06989a108ccad0"
+      }
+    }
+  },
+  {
+    "tool": "observe_project",
+    "arguments": {
+      "file": "blueprint.vfx.json",
+      "view": "storyboard"
+    },
+    "result": {
+      "file": "blueprint.vfx.json",
+      "revision": "c0990459a5b35db5ecdd87d826ae3e26ed13485f02ae1f133f06989a108ccad0",
+      "draft": false,
+      "scene": {
+        "version": "0.7.4",
+        "name": "Arcane bloom",
+        "seed": 74,
+        "canvas": {
+          "width": 128,
+          "height": 128,
+          "pixelArt": true,
+          "background": "#110f19"
+        },
+        "duration": 1.2,
+        "fps": 30,
+        "loop": true,
+        "coordinates": {
+          "origin": "top-left",
+          "x": "right",
+          "y": "down",
+          "units": "canvas pixels before export scaling",
+          "rotation": "clockwise degrees; zero points right",
+          "position": "layer anchor in canvas pixels, before animated motion",
+          "points": "layer-local offsets from the animated anchor",
+          "geometry": "width/radius/handle offsets and masks are layer-local; worldPoints and pixel bounds are canvas coordinates",
+          "normalized": "x * canvas.width, y * canvas.height",
+          "time": "project seconds; keyframe t is normalized within each layer",
+          "layerOrder": "bottom to top; the last layer is in front"
+        },
+        "time": 0.16666666666666666,
+        "layerCount": 2,
+        "scope": [
+          "shockwave",
+          "sparks"
+        ],
+        "controls": [
+          {
+            "id": "size",
+            "name": "Size",
+            "value": 1,
+            "min": 0.25,
+            "max": 3
+          },
+          {
+            "id": "intensity",
+            "name": "Intensity",
+            "value": 1,
+            "min": 0.1,
+            "max": 2
+          },
+          {
+            "id": "hue",
+            "name": "Hue",
+            "value": 0,
+            "min": -180,
+            "max": 180
+          },
+          {
+            "id": "direction",
+            "name": "Direction",
+            "value": 35,
+            "min": -180,
+            "max": 180
+          }
+        ],
+        "layers": [
+          {
+            "id": "shockwave",
+            "name": "Impact ring",
+            "type": "ring",
+            "order": 0,
+            "visible": true,
+            "locked": false,
+            "baseTransform": {
+              "position": {
+                "x": 64,
+                "y": 64
+              },
+              "rotation": 0,
+              "scale": 1
+            },
+            "resolvedTransform": {
+              "position": {
+                "x": 64,
+                "y": 64
+              },
+              "rotation": 35,
+              "scale": 1
+            },
+            "transform": {
+              "anchor": {
+                "x": 64,
+                "y": 64
+              },
+              "rotation": 35,
+              "scale": 1,
+              "localTime": 0.16666666666666666,
+              "progress": 0.2777777777777778,
+              "localToCanvas": [
+                0.8191520442889918,
+                0.573576436351046,
+                -0.573576436351046,
+                0.8191520442889918,
+                64,
+                64
+              ],
+              "canvasToLocal": [
+                0.8191520442889919,
+                -0.5735764363510462,
+                0.5735764363510462,
+                0.8191520442889919,
+                -89.13462276096244,
+                -15.71683890802853
+              ]
+            },
+            "timing": {
+              "start": 0,
+              "end": 0.6,
+              "duration": 0.6,
+              "repeat": false,
+              "active": true
+            },
+            "opacity": 0.5777777777777778,
+            "geometry": {
+              "type": "ring",
+              "radius": 14.944444444444445,
+              "width": 3.611111111111111,
+              "arc": 360
+            },
+            "mask": null,
+            "modifiers": [
+              {
+                "id": "violet-edge",
+                "type": "outline",
+                "enabled": true
+              }
+            ],
+            "drivenBy": [
+              {
+                "control": "size",
+                "value": 1,
+                "target": "scale",
+                "mode": "multiply",
+                "factor": 1,
+                "offset": 0
+              },
+              {
+                "control": "intensity",
+                "value": 1,
+                "target": "width",
+                "mode": "multiply",
+                "factor": 1,
+                "offset": 0
+              },
+              {
+                "control": "hue",
+                "value": 0,
+                "target": "colors.hue",
+                "mode": "set",
+                "factor": 1,
+                "offset": 0
+              },
+              {
+                "control": "direction",
+                "value": 35,
+                "target": "rotation",
+                "mode": "add",
+                "factor": 1,
+                "offset": 0
+              }
+            ],
+            "pixels": {
+              "visiblePixels": 2121,
+              "alphaMass": 561.49,
+              "bounds": {
+                "x": 39,
+                "y": 39,
+                "width": 50,
+                "height": 50
+              },
+              "touches": []
+            },
+            "geometryBounds": {
+              "x": 40.671797949279366,
+              "y": 40.671797949279366,
+              "width": 46.65640410144127,
+              "height": 46.65640410144127
+            },
+            "state": "visible"
+          },
+          {
+            "id": "sparks",
+            "name": "Flying sparks",
+            "type": "particles",
+            "order": 1,
+            "visible": true,
+            "locked": false,
+            "baseTransform": {
+              "position": {
+                "x": 64,
+                "y": 64
+              },
+              "rotation": 0,
+              "scale": 1
+            },
+            "resolvedTransform": {
+              "position": {
+                "x": 64,
+                "y": 64
+              },
+              "rotation": 0,
+              "scale": 1
+            },
+            "transform": {
+              "anchor": {
+                "x": 64,
+                "y": 64
+              },
+              "rotation": 0,
+              "scale": 1,
+              "localTime": 0.16666666666666666,
+              "progress": 0.16666666666666666,
+              "localToCanvas": [
+                1,
+                0,
+                0,
+                1,
+                64,
+                64
+              ],
+              "canvasToLocal": [
+                1,
+                0,
+                0,
+                1,
+                -64,
+                -64
+              ]
+            },
+            "timing": {
+              "start": 0,
+              "end": 1,
+              "duration": 1,
+              "repeat": false,
+              "active": true
+            },
+            "opacity": "per-particle age",
+            "geometry": {
+              "type": "particles",
+              "mode": "burst",
+              "alive": 120,
+              "sampleLimit": 12,
+              "samples": [
+                {
+                  "id": 0,
+                  "x": 78.7311,
+                  "y": 57.7413,
+                  "size": 1.3605,
+                  "alpha": 0.7558,
+                  "color": "#d2b8fc"
+                },
+                {
+                  "id": 1,
+                  "x": 55.0575,
+                  "y": 71.7394,
+                  "size": 1.3747,
+                  "alpha": 0.7637,
+                  "color": "#d3b9fc"
+                },
+                {
+                  "id": 2,
+                  "x": 66.3404,
+                  "y": 60.577,
+                  "size": 1.2847,
+                  "alpha": 0.7137,
+                  "color": "#ceb1fc"
+                },
+                {
+                  "id": 3,
+                  "x": 61.5761,
+                  "y": 48.2004,
+                  "size": 1.3658,
+                  "alpha": 0.7588,
+                  "color": "#d3b9fc"
+                },
+                {
+                  "id": 4,
+                  "x": 55.6912,
+                  "y": 74.6132,
+                  "size": 1.3497,
+                  "alpha": 0.7498,
+                  "color": "#d2b7fc"
+                },
+                {
+                  "id": 5,
+                  "x": 60.0623,
+                  "y": 50.6756,
+                  "size": 1.1741,
+                  "alpha": 0.6523,
+                  "color": "#c9a8fb"
+                },
+                {
+                  "id": 6,
+                  "x": 66.6485,
+                  "y": 59.4263,
+                  "size": 1.2509,
+                  "alpha": 0.6949,
+                  "color": "#cdaefb"
+                },
+                {
+                  "id": 7,
+                  "x": 62.302,
+                  "y": 71.0131,
+                  "size": 1.1935,
+                  "alpha": 0.6631,
+                  "color": "#caa9fb"
+                },
+                {
+                  "id": 8,
+                  "x": 56.2493,
+                  "y": 50.8469,
+                  "size": 0.8213,
+                  "alpha": 0.4563,
+                  "color": "#b689f8"
+                },
+                {
+                  "id": 9,
+                  "x": 70.7068,
+                  "y": 57.6902,
+                  "size": 0.8802,
+                  "alpha": 0.489,
+                  "color": "#b98ef9"
+                },
+                {
+                  "id": 10,
+                  "x": 64.4349,
+                  "y": 54.4649,
+                  "size": 1.3008,
+                  "alpha": 0.7227,
+                  "color": "#cfb3fc"
+                },
+                {
+                  "id": 11,
+                  "x": 75.53,
+                  "y": 60.4232,
+                  "size": 1.2185,
+                  "alpha": 0.6769,
+                  "color": "#cbacfb"
+                }
+              ]
+            },
+            "mask": null,
+            "modifiers": [],
+            "drivenBy": [
+              {
+                "control": "size",
+                "value": 1,
+                "target": "scale",
+                "mode": "multiply",
+                "factor": 1,
+                "offset": 0
+              },
+              {
+                "control": "intensity",
+                "value": 1,
+                "target": "size",
+                "mode": "multiply",
+                "factor": 1,
+                "offset": 0
+              },
+              {
+                "control": "hue",
+                "value": 0,
+                "target": "colors.hue",
+                "mode": "set",
+                "factor": 1,
+                "offset": 0
+              }
+            ],
+            "pixels": {
+              "visiblePixels": 2307,
+              "alphaMass": 473.447,
+              "bounds": {
+                "x": 39,
+                "y": 38,
+                "width": 50,
+                "height": 53
+              },
+              "touches": []
+            },
+            "geometryBounds": {
+              "x": 47.25728044717843,
+              "y": 46.63416528510399,
+              "width": 33.1344336563385,
+              "height": 35.45215152831369
+            },
+            "state": "visible"
+          }
+        ],
+        "view": "storyboard",
+        "draft": false,
+        "frames": [
+          {
+            "time": 0,
+            "frameIndex": 0,
+            "visiblePixels": 400,
+            "alphaMass": 165.224,
+            "bounds": {
+              "x": 54,
+              "y": 54,
+              "width": 20,
+              "height": 20
+            },
+            "touches": [],
+            "cropPixels": 400
+          },
+          {
+            "time": 0.016666666666666666,
+            "frameIndex": 0,
+            "visiblePixels": 576,
+            "alphaMass": 242.976,
+            "bounds": {
+              "x": 52,
+              "y": 52,
+              "width": 24,
+              "height": 24
+            },
+            "touches": [],
+            "cropPixels": 576
+          },
+          {
+            "time": 0.16666666666666666,
+            "frameIndex": 5,
+            "visiblePixels": 2318,
+            "alphaMass": 875.62,
+            "bounds": {
+              "x": 39,
+              "y": 38,
+              "width": 50,
+              "height": 53
+            },
+            "touches": [],
+            "cropPixels": 2318
+          },
+          {
+            "time": 0.3,
+            "frameIndex": 9,
+            "visiblePixels": 4344,
+            "alphaMass": 730.776,
+            "bounds": {
+              "x": 28,
+              "y": 27,
+              "width": 73,
+              "height": 73
+            },
+            "touches": [],
+            "cropPixels": 4344
+          },
+          {
+            "time": 0.3333333333333333,
+            "frameIndex": 10,
+            "visiblePixels": 4862,
+            "alphaMass": 627.42,
+            "bounds": {
+              "x": 25,
+              "y": 25,
+              "width": 78,
+              "height": 78
+            },
+            "touches": [],
+            "cropPixels": 4862
+          },
+          {
+            "time": 0.5,
+            "frameIndex": 15,
+            "visiblePixels": 3783,
+            "alphaMass": 121.694,
+            "bounds": {
+              "x": 17,
+              "y": 17,
+              "width": 94,
+              "height": 94
+            },
+            "touches": [],
+            "cropPixels": 3783
+          }
+        ],
+        "sampling": {
+          "automatic": true,
+          "times": [
+            0,
+            0.016666666666666666,
+            0.16666666666666666,
+            0.3,
+            0.3333333333333333,
+            0.5,
+            0.6,
+            0.6666666666666666,
+            0.8333333333333334,
+            1,
+            1.1666666666666667
+          ],
+          "basis": "largest rendered alpha mass among sampled times; not an exhaustive proof of visibility",
+          "storyboardMode": "active",
+          "emptySamplesOmitted": 5
+        },
+        "reference": {
+          "displayed": false,
+          "excludedFromPixels": true
+        },
+        "warnings": [],
+        "tiles": [
+          {
+            "image": "frame-0.png",
+            "time": 0,
+            "viewport": {
+              "x": 38,
+              "y": 56,
+              "width": 256,
+              "height": 256
+            },
+            "crop": {
+              "x": 0,
+              "y": 0,
+              "width": 128,
+              "height": 128
+            },
+            "pixelsPerCanvasPixel": 2
+          },
+          {
+            "image": "frame-1.png",
+            "time": 0.016666666666666666,
+            "viewport": {
+              "x": 342,
+              "y": 56,
+              "width": 256,
+              "height": 256
+            },
+            "crop": {
+              "x": 0,
+              "y": 0,
+              "width": 128,
+              "height": 128
+            },
+            "pixelsPerCanvasPixel": 2
+          },
+          {
+            "image": "frame-2.png",
+            "time": 0.16666666666666666,
+            "viewport": {
+              "x": 646,
+              "y": 56,
+              "width": 256,
+              "height": 256
+            },
+            "crop": {
+              "x": 0,
+              "y": 0,
+              "width": 128,
+              "height": 128
+            },
+            "pixelsPerCanvasPixel": 2
+          },
+          {
+            "image": "frame-3.png",
+            "time": 0.3,
+            "viewport": {
+              "x": 38,
+              "y": 364,
+              "width": 256,
+              "height": 256
+            },
+            "crop": {
+              "x": 0,
+              "y": 0,
+              "width": 128,
+              "height": 128
+            },
+            "pixelsPerCanvasPixel": 2
+          },
+          {
+            "image": "frame-4.png",
+            "time": 0.3333333333333333,
+            "viewport": {
+              "x": 342,
+              "y": 364,
+              "width": 256,
+              "height": 256
+            },
+            "crop": {
+              "x": 0,
+              "y": 0,
+              "width": 128,
+              "height": 128
+            },
+            "pixelsPerCanvasPixel": 2
+          },
+          {
+            "image": "frame-5.png",
+            "time": 0.5,
+            "viewport": {
+              "x": 646,
+              "y": 364,
+              "width": 256,
+              "height": 256
+            },
+            "crop": {
+              "x": 0,
+              "y": 0,
+              "width": 128,
+              "height": 128
+            },
+            "pixelsPerCanvasPixel": 2
+          }
+        ],
+        "omittedLayerIds": []
+      },
+      "images": [
+        {
+          "name": "observation.png",
+          "role": "annotated",
+          "width": 1108,
+          "height": 660,
+          "file": "blueprint.vfx.json",
+          "revision": "c0990459a5b35db5ecdd87d826ae3e26ed13485f02ae1f133f06989a108ccad0",
+          "draft": false,
+          "uri": "vfx://images/3ef18b7bbd41236045b766c8770ef008ee48cceb403a418f5120ab32bc18bd23",
+          "sha256": "b8ea32b9b521019c6c74b74e4013e81bf2c11144c739bc21b48f493e22a278fd",
+          "mimeType": "image/png",
+          "bytes": 75725
+        },
+        {
+          "name": "frame-0.png",
+          "role": "frame",
+          "width": 128,
+          "height": 128,
+          "time": 0,
+          "file": "blueprint.vfx.json",
+          "revision": "c0990459a5b35db5ecdd87d826ae3e26ed13485f02ae1f133f06989a108ccad0",
+          "draft": false,
+          "uri": "vfx://images/e5b59e171d3acd2bd1879632bd17cab0790f3840c9da0391af31082dd7a06a65",
+          "sha256": "8668f39f798be9bc6628524923babd6ecfe08425731ef28b7e55d4130e39821f",
+          "mimeType": "image/png",
+          "bytes": 1392
+        },
+        {
+          "name": "frame-1.png",
+          "role": "frame",
+          "width": 128,
+          "height": 128,
+          "time": 0.016666666666666666,
+          "file": "blueprint.vfx.json",
+          "revision": "c0990459a5b35db5ecdd87d826ae3e26ed13485f02ae1f133f06989a108ccad0",
+          "draft": false,
+          "uri": "vfx://images/a47307829371eaed4fee9b6261ab40b634fec69b33b1ba7420cf37883b0f7887",
+          "sha256": "51e17cfbe9a3a8b3a22eafbda1d94775f10b251ca428159b8fa8ce1d29baf2b7",
+          "mimeType": "image/png",
+          "bytes": 1723
+        },
+        {
+          "name": "frame-2.png",
+          "role": "frame",
+          "width": 128,
+          "height": 128,
+          "time": 0.16666666666666666,
+          "file": "blueprint.vfx.json",
+          "revision": "c0990459a5b35db5ecdd87d826ae3e26ed13485f02ae1f133f06989a108ccad0",
+          "draft": false,
+          "uri": "vfx://images/17f15212c189f6e26e22e00c98f916b40594f806aaf6ac185447d989295a9cca",
+          "sha256": "9527f10aee4bd408cd545ff48e04f950e4a790341e2c557b1e775c0b297de0a3",
+          "mimeType": "image/png",
+          "bytes": 6474
+        },
+        {
+          "name": "frame-3.png",
+          "role": "frame",
+          "width": 128,
+          "height": 128,
+          "time": 0.3,
+          "file": "blueprint.vfx.json",
+          "revision": "c0990459a5b35db5ecdd87d826ae3e26ed13485f02ae1f133f06989a108ccad0",
+          "draft": false,
+          "uri": "vfx://images/4ed5f2cb2d84cb8fbd53813211cbf361d7cb8fc710945860b2cc336236bb7286",
+          "sha256": "fe6b31fcbcf39153398a7a7626e0a9338e9fddd76dcef883c13b95c6c9bb623b",
+          "mimeType": "image/png",
+          "bytes": 8918
+        },
+        {
+          "name": "frame-4.png",
+          "role": "frame",
+          "width": 128,
+          "height": 128,
+          "time": 0.3333333333333333,
+          "file": "blueprint.vfx.json",
+          "revision": "c0990459a5b35db5ecdd87d826ae3e26ed13485f02ae1f133f06989a108ccad0",
+          "draft": false,
+          "uri": "vfx://images/958c6ae441382096c22ff9cbc0c86f835e6a259089c99087aa459d4e72cb0dd0",
+          "sha256": "a9ec7f5c3ea3c1b6582b1ff01f7f1a23968abba21999022401bfb9d29a76922c",
+          "mimeType": "image/png",
+          "bytes": 8664
+        },
+        {
+          "name": "frame-5.png",
+          "role": "frame",
+          "width": 128,
+          "height": 128,
+          "time": 0.5,
+          "file": "blueprint.vfx.json",
+          "revision": "c0990459a5b35db5ecdd87d826ae3e26ed13485f02ae1f133f06989a108ccad0",
+          "draft": false,
+          "uri": "vfx://images/90ec3e76be52c3dc01e94c6cd690019db044c7059b0c48e315809b097aa142ea",
+          "sha256": "90359ed94d166b0fad481c81ac5b2b32e8ff0bb9ad1995972694499dd135a3e3",
+          "mimeType": "image/png",
+          "bytes": 1045
+        }
+      ],
+      "imageDelivery": {
+        "inline": true,
+        "reason": "inline-and-resources"
+      }
+    }
+  },
+  {
+    "tool": "save_preview",
+    "arguments": {
+      "uri": "vfx://images/3ef18b7bbd41236045b766c8770ef008ee48cceb403a418f5120ab32bc18bd23",
+      "out": "storyboard.png"
+    },
+    "result": {
+      "name": "observation.png",
+      "role": "annotated",
+      "width": 1108,
+      "height": 660,
+      "file": "blueprint.vfx.json",
+      "revision": "c0990459a5b35db5ecdd87d826ae3e26ed13485f02ae1f133f06989a108ccad0",
+      "draft": false,
+      "uri": "vfx://images/3ef18b7bbd41236045b766c8770ef008ee48cceb403a418f5120ab32bc18bd23",
+      "sha256": "b8ea32b9b521019c6c74b74e4013e81bf2c11144c739bc21b48f493e22a278fd",
+      "mimeType": "image/png",
+      "bytes": 75725,
+      "out": "storyboard.png",
+      "absolutePath": "/workspace/vfx-blueprint-agent-0.7.4-release/storyboard.png"
+    }
+  },
+  {
+    "tool": "get_blueprint",
+    "arguments": {
+      "file": "blueprint.vfx.json"
+    },
+    "result": {
+      "revision": "c0990459a5b35db5ecdd87d826ae3e26ed13485f02ae1f133f06989a108ccad0",
+      "kind": "vfx-blueprint",
+      "stage": null,
+      "coordinates": "Node positions are editor pixels. Layer parameters use original canvas pixels, clockwise degrees and normalized layer-life curves.",
+      "controlOrder": [
+        "size",
+        "intensity",
+        "hue",
+        "direction"
+      ],
+      "controls": [
+        {
+          "id": "size",
+          "name": "Size",
+          "min": 0.25,
+          "max": 3,
+          "value": 1,
+          "step": 0.05,
+          "bindings": [
+            {
+              "layer": "shockwave",
+              "target": "scale",
+              "mode": "multiply",
+              "factor": 1,
+              "offset": 0
+            },
+            {
+              "layer": "sparks",
+              "target": "scale",
+              "mode": "multiply",
+              "factor": 1,
+              "offset": 0
+            }
+          ],
+          "nodeId": "control:size"
+        },
+        {
+          "id": "intensity",
+          "name": "Intensity",
+          "min": 0.1,
+          "max": 2,
+          "value": 1,
+          "step": 0.05,
+          "bindings": [
+            {
+              "layer": "shockwave",
+              "target": "width",
+              "mode": "multiply",
+              "factor": 1,
+              "offset": 0
+            },
+            {
+              "layer": "sparks",
+              "target": "size",
+              "mode": "multiply",
+              "factor": 1,
+              "offset": 0
+            }
+          ],
+          "nodeId": "control:intensity"
+        },
+        {
+          "id": "hue",
+          "name": "Hue",
+          "min": -180,
+          "max": 180,
+          "value": 0,
+          "step": 1,
+          "bindings": [
+            {
+              "layer": "shockwave",
+              "target": "colors.hue",
+              "mode": "set",
+              "factor": 1,
+              "offset": 0
+            },
+            {
+              "layer": "sparks",
+              "target": "colors.hue",
+              "mode": "set",
+              "factor": 1,
+              "offset": 0
+            }
+          ],
+          "nodeId": "control:hue"
+        },
+        {
+          "id": "direction",
+          "name": "Direction",
+          "min": -180,
+          "max": 180,
+          "value": 35,
+          "step": 1,
+          "bindings": [
+            {
+              "layer": "shockwave",
+              "target": "rotation",
+              "mode": "add",
+              "factor": 1,
+              "offset": 0
+            }
+          ],
+          "nodeId": "control:direction"
+        }
+      ],
+      "layers": [
+        {
+          "id": "shockwave",
+          "nodeId": "layer:shockwave",
+          "name": "Impact ring",
+          "type": "ring",
+          "locked": false,
+          "visible": true,
+          "inputs": [
+            {
+              "path": "position.x",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "position.y",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "rotation",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "scale",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "glow.strength",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "glow.blur",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "arc",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "segments",
+              "kind": "number",
+              "integer": true
+            },
+            {
+              "path": "modifiers.violet-edge.thickness",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "modifiers.violet-edge.alpha",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "opacity",
+              "kind": "curve"
+            },
+            {
+              "path": "motion.x",
+              "kind": "curve"
+            },
+            {
+              "path": "motion.y",
+              "kind": "curve"
+            },
+            {
+              "path": "motion.rotation",
+              "kind": "curve"
+            },
+            {
+              "path": "motion.scale",
+              "kind": "curve"
+            },
+            {
+              "path": "radius",
+              "kind": "curve"
+            },
+            {
+              "path": "width",
+              "kind": "curve"
+            },
+            {
+              "path": "colors.hue",
+              "kind": "hue"
+            }
+          ],
+          "modifiers": [
+            {
+              "id": "violet-edge",
+              "enabled": true,
+              "type": "outline",
+              "thickness": 1,
+              "color": "#ab7bff",
+              "alpha": 0.7
+            }
+          ]
+        },
+        {
+          "id": "sparks",
+          "nodeId": "layer:sparks",
+          "name": "Flying sparks",
+          "type": "particles",
+          "locked": false,
+          "visible": true,
+          "inputs": [
+            {
+              "path": "position.x",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "position.y",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "rotation",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "scale",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "glow.strength",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "glow.blur",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "count",
+              "kind": "number",
+              "integer": true
+            },
+            {
+              "path": "rate",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "speed.0",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "speed.1",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "angle",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "spread",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "spawn.radius",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "spawn.width",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "spawn.height",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "gravity.x",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "gravity.y",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "drag",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "turbulence",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "frequency",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "stretch",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "trail.seconds",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "trail.width",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "trail.opacity",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "opacity",
+              "kind": "curve"
+            },
+            {
+              "path": "motion.x",
+              "kind": "curve"
+            },
+            {
+              "path": "motion.y",
+              "kind": "curve"
+            },
+            {
+              "path": "motion.rotation",
+              "kind": "curve"
+            },
+            {
+              "path": "motion.scale",
+              "kind": "curve"
+            },
+            {
+              "path": "size",
+              "kind": "curve"
+            },
+            {
+              "path": "colors.hue",
+              "kind": "hue"
+            }
+          ],
+          "modifiers": []
+        }
+      ],
+      "connections": [
+        {
+          "control": "size",
+          "index": 0,
+          "source": "control:size",
+          "sourcePort": "value",
+          "destination": "layer:shockwave",
+          "layer": "shockwave",
+          "target": "scale",
+          "mode": "multiply",
+          "factor": 1,
+          "offset": 0,
+          "editable": true,
+          "disconnectEdit": {
+            "action": "disconnect_control",
+            "control": "size",
+            "index": 0
+          }
+        },
+        {
+          "control": "size",
+          "index": 1,
+          "source": "control:size",
+          "sourcePort": "value",
+          "destination": "layer:sparks",
+          "layer": "sparks",
+          "target": "scale",
+          "mode": "multiply",
+          "factor": 1,
+          "offset": 0,
+          "editable": true,
+          "disconnectEdit": {
+            "action": "disconnect_control",
+            "control": "size",
+            "index": 1
+          }
+        },
+        {
+          "control": "intensity",
+          "index": 0,
+          "source": "control:intensity",
+          "sourcePort": "value",
+          "destination": "layer:shockwave",
+          "layer": "shockwave",
+          "target": "width",
+          "mode": "multiply",
+          "factor": 1,
+          "offset": 0,
+          "editable": true,
+          "disconnectEdit": {
+            "action": "disconnect_control",
+            "control": "intensity",
+            "index": 0
+          }
+        },
+        {
+          "control": "intensity",
+          "index": 1,
+          "source": "control:intensity",
+          "sourcePort": "value",
+          "destination": "layer:sparks",
+          "layer": "sparks",
+          "target": "size",
+          "mode": "multiply",
+          "factor": 1,
+          "offset": 0,
+          "editable": true,
+          "disconnectEdit": {
+            "action": "disconnect_control",
+            "control": "intensity",
+            "index": 1
+          }
+        },
+        {
+          "control": "hue",
+          "index": 0,
+          "source": "control:hue",
+          "sourcePort": "value",
+          "destination": "layer:shockwave",
+          "layer": "shockwave",
+          "target": "colors.hue",
+          "mode": "set",
+          "factor": 1,
+          "offset": 0,
+          "editable": true,
+          "disconnectEdit": {
+            "action": "disconnect_control",
+            "control": "hue",
+            "index": 0
+          }
+        },
+        {
+          "control": "hue",
+          "index": 1,
+          "source": "control:hue",
+          "sourcePort": "value",
+          "destination": "layer:sparks",
+          "layer": "sparks",
+          "target": "colors.hue",
+          "mode": "set",
+          "factor": 1,
+          "offset": 0,
+          "editable": true,
+          "disconnectEdit": {
+            "action": "disconnect_control",
+            "control": "hue",
+            "index": 1
+          }
+        },
+        {
+          "control": "direction",
+          "index": 0,
+          "source": "control:direction",
+          "sourcePort": "value",
+          "destination": "layer:shockwave",
+          "layer": "shockwave",
+          "target": "rotation",
+          "mode": "add",
+          "factor": 1,
+          "offset": 0,
+          "editable": true,
+          "disconnectEdit": {
+            "action": "disconnect_control",
+            "control": "direction",
+            "index": 0
+          }
+        }
+      ],
+      "imagePipeline": [
+        {
+          "layer": "shockwave",
+          "order": [
+            "layer:shockwave",
+            "modifier:shockwave:violet-edge",
+            "output"
+          ]
+        },
+        {
+          "layer": "sparks",
+          "order": [
+            "layer:sparks",
+            "output"
+          ]
+        }
+      ],
+      "positions": {
+        "control:direction": {
+          "x": -80,
+          "y": 480
+        },
+        "layer:shockwave": {
+          "x": 370,
+          "y": 60
+        }
+      },
+      "editing": {
+        "tool": "apply_edits",
+        "connect": {
+          "action": "connect_control",
+          "control": "CONTROL_ID",
+          "layer": "LAYER_ID",
+          "target": "INPUT_PATH",
+          "mode": "multiply",
+          "factor": 1,
+          "offset": 0
+        },
+        "controlValue": {
+          "action": "creative",
+          "operation": {
+            "action": "set_control",
+            "id": "CONTROL_ID",
+            "value": 1
+          }
+        },
+        "draft": "Use the same edits in observe_project with the source revision before committing. Binding indices refer to this revision only.",
+        "pipeline": "Image wires show ordered modifiers then composition. Reorder modifiers through creative put_modifier index; arbitrary image graph rewiring is not supported."
+      }
+    }
+  }
+]

@@ -23,12 +23,16 @@ jobs:
       - run: npm run build
       - run: npm run test:e2e
       - run: npm pack --ignore-scripts
+      - run: node scripts/package-release.mjs
       - uses: actions/upload-artifact@v4
         with:
-          name: vfx-maker-0.7.3
-          path: vfx-maker-0.7.3.tgz
+          name: vfx-maker-0.7.4
+          path: |
+            vfx-maker-0.7.4.tgz
+            vfx-maker-0.7.4-studio.zip
+            vfx-maker-0.7.4-studio.zip.sha256
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: browser-checks-0.7.3
+          name: browser-checks-0.7.4
           path: test-results

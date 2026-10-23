@@ -157,7 +157,7 @@ test("MCP observes, previews a draft, commits once and verifies exact exported p
   test.setTimeout(120000);
   const s = await session();
   try {
-    expect((await s.client.listTools()).tools).toHaveLength(38);
+    expect((await s.client.listTools()).tools).toHaveLength(40);
     expect((await s.call("capabilities")).coordinates.origin).toBe("top-left");
     expect(
       (await s.client.readResource({ uri: "vfx://guide" })).contents[0],

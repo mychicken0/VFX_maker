@@ -1,0 +1,1 @@
+Godot 4: assign effect.tres to AnimatedSprite2D.sprite_frames. Set Texture Filter to Nearest for pixel art. This is a baked animation.

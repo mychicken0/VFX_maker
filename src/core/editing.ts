@@ -10,6 +10,18 @@ import { parameterTargets } from "./parameters.js";
 export function cleanupGroups(project: Project): Project {
   return parseProject({
     ...project,
+    ...(project.stage
+      ? {
+          stage: {
+            ...project.stage,
+            layers: Object.fromEntries(
+              Object.entries(project.stage.layers).filter(([id]) =>
+                project.layers.some((l) => l.id === id),
+              ),
+            ),
+          },
+        }
+      : {}),
     controls: project.controls.map((c) => ({
       ...c,
       bindings: c.bindings.filter((b) => {

@@ -1,15 +1,64 @@
-# VFX Maker 0.7.3
+# VFX Maker 0.7.4 — AI-native pixel VFX studio
 
-**A visual VFX studio built with TypeScript, PixiJS 8 and React 19.**
-Pick an effect, adjust Size, Intensity and Hue, and export it for your game.
-Open layer settings when you want to reshape a sword slash, add procedural
-textures or build your own modifier stack. The same Pixi renderer powers the browser editor, Terminal and MCP.
+**Draw and customize effects in a visual editor. Let an AI agent use the same tools through MCP.**
+Built with TypeScript, PixiJS 8 and React 19. MIT licensed, local, and usable from
+any game/project folder. The browser editor, Terminal and MCP share validated
+project operations and the same renderer.
 
-**0.7.3:** multi-project batches, direct gradients for gray smoke, numeric
-render regression QA, warm MCP renderers, activity-focused storyboards and
-64-layer projects. [Release and measured checks](docs/RELEASE_0.7.3.md).
+**0.7.4:** larger canvas-first workspace, comfortable text sizes, direct Move /
+Scale / Rotate tools, editable pen/Bezier paths and draggable curves, a resizable
+and zoomable timeline, **Blueprint** for visual parameter connections, and a
+separate **2.5D / 3D Stage** for camera-baked game effects.
+[Release notes](docs/RELEASE_0.7.4.md) · [Research and upstream licenses](docs/RESEARCH_0.7.4.md).
 
 ![VFX Maker Studio](examples/studio.png)
+
+<details>
+<summary>Detailed Blueprint workspace</summary>
+
+![Editable control connections and live preview](examples/blueprint.png)
+
+</details>
+
+## AI-native, with results an agent can verify
+
+MCP exposes **40 tools**: discovery and schemas, editable projects, layer/path
+operations, Blueprint ports and connections, annotated PNG previews, exact canvas
+coordinates, dry-run transactions, revisions/backups, independent project batches,
+render budget preflight, numeric RGBA parity/baselines and game exports.
+
+A practical workflow is **capabilities → new_project → get_blueprint /
+observe_project → preview edits → apply_edits → analyze_project → export**.
+Agents can edit the same parameters and paths as a person, then open the resulting
+`.vfx.json` in Studio. Image resources can be read/saved when a host omits inline
+images; an agent must report that limitation rather than claiming to have seen a preview.
+
+This is a local authoring tool for external MCP clients; Studio does not contain a
+hosted AI model or chat service. [MCP setup and examples](docs/MCP.md) ·
+[Shared Blueprint operations](docs/BLUEPRINT.md) ·
+[Real MCP-created effect, transcript and QA](examples/blueprint-agent/README.md).
+
+## Optional 2.5D / 3D Stage
+
+**2D remains the default editor.** Open **2.5D / 3D** for a separate workspace:
+isometric or perspective camera, orbit controls, ground/upright/billboard planes,
+per-layer depth and camera exports. Advanced settings stay folded.
+The same editable effect layers become textured planes; this release does not
+simulate volumetric XYZ particles. GIFs, atlases and game exports bake the selected
+camera, with grid/axes excluded. Agents use `get_stage`, shared edit batches,
+`render_preview` and `analyze_project` with `view:"stage"`, and export `options.view`.
+[Stage guide](docs/STAGE.md) · [Editable examples and MCP evidence](examples/stage/README.md).
+
+<details>
+<summary>Camera-stage GIF examples</summary>
+
+| Isometric healing field                                                                   | Crimson cross in depth                                                                 |
+| ----------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| ![Healing field through an isometric camera](examples/stage/isometric-heal/animation.gif) | ![Sword planes through a perspective camera](examples/stage/depth-cross/animation.gif) |
+
+[Open the projects](examples/stage/README.md). These are camera-baked exports.
+
+</details>
 
 ## Showcase
 
@@ -32,6 +81,15 @@ Actual GIFs exported by VFX Maker. Each caption opens its editable project.
 
 ## Run
 
+For people using Studio: download **vfx-maker-0.7.4-studio.zip** from the
+[release](https://github.com/mychicken0/VFX_maker/releases/tag/v0.7.4), extract it,
+and open **Start VFX Maker.cmd** on Windows or **Start VFX Maker.command** on macOS.
+On Linux run `./Start-VFX-Maker.sh` (or `node launch.mjs`). Install **Node.js 24 LTS**
+once first. The first launch installs dependencies locally; subsequent launches
+open Studio in your browser. Keep the launcher Terminal running while editing.
+These are Node launchers, not a bundled desktop binary; Windows/macOS scripts
+have not been tested on those operating systems.
+
 Requires **Node 22.18+** (Node 24 recommended). From source:
 
 ```bash
@@ -40,10 +98,10 @@ npm run build
 node dist/cli.js studio --open
 ```
 
-Or install the prepared `vfx-maker-0.7.3.tgz` once and use it in any folder:
+Or install the prepared `vfx-maker-0.7.4.tgz` once and use it in any folder:
 
 ```bash
-npm install -g /path/to/vfx-maker-0.7.3.tgz
+npm install -g /path/to/vfx-maker-0.7.4.tgz
 cd /path/to/your/game
 vfx studio --open
 ```
@@ -62,8 +120,18 @@ tested; macOS, Windows, Firefox and Safari are not verified.
 
 ## Customize visually
 
-- Adjust **Size / Intensity / Hue** at the top of the Inspector. Advanced control
-  bindings stay folded away and can drive several layer properties together.
+- The canvas fills available space; **Focus canvas** hides panels for more room. **Library** starts closed; open it for Effects,
+  layers and assets. **Make it yours** and advanced options start folded.
+- Use **Move / Scale / Rotate** on the canvas. Wheel zooms at your cursor, middle
+  drag pans, **F** fits; **V / S / R / P** select transform/point tools. Shift when
+  starting a rotation snaps it to 15° increments.
+- **Pen** places points; Enter or double-click finishes, Escape cancels. **Points**
+  inserts/deletes/smooths anchors and edits coordinates. Inspector curve points
+  can be dragged in time/value; each completed drag is one undo.
+- Drag the thick timeline divider to resize, **+ / −** to zoom time, **Fit** to
+  reset horizontal zoom and **Focus timeline** to expand it. Text size is adjustable.
+- Open **Make it yours · size & color** for Size / Intensity / Hue. Recolor can set
+  real gradients, including gray smoke. Detailed bindings stay folded.
 - Add **Modifiers** to a layer: outline, pixel blocks, color replacement/ramp,
   shockwave, noise warp or dissolve. Reorder or bypass steps independently.
 - Save selected layers under **Saved**, then insert them into another project.
@@ -209,7 +277,7 @@ For clients with `mcpServers`, merge this entry into their settings:
 }
 ```
 
-38 tools cover templates, schemas, portable projects, layer/group transforms,
+40 tools cover templates, schemas, portable projects, layer/group transforms,
 keyframes, backups and restoration, direct layer updates,
 embedded assets, inline image previews, PNG optimization, canvas resizing,
 recoloring, ordered modifiers, macro controls, components, variants, exports and
@@ -259,6 +327,11 @@ See [pixel workflows](docs/PIXEL_WORKFLOWS.md),
 [0.7.2 agent tools](docs/RELEASE_0.7.2.md),
 [0.7.1 UI fixes](docs/RELEASE_0.7.1.md),
 [0.7.0 features](docs/RELEASE_0.7.0.md),
-[validation](docs/VALIDATION_0.7.3.md),
+[validation](docs/VALIDATION_0.7.4.md),
 [previous authoring release](docs/RELEASE_0.6.0.md), and
 [project compatibility](docs/MIGRATION.md).
+
+## License
+
+VFX Maker application code is [MIT licensed](LICENSE). Dependencies retain their
+own licenses; see [third-party notices](THIRD_PARTY_NOTICES.md).

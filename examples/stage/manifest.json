@@ -1,0 +1,38 @@
+{
+  "version": "0.7.4",
+  "tools": 40,
+  "items": [
+    {
+      "id": "isometric-heal",
+      "name": "Isometric healing field",
+      "preset": "heal_pulse",
+      "view": "stage",
+      "draftKeptSource": true,
+      "draftCommitPngSha256": "6400fc25b50db16b2f2a2cc9eb7338b587af8d0acf775c404c0f36446506a6d9",
+      "parity": {
+        "checked": true,
+        "passed": true,
+        "order": "reverse",
+        "mismatches": []
+      },
+      "gifSha256": "567df324db5029201e38e218ef61d781be812d4db66a5d904d3569180bcc7a78",
+      "gifBytes": 55919
+    },
+    {
+      "id": "depth-cross",
+      "name": "Crimson cross in depth",
+      "preset": "red_magic_cross",
+      "view": "stage",
+      "draftKeptSource": true,
+      "draftCommitPngSha256": "1f11df3243c0fd8875e65045b6bb7c8b2afb01f7365ebf910f1c169582b3c3c9",
+      "parity": {
+        "checked": true,
+        "passed": true,
+        "order": "reverse",
+        "mismatches": []
+      },
+      "gifSha256": "9490a739fe0f166900dd7bd4c322806f7d9da39c7e100390c78286272d887829",
+      "gifBytes": 149635
+    }
+  ]
+}

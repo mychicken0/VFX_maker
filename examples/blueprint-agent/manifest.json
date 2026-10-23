@@ -1,0 +1,34 @@
+{
+  "version": "0.7.4",
+  "tools": 40,
+  "dryRunKeptSource": true,
+  "draftCommittedFrameSha256": "ae42828a2d0f293e35838e3ebc542844e20afa836fe24b0df6161e9d5a74dc6e",
+  "reverseOrderParity": {
+    "checked": true,
+    "passed": true,
+    "order": "reverse",
+    "mismatches": []
+  },
+  "editorLayoutPreservedBaseline": {
+    "passed": true,
+    "viewMatch": true,
+    "dimensionMatch": true,
+    "comparedFrames": 3,
+    "missingTimes": [],
+    "mismatches": []
+  },
+  "revision": "c0990459a5b35db5ecdd87d826ae3e26ed13485f02ae1f133f06989a108ccad0",
+  "renderer": {
+    "launches": 1,
+    "requests": 8,
+    "reuses": 7,
+    "active": 0,
+    "idle": 1,
+    "maxWorkers": 2,
+    "idleSeconds": 30
+  },
+  "formats": [
+    "gif",
+    "godot"
+  ]
+}

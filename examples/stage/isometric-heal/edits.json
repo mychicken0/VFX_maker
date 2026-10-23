@@ -1,0 +1,29 @@
+[
+  {
+    "action": "update_project",
+    "patch": {
+      "name": "Isometric healing field"
+    }
+  },
+  {
+    "action": "configure_stage",
+    "patch": {
+      "mode": "2.5d",
+      "projection": "orthographic",
+      "span": 160,
+      "azimuth": 35,
+      "elevation": 35.264,
+      "plane": "ground"
+    }
+  },
+  {
+    "action": "place_stage_layer",
+    "id": "sparks",
+    "patch": {
+      "plane": "billboard",
+      "position": {
+        "y": 10
+      }
+    }
+  }
+]

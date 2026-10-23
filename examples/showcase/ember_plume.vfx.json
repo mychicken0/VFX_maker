@@ -1,6 +1,6 @@
 {
   "format": "vfx-maker",
-  "version": "0.7.3",
+  "version": "0.7.4",
   "name": "Ember plume",
   "seed": 42,
   "canvas": {

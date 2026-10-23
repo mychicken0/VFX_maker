@@ -1,0 +1,56 @@
+[
+  {
+    "action": "update_project",
+    "patch": {
+      "name": "Crimson cross in depth"
+    }
+  },
+  {
+    "action": "configure_stage",
+    "patch": {
+      "mode": "3d",
+      "projection": "perspective",
+      "distance": 200,
+      "azimuth": 25,
+      "elevation": 20,
+      "plane": "upright"
+    }
+  },
+  {
+    "action": "place_stage_layer",
+    "id": "cut-a",
+    "patch": {
+      "plane": "upright",
+      "position": {
+        "z": 16
+      }
+    }
+  },
+  {
+    "action": "place_stage_layer",
+    "id": "cut-b",
+    "patch": {
+      "plane": "upright",
+      "position": {
+        "z": -16
+      }
+    }
+  },
+  {
+    "action": "place_stage_layer",
+    "id": "shockwave",
+    "patch": {
+      "plane": "ground",
+      "position": {
+        "y": -20
+      }
+    }
+  },
+  {
+    "action": "place_stage_layer",
+    "id": "sparks",
+    "patch": {
+      "plane": "billboard"
+    }
+  }
+]

@@ -1,3 +1,4 @@
+import { editingWorkspace } from "./workspace-helpers.js";
 import { expect, test, type Page } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 import { PNG } from "pngjs";
@@ -26,6 +27,7 @@ async function snapshot(page: Page): Promise<Project> {
 }
 async function start(page: Page) {
   await page.goto("/");
+  await editingWorkspace(page);
   await button(page, "Pause").click();
   await page.getByLabel("Playhead", { exact: true }).fill("0.3");
   await expect(page.locator(".pixi-host canvas")).toBeVisible();
@@ -432,6 +434,8 @@ test("new dialogs and advanced disclosures stay reachable on narrow and short sc
       await page.evaluate(() => document.documentElement.scrollWidth),
     ).toBe(width);
     await button(page, "Close dialog").click();
+    if (!(await button(page, "Timing tools").isVisible()))
+      await button(page, "Focus timeline").click();
     await button(page, "Timing tools").click();
     await expect(
       page.getByRole("dialog", { name: "Timing tools" }),

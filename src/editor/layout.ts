@@ -1,18 +1,20 @@
 import { useEffect, useState } from "react";
 import { z } from "zod";
 const schema = z.object({
-  left: z.number().min(180).max(380),
-  right: z.number().min(240).max(420),
-  timeline: z.number().min(90).max(400),
+  left: z.number().min(180).max(520),
+  right: z.number().min(240).max(640),
+  timeline: z.number().min(140).max(1600),
+  textScale: z.number().min(1).max(1.4).default(1),
   leftOpen: z.boolean(),
   rightOpen: z.boolean(),
   timelineOpen: z.boolean(),
 });
 const defaults = {
-  left: 246,
-  right: 292,
-  timeline: 230,
-  leftOpen: true,
+  left: 270,
+  right: 326,
+  timeline: 220,
+  textScale: 1,
+  leftOpen: false,
   rightOpen: true,
   timelineOpen: true,
 };
@@ -29,6 +31,10 @@ export function useStudioLayout() {
   });
   const [drawer, setDrawer] = useState<"left" | "right" | null>(null);
   const compact = size.width < 1000;
+  const short = size.height < 560;
+  useEffect(() => {
+    if (short) setLayout((l) => ({ ...l, timelineOpen: false }));
+  }, [short]);
   useEffect(() => {
     const onResize = () => setSize({ width: innerWidth, height: innerHeight });
     window.addEventListener("resize", onResize);
@@ -49,7 +55,7 @@ export function useStudioLayout() {
   );
   const left = Math.max(180, Math.floor(layout.left * factor)),
     right = Math.max(240, Math.floor(layout.right * factor));
-  const timeline = Math.max(90, Math.min(layout.timeline, size.height - 300));
+  const timeline = Math.max(140, Math.min(layout.timeline, size.height - 260));
   const toggle = (panel: "left" | "right" | "timeline") => {
     if (compact && panel !== "timeline")
       setDrawer((d) => (d === panel ? null : panel));
@@ -62,9 +68,13 @@ export function useStudioLayout() {
     setLayout((l) => ({
       ...l,
       [panel]: Math.max(
-        panel === "left" ? 180 : panel === "right" ? 240 : 90,
+        panel === "left" ? 180 : panel === "right" ? 240 : 140,
         Math.min(
-          panel === "left" ? 380 : panel === "right" ? 420 : 400,
+          panel === "left"
+            ? 520
+            : panel === "right"
+              ? 640
+              : Math.max(140, size.height - 260),
           l[panel] + delta,
         ),
       ),
@@ -101,6 +111,8 @@ export function useStudioLayout() {
     toggle,
     resize,
     drag,
+    setTextScale: (textScale: number) =>
+      setLayout((l) => ({ ...l, textScale })),
     reset: () => {
       setLayout(defaults);
       setDrawer(null);
@@ -108,9 +120,10 @@ export function useStudioLayout() {
     style: {
       "--left-size": `${leftVisible && !compact ? left : 0}px`,
       "--right-size": `${rightVisible && !compact ? right : 0}px`,
-      "--left-handle": leftVisible && !compact ? "6px" : "0px",
-      "--right-handle": rightVisible && !compact ? "6px" : "0px",
+      "--left-handle": leftVisible && !compact ? "10px" : "0px",
+      "--right-handle": rightVisible && !compact ? "10px" : "0px",
       "--timeline-size": `${layout.timelineOpen ? timeline : 43}px`,
+      "--ui-text-scale": layout.textScale,
     } as React.CSSProperties,
   };
 }

@@ -1,3 +1,4 @@
+import { editingWorkspace } from "./workspace-helpers.js";
 import { test, expect, type Page } from "@playwright/test";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
@@ -335,6 +336,7 @@ test("64-layer Studio remains scrollable and direct color changes are one undoab
     ),
   });
   await page.goto("/");
+  await editingWorkspace(page);
   await page.getByRole("button", { name: "Pause", exact: true }).click();
   await page
     .locator('input[type="file"]')

@@ -66,6 +66,7 @@ cli
     "--times <seconds>",
     "Comma-separated times; default all export frames",
   )
+  .option("--view <view>", "effect or stage", "effect")
   .option("--no-parity", "Skip reverse-order rerender parity")
   .option("--baseline <file>", "Root-scoped saved analysis JSON")
   .option("--out <file>", "Fresh report JSON file")
@@ -75,7 +76,11 @@ cli
       await service()
     ).analyze(
       file,
-      { times: o.times?.split(",").map(Number), parity: o.parity },
+      {
+        times: o.times?.split(",").map(Number),
+        parity: o.parity,
+        view: o.view,
+      },
       o.ifMatch,
       o.baseline,
       o.out,
@@ -144,7 +149,7 @@ cli
   .command("schema")
   .argument(
     "[kind]",
-    "project, layer, asset, pixels, export, creative, modifier, control, edits, observation, analysis or batch",
+    "project, layer, asset, pixels, export, creative, modifier, control, edits, observation, analysis, batch, stage or stage_placement",
     "project",
   )
   .action(async (kind) => {
@@ -162,6 +167,8 @@ cli
         "observation",
         "analysis",
         "batch",
+        "stage",
+        "stage_placement",
       ].includes(kind)
     )
       throw new Error("Unknown schema kind");
@@ -261,6 +268,7 @@ cli
   });
 cli
   .command("preview <file>")
+  .option("--view <view>", "effect or stage", "effect")
   .option(
     "--time <seconds>",
     "Frame time; omit to sample a visible moment",
@@ -270,7 +278,7 @@ cli
   .action(async (file, o) => {
     const s = await service(),
       dest = await s.store.path(o.out, false),
-      result = await s.preview(file, o.time);
+      result = await s.preview(file, o.time, o.view);
     await writeFile(dest, result.png, { flag: "wx" });
     output({ ...result.metadata, file: dest, sourceFile: file });
   });
@@ -402,6 +410,7 @@ cli
   });
 cli
   .command("export <file>")
+  .option("--view <view>", "effect or camera-baked stage", "effect")
   .requiredOption("--out <directory>", "New output directory")
   .option(
     "--format <format>",
@@ -435,6 +444,7 @@ cli
           o.out,
           {
             format: o.format,
+            view: o.view,
             fps: o.fps,
             start: o.start,
             end: o.end,

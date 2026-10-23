@@ -1,0 +1,89 @@
+{
+  "kind": "vfx-analysis",
+  "formatVersion": 1,
+  "view": "stage",
+  "canvas": {
+    "width": 128,
+    "height": 128
+  },
+  "duration": 1.2,
+  "fps": 30,
+  "frames": [
+    {
+      "time": 0.15,
+      "frameIndex": 4,
+      "sha256": "c1b3266c9856969294a3f8ac6763ffd36c079586bbdb7e637ce895c9d3163536",
+      "visiblePixels": 1156,
+      "alphaMass": 320.518,
+      "bounds": {
+        "x": 24,
+        "y": 28,
+        "width": 50,
+        "height": 60
+      },
+      "touches": []
+    },
+    {
+      "time": 0.35,
+      "frameIndex": 10,
+      "sha256": "ad753fda9136c908576add7cbefffb3fe1c3d1369cac18151658a316cc467725",
+      "visiblePixels": 2903,
+      "alphaMass": 841.141,
+      "bounds": {
+        "x": 24,
+        "y": 27,
+        "width": 83,
+        "height": 79
+      },
+      "touches": []
+    },
+    {
+      "time": 0.55,
+      "frameIndex": 16,
+      "sha256": "2c5dd18947936fd05217bcdbb9f458406895aa275b8d3915d25e81092b9609fc",
+      "visiblePixels": 3017,
+      "alphaMass": 562.404,
+      "bounds": {
+        "x": 24,
+        "y": 28,
+        "width": 83,
+        "height": 77
+      },
+      "touches": []
+    }
+  ],
+  "summary": {
+    "sampledFrames": 3,
+    "visibleFrames": 3,
+    "emptyFrames": 0,
+    "firstVisibleTime": 0.15,
+    "lastVisibleTime": 0.55,
+    "peakAlphaMass": {
+      "time": 0.35,
+      "value": 841.141
+    },
+    "peakVisiblePixels": {
+      "time": 0.55,
+      "value": 3017
+    },
+    "edgeTimes": []
+  },
+  "parity": {
+    "checked": true,
+    "passed": true,
+    "order": "reverse",
+    "mismatches": []
+  },
+  "file": "depth-cross/effect.vfx.json",
+  "revision": "4bdb1730c2d36c3320bd0de07d1d5cb1a5426aa2a4a963165803c0ad74724b9f",
+  "ok": true,
+  "renderer": {
+    "launches": 1,
+    "requests": 8,
+    "reuses": 7,
+    "active": 0,
+    "idle": 1,
+    "maxWorkers": 2,
+    "idleSeconds": 30
+  }
+}

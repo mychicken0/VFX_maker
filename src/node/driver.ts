@@ -7,7 +7,7 @@ import type { ObservationInput } from "../core/observation.js";
 import type { AnalysisInput } from "../core/analysis.js";
 export type RenderRequest =
   | { analysis: AnalysisInput }
-  | { time: number }
+  | { time: number; view?: "effect" | "stage" }
   | { options: ExportOptions; variants?: string[] }
   | { observation: ObservationInput; draft?: boolean };
 export function browserPath(): string | undefined {
@@ -207,6 +207,7 @@ export async function render(
                   "preview.png": await window.vfx.preview(
                     project,
                     request.time,
+                    request.view,
                   ),
                 }
               : request.variants

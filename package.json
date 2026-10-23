@@ -1,9 +1,9 @@
 {
   "name": "vfx-maker",
-  "version": "0.7.3",
-  "description": "Visual VFX authoring with React, PixiJS, a standalone CLI and MCP server",
+  "version": "0.7.4",
+  "description": "AI-native pixel VFX Studio with direct canvas authoring, Blueprint controls, CLI and MCP",
   "type": "module",
-  "license": "UNLICENSED",
+  "license": "MIT",
   "engines": {
     "node": ">=22.18.0"
   },
@@ -26,7 +26,8 @@
     "README.md",
     "docs",
     "examples",
-    "THIRD_PARTY_NOTICES.md"
+    "THIRD_PARTY_NOTICES.md",
+    "LICENSE"
   ],
   "scripts": {
     "dev": "vite --host 127.0.0.1",
@@ -42,6 +43,7 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "1.32.1",
+    "@xyflow/react": "12.12.0",
     "commander": "14.0.3",
     "esbuild": "0.28.1",
     "fflate": "0.8.3",
@@ -52,6 +54,7 @@
     "playwright-core": "1.64.1",
     "react": "19.3.1",
     "react-dom": "19.3.1",
+    "three": "0.186.1",
     "upng-js": "2.1.0",
     "zod": "4.4.3"
   },
@@ -62,6 +65,7 @@
     "@types/pngjs": "6.0.5",
     "@types/react": "19.2.17",
     "@types/react-dom": "19.2.3",
+    "@types/three": "0.186.0",
     "@types/upng-js": "2.1.5",
     "@vitejs/plugin-react": "6.1.2",
     "gifuct-js": "2.1.2",

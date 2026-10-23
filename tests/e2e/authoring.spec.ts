@@ -1,3 +1,4 @@
+import { editingWorkspace } from "./workspace-helpers.js";
 import { test, expect, type Page } from "@playwright/test";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -20,6 +21,7 @@ const button = (p: Page, name: string) =>
   p.getByRole("button", { name, exact: true });
 async function start(p: Page) {
   await p.goto("/");
+  await editingWorkspace(p);
   await button(p, "Pause").click();
   await p.getByLabel("Playhead", { exact: true }).fill("0.4");
   await expect(p.locator(".pixi-host canvas")).toBeVisible();
@@ -241,7 +243,9 @@ test("imports and positions a preview reference which never changes exported pix
     0,
   );
   const p = await snapshot(page);
-  expect(p.editor.reference?.position.x).toBe(55);
+  const zoom =
+    (await page.locator(".canvas-stack").boundingBox())!.width / p.canvas.width;
+  expect(p.editor.reference?.position.x).toBe(45 + Math.round(30 / zoom));
   expect(p.editor.reference?.scale).toBe(1.5);
   expect(p.layers).toEqual(before.layers);
   await page.goto("/render.html");
@@ -362,6 +366,7 @@ test("timeline keys remain reachable in a short window and focus mode restores t
     .filter({ hasText: "First slash" })
     .click();
   await page.setViewportSize({ width: 640, height: 360 });
+  await button(page, "Focus timeline").click();
   await button(page, "Keyframes").click();
   await expect(page.locator(".viewport")).toBeHidden();
   const graph = page.getByRole("img", { name: "Timeline keyframe graph" });

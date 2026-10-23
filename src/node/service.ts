@@ -66,6 +66,11 @@ import {
   type BatchItemResult,
 } from "./batch.js";
 import { MAX_BATCH_SOURCE_BYTES } from "../core/limits.js";
+import {
+  stageSchema,
+  stagePlacementSchema,
+  STAGE_COORDINATES,
+} from "../core/stage.js";
 import { toolError } from "./tool-errors.js";
 export class Service {
   constructor(readonly store: Store) {}
@@ -305,7 +310,9 @@ export class Service {
       | "edits"
       | "observation"
       | "analysis"
-      | "batch",
+      | "batch"
+      | "stage"
+      | "stage_placement",
   ) {
     return z.toJSONSchema(
       {
@@ -321,6 +328,8 @@ export class Service {
         observation: observationSchema,
         analysis: analysisSchema,
         batch: batchSchema,
+        stage: stageSchema,
+        stage_placement: stagePlacementSchema,
       }[kind],
     );
   }
@@ -607,15 +616,28 @@ export class Service {
       changes,
     };
   }
-  async preview(file: string, time?: number) {
-    if (time === undefined) {
-      const result = await this.observe(file, {
-        view: "frame",
-        grid: false,
-        guides: false,
-        includeReference: false,
-        scale: 1,
-      });
+  async preview(
+    file: string,
+    time?: number,
+    view: "effect" | "stage" = "effect",
+    expected?: string,
+    edits?: unknown,
+  ) {
+    if (!["effect", "stage"].includes(view))
+      throw Error("Preview view must be effect or stage");
+    if (time === undefined && view === "effect") {
+      const result = await this.observe(
+        file,
+        {
+          view: "frame",
+          grid: false,
+          guides: false,
+          includeReference: false,
+          scale: 1,
+        },
+        expected,
+        edits,
+      );
       const frame = result.report.frames[0];
       return {
         png: result.files["frame-0.png"],
@@ -628,12 +650,29 @@ export class Service {
           coordinates: COORDINATES,
           pixels: frame,
           automaticTime: true,
+          draft: edits !== undefined,
           warnings: result.report.warnings,
         },
       };
     }
-    const { project, revision } = await this.store.read(file),
-      files = await render(project, { time });
+    const snapshot = await this.store.read(file);
+    if (expected && expected !== snapshot.revision)
+      throw Error("Revision conflict");
+    if (edits !== undefined && !expected)
+      throw Error("A revision is required to preview uncommitted edits");
+    const project =
+        edits === undefined
+          ? snapshot.project
+          : applyEdits(snapshot.project, edits),
+      revision = snapshot.revision;
+    const automaticTime = time === undefined;
+    time ??= Math.min(
+      project.duration * 0.35,
+      ...project.layers
+        .filter((l) => l.visible)
+        .map((l) => l.start + l.duration * 0.35),
+    );
+    const files = await render(project, { time, view });
     const png = files["preview.png"],
       bitmap = decodePng(png),
       pixels = pixelMetrics(bitmap.rgba, bitmap.width, bitmap.height);
@@ -647,7 +686,12 @@ export class Service {
         canvas: project.canvas,
         coordinates: COORDINATES,
         pixels,
-        automaticTime: false,
+        automaticTime,
+        draft: edits !== undefined,
+        view,
+        ...(view === "stage"
+          ? { stage: project.stage, stageCoordinates: STAGE_COORDINATES }
+          : {}),
         warnings: pixels.visiblePixels
           ? []
           : [

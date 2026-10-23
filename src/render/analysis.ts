@@ -7,7 +7,7 @@ import {
   type AnalysisFrame,
 } from "../core/analysis.js";
 import { pixelMetrics } from "../core/observation.js";
-import type { VfxRenderer } from "./pixi.js";
+import type { EffectRenderer } from "./types.js";
 async function hash(bytes: Uint8ClampedArray) {
   const digest = await crypto.subtle.digest("SHA-256", new Uint8Array(bytes));
   return Array.from(new Uint8Array(digest), (n) =>
@@ -15,7 +15,7 @@ async function hash(bytes: Uint8ClampedArray) {
   ).join("");
 }
 export async function analyze(
-  renderer: VfxRenderer,
+  renderer: EffectRenderer,
   value: Project,
   input: AnalysisInput = {},
 ): Promise<AnalysisReport> {
@@ -55,6 +55,7 @@ export async function analyze(
   return {
     kind: "vfx-analysis",
     formatVersion: 1,
+    view: o.view,
     canvas: { width: p.canvas.width, height: p.canvas.height },
     duration: p.duration,
     fps: p.fps,

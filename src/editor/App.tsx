@@ -1,5 +1,13 @@
 import { MAX_LAYERS } from "../core/limits.js";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  lazy,
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   cleanupGroups,
   groupLayers,
@@ -37,6 +45,9 @@ import { VariantDialog } from "./VariantDialog.js";
 import { TimingDialog } from "./TimingDialog.js";
 import { Inspector } from "./Inspector.js";
 import { Timeline } from "./Timeline.js";
+const Blueprint = lazy(() =>
+  import("./Blueprint.js").then((module) => ({ default: module.Blueprint })),
+);
 import { Viewport } from "./Viewport.js";
 import { useDocument, type BackupItem } from "./useDocument.js";
 import { RECOVERY, filePickers } from "./documents.js";
@@ -58,6 +69,11 @@ import {
 import { useStudioLayout } from "./layout.js";
 import { rememberProject, listRecent, type RecentProject } from "./recent.js";
 import { downloadFile as download, safeFilename as safeName } from "./files.js";
+const StageStudio = lazy(() =>
+  import("./StageStudio.js").then((module) => ({
+    default: module.StageStudio,
+  })),
+);
 // Keep the same autosave key so existing browser projects open automatically.
 const STORAGE = "vfx-maker.0.4.autosave";
 function recoveryInfo(): { id: string | null; dirty: boolean } | null {
@@ -140,6 +156,8 @@ export function App() {
       | "recovery"
       | "variants"
       | "timing"
+      | "blueprint"
+      | "stage"
       | null
     >(null),
     [saved, setSaved] = useState(() =>
@@ -182,6 +200,7 @@ export function App() {
     initialRecovery = useRef(recoveryInfo()),
     [fileMenu, setFileMenu] = useState(false),
     [timelineFocus, setTimelineFocus] = useState(false),
+    [canvasFocus, setCanvasFocus] = useState(false),
     [backups, setBackups] = useState<BackupItem[]>([]),
     [recoveryProject, setRecoveryProject] = useState<Project | null>(null);
   const layout = useStudioLayout();
@@ -258,13 +277,30 @@ export function App() {
   const update = useCallback(
     (patch: Record<string, unknown>) => {
       if (!selected) return;
-      if (selection.length > 1 && patch.position) {
+      if (
+        selection.length > 1 &&
+        (patch.position ||
+          patch.scale !== undefined ||
+          patch.rotation !== undefined)
+      ) {
         const primary = project.layers.find((l) => l.id === selected)!,
-          pos = patch.position as { x: number; y: number };
+          pos = (patch.position ?? primary.position) as {
+            x: number;
+            y: number;
+          };
         try {
           const moved = transformLayers(project, selection, {
             x: pos.x - primary.position.x,
             y: pos.y - primary.position.y,
+            rotation:
+              patch.rotation === undefined
+                ? undefined
+                : Number(patch.rotation) - primary.rotation,
+            scale:
+              patch.scale === undefined
+                ? undefined
+                : Number(patch.scale) / primary.scale,
+            pivot: primary.position,
           });
           if (autoKey) {
             let next = project;
@@ -275,7 +311,11 @@ export function App() {
                 autoKeyTransform(
                   next,
                   l.id,
-                  { position: l.position },
+                  {
+                    position: l.position,
+                    rotation: l.rotation,
+                    scale: l.scale,
+                  },
                   timeRef.current,
                 ) ?? next;
             safeCommit(next);
@@ -457,7 +497,14 @@ export function App() {
           ),
           ids: group.ids.map((id) => mapping.get(id)!),
         });
-    safeCommit({ ...project, layers, groups });
+    const stage = project.stage
+      ? { ...project.stage, layers: { ...project.stage.layers } }
+      : undefined;
+    if (stage)
+      for (const [before, after] of mapping)
+        if (stage.layers[before])
+          stage.layers[after] = structuredClone(stage.layers[before]);
+    safeCommit({ ...project, layers, groups, ...(stage ? { stage } : {}) });
     setSelection([...mapping.values()]);
   }, [project, selection, safeCommit]);
   const activeGroup = project.groups.find(
@@ -785,10 +832,24 @@ export function App() {
       aria-label={`Resize ${panel === "left" ? "library" : panel === "right" ? "inspector" : "timeline"}`}
       aria-orientation={panel === "timeline" ? "horizontal" : "vertical"}
       aria-valuemin={panel === "left" ? 180 : panel === "right" ? 240 : 90}
-      aria-valuemax={panel === "left" ? 380 : panel === "right" ? 420 : 400}
+      aria-valuemax={
+        panel === "left"
+          ? 520
+          : panel === "right"
+            ? 640
+            : Math.max(140, innerHeight - 260)
+      }
       aria-valuenow={layout.layout[panel]}
       tabIndex={0}
       onPointerDown={(e) => layout.drag(e, panel)}
+      title={
+        panel === "timeline"
+          ? "Drag to resize timeline · double-click to expand"
+          : "Drag to resize panel"
+      }
+      onDoubleClick={() =>
+        panel === "timeline" && setTimelineFocus((value) => !value)
+      }
       onKeyDown={(e) => {
         if (
           !["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(e.key)
@@ -806,7 +867,7 @@ export function App() {
   );
   return (
     <div
-      className={`studio ${layout.compact ? "compact" : ""} ${layout.layout.timelineOpen ? (timelineFocus ? "timeline-focus" : "") : "timeline-collapsed"}`}
+      className={`studio ${canvasFocus ? "canvas-focus" : ""} ${layout.compact ? "compact" : ""} ${layout.layout.timelineOpen ? (timelineFocus ? "timeline-focus" : "") : "timeline-collapsed"}`}
       data-history={historyVersion}
       style={layout.style}
       onDragOver={(e) => {
@@ -968,24 +1029,59 @@ export function App() {
         inert={!!modal}
       >
         <button
-          aria-pressed={layout.leftVisible}
-          onClick={() => layout.toggle("left")}
+          aria-pressed={layout.leftVisible && !canvasFocus}
+          onClick={() => {
+            if (!canvasFocus || !layout.leftVisible) layout.toggle("left");
+            setCanvasFocus(false);
+          }}
         >
           Library
         </button>
         <button
-          aria-pressed={layout.rightVisible}
-          onClick={() => layout.toggle("right")}
+          aria-pressed={layout.rightVisible && !canvasFocus}
+          onClick={() => {
+            if (!canvasFocus || !layout.rightVisible) layout.toggle("right");
+            setCanvasFocus(false);
+          }}
         >
           Inspector
         </button>
         <button
-          aria-pressed={layout.layout.timelineOpen}
-          onClick={() => layout.toggle("timeline")}
+          aria-pressed={layout.layout.timelineOpen && !canvasFocus}
+          onClick={() => {
+            if (!canvasFocus || !layout.layout.timelineOpen)
+              layout.toggle("timeline");
+            setCanvasFocus(false);
+          }}
         >
           Timeline
         </button>
+        <button
+          aria-pressed={canvasFocus}
+          onClick={() => {
+            setCanvasFocus((v) => !v);
+            setTimelineFocus(false);
+          }}
+        >
+          {canvasFocus ? "Restore panels" : "Focus canvas"}
+        </button>
         <span className="toolbar-separator" />
+        <button
+          onClick={() => {
+            setPlaying(false);
+            setModal("stage");
+          }}
+        >
+          2.5D / 3D
+        </button>
+        <button
+          onClick={() => {
+            setPlaying(false);
+            setModal("blueprint");
+          }}
+        >
+          Blueprint
+        </button>
         <button onClick={() => void openPixels()}>Pixel optimizer</button>
         <button onClick={() => setModal("resize")}>Resize canvas</button>
         <button
@@ -1024,6 +1120,19 @@ export function App() {
         >
           Reset layout
         </button>
+        <div className="spacer" />
+        <label>
+          Text{" "}
+          <select
+            aria-label="Interface text size"
+            value={layout.layout.textScale}
+            onChange={(e) => layout.setTextScale(Number(e.target.value))}
+          >
+            <option value={1}>Comfortable</option>
+            <option value={1.15}>Large</option>
+            <option value={1.3}>Extra large</option>
+          </select>
+        </label>
         {solo && (
           <span className="solo-notice">
             Solo preview{" "}
@@ -1491,7 +1600,10 @@ export function App() {
             autoKey={autoKey}
             setAutoKey={setAutoKey}
             focused={timelineFocus}
-            onFocus={() => setTimelineFocus((v) => !v)}
+            onFocus={() => {
+              if (!layout.layout.timelineOpen) layout.toggle("timeline");
+              setTimelineFocus((v) => !v);
+            }}
             onKeyframeView={(open) => {
               if (open && innerHeight < 620) setTimelineFocus(true);
               else {
@@ -1689,6 +1801,32 @@ export function App() {
           onLoad={(p) => loadProject(parseProject(p))}
           onClose={closeModal}
         />
+      )}
+      {modal === "stage" && (
+        <Suspense fallback={<p role="status">Opening Stage…</p>}>
+          <StageStudio
+            project={project}
+            selected={selected}
+            time={time}
+            update={safeCommit}
+            undo={undo}
+            redo={redo}
+            onClose={closeModal}
+          />
+        </Suspense>
+      )}
+      {modal === "blueprint" && (
+        <Suspense fallback={<p role="status">Opening Blueprint…</p>}>
+          <Blueprint
+            project={project}
+            selected={selected}
+            time={time}
+            update={safeCommit}
+            undo={undo}
+            redo={redo}
+            onClose={closeModal}
+          />
+        </Suspense>
       )}
       {modal === "help" && <HelpDialog onClose={closeModal} />}
     </div>

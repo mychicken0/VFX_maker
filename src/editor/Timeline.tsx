@@ -44,6 +44,7 @@ export function Timeline({
   const trackArea = useRef<HTMLDivElement>(null);
   const [showKeys, setShowKeys] = useState(false);
   const [allChannels, setAllChannels] = useState(false);
+  const [timeZoom, setTimeZoom] = useState(1);
   const active = p.layers.find((l) => l.id === selected),
     range = p.editor.range;
   const drag = (
@@ -69,7 +70,7 @@ export function Timeline({
           Math.max(
             resize ? 0.02 : 0,
             Math.min(
-              resize ? 10 : p.duration - 0.02,
+              resize ? 20 : p.duration - 0.02,
               (resize ? duration : start) +
                 ((e.clientX - x) / width) * p.duration,
             ),
@@ -164,6 +165,22 @@ export function Timeline({
             <small> / {p.duration.toFixed(2)} s</small>
           </span>
         </div>
+        <input
+          className="transport-scrubber"
+          aria-label="Playhead"
+          type="range"
+          min={0}
+          max={p.duration}
+          step={1 / p.fps}
+          value={time}
+          onChange={(e) => {
+            setPlaying(false);
+            setTime(Number(e.target.value));
+          }}
+        />
+        <button onClick={onFocus} aria-pressed={focused}>
+          {focused ? "Restore canvas" : "Focus timeline"}
+        </button>
         <span className="timeline-help">
           Space to play <i>·</i> drag clips to retime
         </span>
@@ -198,11 +215,32 @@ export function Timeline({
           </button>
         )}
         <button onClick={onTiming}>Timing tools</button>
-        {showKeys && (
-          <button onClick={onFocus} aria-pressed={focused}>
-            {focused ? "Restore canvas" : "Focus timeline"}
+        <div className="timeline-zoom" aria-label="Timeline zoom controls">
+          <button
+            aria-label="Zoom timeline out"
+            disabled={timeZoom <= 1}
+            onClick={() => setTimeZoom((v) => Math.max(1, v / 2))}
+          >
+            −
           </button>
-        )}
+          <span>{Math.round(timeZoom * 100)}%</span>
+          <button
+            aria-label="Zoom timeline in"
+            disabled={timeZoom >= 16}
+            onClick={() => setTimeZoom((v) => Math.min(16, v * 2))}
+          >
+            +
+          </button>
+          <button
+            aria-label="Fit timeline"
+            onClick={() => {
+              setTimeZoom(1);
+              if (trackArea.current) trackArea.current.scrollLeft = 0;
+            }}
+          >
+            Fit
+          </button>
+        </div>
         <button
           aria-pressed={!!range}
           onClick={() =>
@@ -248,92 +286,97 @@ export function Timeline({
           </>
         )}
       </div>
-      <div className="timeline-ruler">
-        <span>LAYERS</span>
-        <div>
-          {range && (
-            <span
-              className="play-range"
-              style={{
-                left: `${(range.start / p.duration) * 100}%`,
-                width: `${((range.end - range.start) / p.duration) * 100}%`,
-              }}
-            />
-          )}
-          {Array.from({ length: 7 }, (_, i) => (
-            <small key={i} style={{ left: `${(i / 6) * 100}%` }}>
-              {((i / 6) * p.duration).toFixed(1)}s
-            </small>
-          ))}
-          <input
-            aria-label="Playhead"
-            type="range"
-            min={0}
-            max={p.duration}
-            step={1 / p.fps}
-            value={time}
-            onChange={(e) => {
-              setPlaying(false);
-              setTime(Number(e.target.value));
-            }}
-          />
-        </div>
-      </div>
-      <div className="timeline-tracks" ref={trackArea}>
-        {showKeys && allChannels && (
-          <DopeSheet
-            project={p}
-            ids={selection}
-            time={time}
-            update={updateProject}
-          />
-        )}
-        {showKeys && !allChannels && active && (
-          <KeyframeTrack project={p} layer={active} update={updateLayer} />
-        )}
-        {[...p.layers].reverse().map((l) => (
-          <div
-            key={l.id}
-            className={`timeline-row ${selected === l.id ? "selected" : ""}`}
-          >
-            <button onClick={(e) => select(l.id, e)}>
-              <span className={`type-dot ${l.type}`} />
-              {l.name}
-            </button>
-            <div
-              className="timeline-track"
-              onClick={(e) => {
-                if (e.target === e.currentTarget) {
-                  const b = e.currentTarget.getBoundingClientRect();
-                  setPlaying(false);
-                  setTime(((e.clientX - b.left) / b.width) * p.duration);
-                }
-              }}
-            >
-              <div
-                className={`timeline-clip ${l.type} ${!l.visible ? "muted" : ""}`}
-                style={{
-                  left: `${(l.start / p.duration) * 100}%`,
-                  width: `${(Math.max(0, Math.min(l.duration, p.duration - l.start)) / p.duration) * 100}%`,
-                }}
-                onPointerDown={(e) => drag(e, l, false)}
-              >
-                <span>
-                  {l.repeat ? "↻ " : ""}
-                  {l.name}
-                </span>
-                <div
-                  className="clip-resize"
-                  onPointerDown={(e) => drag(e, l, true)}
+      <div
+        className="timeline-scroll"
+        ref={trackArea}
+        onWheel={(e) => {
+          if (!e.ctrlKey && !e.metaKey) return;
+          e.preventDefault();
+          setTimeZoom((v) =>
+            Math.max(1, Math.min(16, v * (e.deltaY < 0 ? 1.2 : 1 / 1.2))),
+          );
+        }}
+      >
+        <div
+          className="timeline-content"
+          style={{ width: `${timeZoom * 100}%`, minWidth: "100%" }}
+        >
+          <div className="timeline-ruler">
+            <span>LAYERS</span>
+            <div>
+              {range && (
+                <span
+                  className="play-range"
+                  style={{
+                    left: `${(range.start / p.duration) * 100}%`,
+                    width: `${((range.end - range.start) / p.duration) * 100}%`,
+                  }}
                 />
-              </div>
-              <div
-                className="playhead-line"
-                style={{ left: `${(time / p.duration) * 100}%` }}
-              />
+              )}
+              {Array.from({ length: 7 }, (_, i) => (
+                <small key={i} style={{ left: `${(i / 6) * 100}%` }}>
+                  {((i / 6) * p.duration).toFixed(1)}s
+                </small>
+              ))}
             </div>
           </div>
-        ))}
+          <div className="timeline-tracks">
+            {showKeys && allChannels && (
+              <DopeSheet
+                project={p}
+                ids={selection}
+                time={time}
+                update={updateProject}
+              />
+            )}
+            {showKeys && !allChannels && active && (
+              <KeyframeTrack project={p} layer={active} update={updateLayer} />
+            )}
+            {[...p.layers].reverse().map((l) => (
+              <div
+                key={l.id}
+                className={`timeline-row ${selected === l.id ? "selected" : ""}`}
+              >
+                <button onClick={(e) => select(l.id, e)}>
+                  <span className={`type-dot ${l.type}`} />
+                  {l.name}
+                </button>
+                <div
+                  className="timeline-track"
+                  onClick={(e) => {
+                    if (e.target === e.currentTarget) {
+                      const b = e.currentTarget.getBoundingClientRect();
+                      setPlaying(false);
+                      setTime(((e.clientX - b.left) / b.width) * p.duration);
+                    }
+                  }}
+                >
+                  <div
+                    className={`timeline-clip ${l.type} ${!l.visible ? "muted" : ""}`}
+                    style={{
+                      left: `${(l.start / p.duration) * 100}%`,
+                      width: `${(Math.max(0, Math.min(l.duration, p.duration - l.start)) / p.duration) * 100}%`,
+                    }}
+                    onPointerDown={(e) => drag(e, l, false)}
+                  >
+                    <span>
+                      {l.repeat ? "↻ " : ""}
+                      {l.name}
+                    </span>
+                    <div
+                      className="clip-resize"
+                      onPointerDown={(e) => drag(e, l, true)}
+                    />
+                  </div>
+                  <div
+                    className="playhead-line"
+                    style={{ left: `${(time / p.duration) * 100}%` }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     </section>
   );

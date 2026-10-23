@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import type { Curve, Gradient } from "../core/model.js";
-import { evaluate } from "../core/math.js";
+import { clamp, evaluate } from "../core/math.js";
 export function NumberField({
   label,
   value,
@@ -114,19 +114,71 @@ export function CurveEditor({
   min?: number;
   signed?: boolean;
 }) {
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(false),
+    [selected, setSelected] = useState<number | null>(null),
+    [draft, setDraft] = useState<Curve | null>(null);
+  const shown = draft ?? keys;
+  useEffect(() => {
+    setSelected(null);
+    setDraft(null);
+  }, [label]);
   const maxY = Math.max(1, ...keys.map((k) => k.value)) * 1.1;
   const minY = Math.min(0, ...keys.map((k) => k.value)) * 1.1;
   const y = (v: number) => 56 - ((v - minY) / (maxY - minY)) * 48;
   const poly = Array.from(
     { length: 101 },
-    (_, i) => `${i * 2},${y(evaluate(keys, i / 100))}`,
+    (_, i) => `${i * 2},${y(evaluate(shown, i / 100))}`,
   ).join(" ");
   const update = (i: number, patch: Partial<Curve[number]>) => {
     const next = keys
       .map((k, n) => (n === i ? { ...k, ...patch } : k))
       .sort((a, b) => a.t - b.t);
     if (next.every((k, n) => n === 0 || k.t > next[n - 1].t)) onChange(next);
+  };
+  const drag = (event: React.PointerEvent<SVGCircleElement>, index: number) => {
+    if (event.button !== 0) return;
+    event.preventDefault();
+    event.stopPropagation();
+    setSelected(index);
+    setExpanded(true);
+    const el = event.currentTarget,
+      box = el.closest("svg")!.getBoundingClientRect(),
+      original = structuredClone(keys),
+      startX = event.clientX,
+      startY = event.clientY;
+    let next = original;
+    el.setPointerCapture(event.pointerId);
+    const move = (e: PointerEvent) => {
+      const t = clamp(
+        original[index].t + (e.clientX - startX) / box.width,
+        index ? original[index - 1].t + 0.00001 : 0,
+        index + 1 < original.length ? original[index + 1].t - 0.00001 : 1,
+      );
+      const value = clamp(
+        original[index].value -
+          ((((e.clientY - startY) / box.height) * 64) / 48) * (maxY - minY),
+        signed ? -4096 : min,
+        signed ? 4096 : max,
+      );
+      next = original.map((k, i) =>
+        i === index ? { ...k, t, value: Math.round(value * 10000) / 10000 } : k,
+      );
+      setDraft(next);
+    };
+    const cleanup = () => {
+      el.removeEventListener("pointermove", move);
+      el.removeEventListener("pointerup", end);
+      el.removeEventListener("pointercancel", cancel);
+      setDraft(null);
+    };
+    const end = () => {
+      cleanup();
+      if (JSON.stringify(next) !== JSON.stringify(original)) onChange(next);
+    };
+    const cancel = () => cleanup();
+    el.addEventListener("pointermove", move);
+    el.addEventListener("pointerup", end);
+    el.addEventListener("pointercancel", cancel);
   };
   return (
     <div className="curve-control">
@@ -140,18 +192,26 @@ export function CurveEditor({
         role="img"
         aria-label={`${label} curve`}
         viewBox="0 0 200 64"
+        preserveAspectRatio="none"
         className="curve-graph"
         onDoubleClick={(e) => {
-          if (keys.length >= 32) return;
+          if (keys.length >= 32 || (e.target as Element).closest("circle"))
+            return;
           const b = e.currentTarget.getBoundingClientRect(),
             t = Math.round(((e.clientX - b.left) / b.width) * 100) / 100;
           if (t <= 0 || t >= 1 || keys.some((k) => Math.abs(k.t - t) < 0.01))
             return;
+          const value = clamp(
+            minY +
+              ((56 - ((e.clientY - b.top) / b.height) * 64) / 48) *
+                (maxY - minY),
+            signed ? -4096 : min,
+            signed ? 4096 : max,
+          );
           onChange(
-            [
-              ...keys,
-              { t, value: evaluate(keys, t), ease: "linear" as const },
-            ].sort((a, b) => a.t - b.t),
+            [...keys, { t, value, ease: "linear" as const }].sort(
+              (a, b) => a.t - b.t,
+            ),
           );
           setExpanded(true);
         }}
@@ -168,8 +228,16 @@ export function CurveEditor({
           stroke="#ad94ff"
           strokeWidth="1.5"
         />
-        {keys.map((k, i) => (
-          <circle key={i} cx={k.t * 200} cy={y(k.value)} r="3" fill="#e0d5ff" />
+        {shown.map((k, i) => (
+          <circle
+            key={i}
+            aria-label={`${label} curve key ${i + 1}`}
+            cx={k.t * 200}
+            cy={y(k.value)}
+            r="5"
+            fill={selected === i ? "#ffdc91" : "#e0d5ff"}
+            onPointerDown={(e) => drag(e, i)}
+          />
         ))}
       </svg>
       {expanded && (
@@ -213,7 +281,8 @@ export function CurveEditor({
             </div>
           ))}
           <p className="hint">
-            Double-click the graph to add a key. Time is normalized from 0 to 1.
+            Drag a point to change time and value. Double-click to add. Time
+            runs from 0 to 1 over this layer's life.
           </p>
         </div>
       )}

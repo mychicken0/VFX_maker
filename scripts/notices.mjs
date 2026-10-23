@@ -69,9 +69,12 @@ await writeFile(
   "docs/licenses/npm-runtime.json",
   JSON.stringify(inventory, null, 2) + "\n",
 );
-await writeFile("docs/licenses/npm-runtime.txt", texts.join(""));
+await writeFile(
+  "docs/licenses/npm-runtime.txt",
+  texts.join("").trimEnd() + "\n",
+);
 await writeFile(
   "THIRD_PARTY_NOTICES.md",
-  `# Third-party notices\n\nVFX Maker ${pkgVersion} uses pinned npm packages. The browser build includes PixiJS, PixiJS Filters, React,\nZod, gifenc, fflate, UPNG.js, pako and their dependencies. Node tools use the official MCP SDK,\nCommander, Playwright Core and esbuild.\n\nThe exact installed runtime inventory, package integrity values and upstream\nrepository URLs are in [npm-runtime.json](docs/licenses/npm-runtime.json).\nUpstream license/notice texts are collected in [npm-runtime.txt](docs/licenses/npm-runtime.txt).\nRuntime inventory: ${inventory.length} installed packages, including the browser libraries.\nPlatform-specific optional packages may differ on another operating system.\n\nDemonstration textures are original project assets. Application code is original;\nupstream packages are included with their notices.\n\nThe project's own distribution license has not been selected; package metadata\nuses UNLICENSED. This does not change any upstream package's license.\n`,
+  `# Third-party notices\n\nVFX Maker ${pkgVersion} uses pinned npm packages. The browser build includes PixiJS, PixiJS Filters, React, React Flow, Three.js,\nZod, gifenc, fflate, UPNG.js, pako and their dependencies. Node tools use the official MCP SDK,\nCommander, Playwright Core and esbuild.\n\nThe exact installed runtime inventory, package integrity values and upstream\nrepository URLs are in [npm-runtime.json](docs/licenses/npm-runtime.json).\nUpstream license/notice texts are collected in [npm-runtime.txt](docs/licenses/npm-runtime.txt).\nRuntime inventory: ${inventory.length} installed packages, including the browser libraries.\nPlatform-specific optional packages may differ on another operating system.\n\nDemonstration textures are original project assets. Application code is original;\nupstream packages are included with their notices.\n\nVFX Maker application code is MIT licensed; see [LICENSE](LICENSE).\nUpstream packages retain their own licenses. Artcraft and Pixel Composer are\ndesign references only; no source or assets were copied from them. See\n[research notes](docs/RESEARCH_0.7.4.md) for inspected sources and decisions.\n`,
 );
 process.stdout.write(`${inventory.length} runtime package notices collected\n`);

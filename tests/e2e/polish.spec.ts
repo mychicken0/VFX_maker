@@ -1,9 +1,11 @@
+import { editingWorkspace } from "./workspace-helpers.js";
 import { test, expect, type Page } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 import { PNG } from "pngjs";
 import { getPreset, type Project } from "../../src/core/index.js";
 async function start(page: Page) {
   await page.goto("/");
+  await editingWorkspace(page);
   await page.getByRole("button", { name: "Pause", exact: true }).click();
   await page.getByLabel("Playhead", { exact: true }).fill("0.4");
   await expect(page.locator(".pixi-host canvas")).toBeVisible();
@@ -135,12 +137,12 @@ test("panel dividers support keyboard resize, persistent layout and collapse wit
     divider = page.getByRole("separator", { name: "Resize library" });
   await divider.focus();
   await page.keyboard.press("ArrowRight");
-  await expect(divider).toHaveAttribute("aria-valuenow", "256");
+  await expect(divider).toHaveAttribute("aria-valuenow", "280");
   await button(page, "Inspector").click();
   await expect(page.locator(".inspector-panel")).toBeHidden();
   await page.reload();
   await expect(page.locator(".inspector-panel")).toBeHidden();
-  await expect(divider).toHaveAttribute("aria-valuenow", "256");
+  await expect(divider).toHaveAttribute("aria-valuenow", "280");
   await button(page, "Timeline").click();
   await expect(page.locator(".timeline-tracks")).toBeHidden();
   expect((await save(page)).layers).toEqual(before.layers);
@@ -153,7 +155,9 @@ test("Fit, pixel grid and panning work without moving a layer; keyboard nudges a
   await start(page);
   const before = await save(page);
   await page.getByLabel("Preview zoom", { exact: true }).selectOption("4");
+  await page.getByText("View options", { exact: true }).click();
   await button(page, "Pixel grid").click();
+  await page.getByText("View options", { exact: true }).click();
   await expect(page.locator(".pixel-grid")).toBeVisible();
   await button(page, "Pan canvas").click();
   const area = (await page.locator(".viewport-area").boundingBox())!,

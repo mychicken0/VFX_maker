@@ -1,3 +1,4 @@
+import { editingWorkspace, openSection } from "./workspace-helpers.js";
 import { expect, test, type Page } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 import { getPreset, type Project } from "../../src/core/index.js";
@@ -12,6 +13,7 @@ async function saved(page: Page): Promise<Project> {
 }
 async function paused(page: Page) {
   await page.goto("/");
+  await editingWorkspace(page);
   await page.getByRole("button", { name: "Pause", exact: true }).click();
   await page.getByLabel("Playhead", { exact: true }).fill("0.4");
   await expect(page.locator(".pixi-host canvas")).toBeVisible();
@@ -50,7 +52,12 @@ test("customizes directly, reshapes a stroke and supports undo/redo and project 
     stroke = p.layers.find((l) => l.id === "cut-a")!;
   expect(stroke.type).toBe("path");
   if (stroke.type !== "path") throw new Error();
-  expect(stroke.points[0]).toEqual({ x: -32, y: -34 });
+  const zoom =
+    (await page.locator(".canvas-stack").boundingBox())!.width / p.canvas.width;
+  expect(stroke.points[0]).toEqual({
+    x: -40 + Math.round(24 / zoom),
+    y: -38 + Math.round(12 / zoom),
+  });
   await page.reload();
   await expect(page.getByLabel("Effect name")).toHaveValue("Crimson cross");
   expect((await saved(page)).layers).toEqual(p.layers);
@@ -67,6 +74,7 @@ test("retimes a layer, edits a curve, adds and reorders layers, and locks edits"
   const clip = page
     .locator(".timeline-clip")
     .filter({ hasText: "First slash" });
+  await clip.scrollIntoViewIfNeeded();
   const b = (await clip.boundingBox())!;
   await page.mouse.move(b.x + 20, b.y + 10);
   await page.mouse.down();
@@ -75,6 +83,7 @@ test("retimes a layer, edits a curve, adds and reorders layers, and locks edits"
   expect(
     (await saved(page)).layers.find((l) => l.id === "cut-a")!.start,
   ).toBeGreaterThan(0.06);
+  await openSection(page, "Stroke");
   const graph = page.getByRole("img", { name: "Width curve", exact: true });
   await graph.dblclick({ position: { x: 65, y: 20 } });
   await expect(
@@ -166,6 +175,6 @@ test("imports a PNG, authors a sprite and reports invalid input without losing t
       mimeType: "application/json",
       buffer: Buffer.from('{"version":"99"}'),
     });
-  await expect(page.getByRole("status")).toContainText("0.7.3");
+  await expect(page.getByRole("status")).toContainText("0.7.4");
   expect((await saved(page)).layers).toEqual(p.layers);
 });

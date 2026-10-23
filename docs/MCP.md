@@ -166,7 +166,7 @@ SDK can reject malformed tool inputs before these handlers run.
 
 ## Available tools
 
-38 tools are available. Existing direct tools remain supported.
+40 tools are available. Existing direct tools remain supported.
 
 | Tool                                                       | Purpose                                                                                              |
 | ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
@@ -383,3 +383,34 @@ actual timestamp captions. This compresses empty pauses; it does not trim export
 or prove unsampled moments are empty. Request `storyboardMode:"timeline"` for
 full-duration context, or explicit `times` to preserve a chosen blank interval.
 `sampling.emptySamplesOmitted` records omitted sampled empty times.
+
+## 0.7.4 Blueprint discovery and shared edits
+
+`get_blueprint {file}` is a read-only compact graph query. It returns the observed
+revision, numeric controls and order, layer IDs/names/lock state, typed valid input
+ports, current connections with ready-to-use `disconnectEdit`, modifiers and image
+pipeline order. It does not decode assets or start a browser. It is the same
+project graph exposed in Studio's Blueprint workspace.
+
+`apply_edits` adds `connect_control`, `disconnect_control` and `edit_path_point`.
+These work with dryRun, draft observation and multi-project batch edits. Connections
+validate the resulting effect rather than accepting out-of-range parameters.
+One batch produces one revision and backup; failure commits none of the edits.
+Connection indices belong to the revision that supplied them. Existing controls,
+modifiers, base layers and curves remain editable through their existing operations.
+
+See [Blueprint with a real JSON example](BLUEPRINT.md), the live `vfx://guide`
+resource and the `effect_workflow` prompt. AI-native here means external agents can
+discover, author, observe and verify without mouse automation. A host that omits
+images can read/save the image resources; do not claim visual judgment from text alone.
+
+## Separate camera stage
+
+Ordinary 2D tools and coordinates remain the default. `get_stage {file}` returns
+the current revision, optional camera scene, placement IDs and world conventions.
+Use `get_schema {kind:"stage"}` / `stage_placement`, then shared edit batches with
+`configure_stage` and `place_stage_layer`. `render_preview` accepts `view:"stage"`
+and optional revision/edits for a source-preserving draft.
+`analyze_project {view:"stage"}` checks projected raw RGBA; it will not accept a
+2D baseline as a matching Stage baseline. Export jobs/batches accept
+`options:{view:"stage"}`. See [Stage examples and limitations](STAGE.md).

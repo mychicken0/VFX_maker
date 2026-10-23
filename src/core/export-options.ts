@@ -3,6 +3,7 @@ import { pixelOptionsSchema } from "./pixel-options.js";
 import type { Project } from "./model.js";
 export const exportOptionsSchema = z
   .object({
+    view: z.enum(["effect", "stage"]).default("effect"),
     format: z
       .enum(["gif", "spritesheet", "sequence", "godot", "unity"])
       .default("spritesheet"),
@@ -104,6 +105,17 @@ export function preflightExport(project: Project, input: ExportOptions = {}) {
       options.format === "gif" ? 33554432 : 16777216,
     ),
   ];
+  if (options.view === "stage")
+    checks.push(
+      check(
+        "stageLayerPixels",
+        count *
+          source.width *
+          source.height *
+          project.layers.filter((l) => l.visible).length,
+        67108864,
+      ),
+    );
   let atlas: ReturnType<typeof atlasLayout> | null = null,
     layoutError: string | undefined;
   if (!["gif", "sequence"].includes(options.format)) {
