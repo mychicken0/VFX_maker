@@ -35,7 +35,8 @@ async function open(page: Page, project: Project) {
   );
 }
 async function library(page: Page) {
-  if (page.viewportSize()!.width < 1000) await button(page, "Library").click();
+  if ((await button(page, "Library").getAttribute("aria-pressed")) === "false")
+    await button(page, "Library").click();
 }
 
 for (const [width, height] of [

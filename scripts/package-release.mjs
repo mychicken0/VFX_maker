@@ -61,6 +61,7 @@ const files = {
   LICENSE: await readFile("LICENSE"),
   "THIRD_PARTY_NOTICES.md": await readFile("THIRD_PARTY_NOTICES.md"),
   "docs/RESEARCH_0.7.5.md": await readFile("docs/RESEARCH_0.7.5.md"),
+  "docs/AUDIT_0.7.6.md": await readFile("docs/AUDIT_0.7.6.md"),
   "docs/licenses/npm-runtime.json": await readFile(
     "docs/licenses/npm-runtime.json",
   ),

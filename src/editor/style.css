@@ -1668,32 +1668,32 @@ button[aria-pressed="true"] {
     display: none;
   }
 }
+.compact .workspace {
+  display: block;
+}
+.compact .center-column {
+  height: 100%;
+  width: 100%;
+}
+.compact .library,
+.compact .inspector-panel {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  z-index: 4;
+  width: min(320px, calc(100vw - 48px));
+  box-shadow: 0 10px 60px #0009;
+}
+.compact .library {
+  left: 0;
+}
+.compact .inspector-panel {
+  right: 0;
+}
+.compact .panel-hidden {
+  display: none;
+}
 @media (max-width: 999px) {
-  .workspace {
-    display: block;
-  }
-  .center-column {
-    height: 100%;
-    width: 100%;
-  }
-  .library,
-  .inspector-panel {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    z-index: 4;
-    width: min(320px, calc(100vw - 48px));
-    box-shadow: 0 10px 60px #0009;
-  }
-  .library {
-    left: 0;
-  }
-  .inspector-panel {
-    right: 0;
-  }
-  .panel-hidden {
-    display: none;
-  }
   .topbar {
     gap: 4px;
     padding: 0 10px;
@@ -3532,4 +3532,21 @@ details[open] > summary::before {
 .blueprint-card .field input,
 .blueprint-port {
   font-size: calc(16px * var(--ui-text-scale, 1));
+}
+
+/* Short windows keep transport available without spending the canvas on tool rows. */
+.room-short .viewport-toolbar {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+}
+.room-short .viewport-toolbar > * {
+  flex-shrink: 0;
+}
+.room-short .canvas-options-popover {
+  position: fixed;
+  top: 144px;
+  left: 10px;
+}
+.timeline-toolbar {
+  height: calc(43px * var(--ui-text-scale, 1));
 }

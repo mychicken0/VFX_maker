@@ -7,6 +7,8 @@ import {
   type Vec,
 } from "./model.js";
 import type { Control } from "./creative-schema.js";
+import { uniqueLayerName } from "./authoring.js";
+import { stageDefaults, stagePlacementSchema } from "./stage.js";
 
 /** Preserve a position binding when translating the component's coordinate origin. */
 function translateControl(control: Control, delta: Vec): Control {
@@ -41,7 +43,15 @@ export function parseComponent(value: unknown): Component {
   const wrapper = z
     .object({
       format: z.literal("vfx-component"),
-      version: z.enum(["0.7.0", "0.7.1", "0.7.2", "0.7.3", "0.7.4", VERSION]),
+      version: z.enum([
+        "0.7.0",
+        "0.7.1",
+        "0.7.2",
+        "0.7.3",
+        "0.7.4",
+        "0.7.5",
+        VERSION,
+      ]),
       name: z.string().min(1).max(100),
       project: z.unknown(),
     })
@@ -88,6 +98,18 @@ export function makeComponent(
       ...p,
       name,
       editor: {},
+      ...(p.stage
+        ? {
+            stage: {
+              ...p.stage,
+              layers: Object.fromEntries(
+                Object.entries(p.stage.layers).filter(([id]) =>
+                  ids.includes(id),
+                ),
+              ),
+            },
+          }
+        : {}),
       variants: [],
       controls,
       layers: layers.map((l) => ({
@@ -145,9 +167,21 @@ export function insertComponent(
       extraAssets.push({ ...a, id });
     }
   }
+  const names = (items: { name: string }[]) => {
+    const used = items.map((item) => item.name);
+    return (name: string) => {
+      const next = uniqueLayerName(name, used);
+      used.push(next);
+      return next;
+    };
+  };
+  const layerName = names(p.layers),
+    controlName = names(p.controls),
+    groupName = names(p.groups);
   const layers = source.layers.map((l) => ({
     ...l,
     id: mapping.get(l.id)!,
+    name: layerName(l.name),
     locked: false,
     position: { x: l.position.x + position.x, y: l.position.y + position.y },
     ...("asset" in l && l.asset
@@ -168,6 +202,7 @@ export function insertComponent(
       {
         ...control,
         id: allocate(control.id, occupied),
+        name: controlName(control.name),
         bindings: control.bindings.map((b) => ({
           ...b,
           layer: mapping.get(b.layer)!,
@@ -179,13 +214,14 @@ export function insertComponent(
   const groups = source.groups.map((g) => ({
     ...g,
     id: allocate(g.id, occupied),
+    name: groupName(g.name),
     ids: g.ids.map((id) => mapping.get(id)!),
   }));
   const ungrouped = ids.filter((id) => !groups.some((g) => g.ids.includes(id)));
   if (ungrouped.length)
     groups.push({
       id: allocate("component", occupied),
-      name: c.name,
+      name: groupName(c.name),
       ids: ungrouped,
     });
   return {
@@ -197,6 +233,25 @@ export function insertComponent(
       assets: [...p.assets, ...extraAssets],
       controls: [...p.controls, ...controls],
       groups: [...p.groups, ...groups],
+      ...(source.stage
+        ? {
+            stage: {
+              ...(p.stage ?? stageDefaults()),
+              layers: {
+                ...p.stage?.layers,
+                ...Object.fromEntries(
+                  source.layers.map((l) => [
+                    mapping.get(l.id)!,
+                    source.stage!.layers[l.id] ??
+                      stagePlacementSchema.parse({
+                        plane: source.stage!.plane,
+                      }),
+                  ]),
+                ),
+              },
+            },
+          }
+        : {}),
     }),
   };
 }

@@ -1,4 +1,4 @@
-# Real UI workflow · 0.7.5
+# Real UI workflow · 0.7.6
 
 This project was made through Studio's actual buttons, fields and menus:
 empty effect → Add Ring / Number / Outline / Particles → set Arc 270° → place

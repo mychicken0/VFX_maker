@@ -1,6 +1,6 @@
 # Third-party notices
 
-VFX Maker 0.7.5 uses pinned npm packages. The browser build includes PixiJS, PixiJS Filters, React, React Flow, Three.js,
+VFX Maker 0.7.6 uses pinned npm packages. The browser build includes PixiJS, PixiJS Filters, React, React Flow, Three.js,
 Zod, gifenc, fflate, UPNG.js, pako and their dependencies. Node tools use the official MCP SDK,
 Commander, Playwright Core and esbuild.
 

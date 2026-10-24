@@ -32,7 +32,7 @@ test("installed-style CLI works outside the repository with portable TypeScript 
     p.fps = 10;
     await writeFile(join(dir, "custom.json"), JSON.stringify(p));
     const info = await cli("inspect", "custom.json");
-    expect(info.project.version).toBe("0.7.5");
+    expect(info.project.version).toBe("0.7.6");
     await cli(
       "set",
       "custom.json",
@@ -168,7 +168,7 @@ test("installed-style CLI works outside the repository with portable TypeScript 
     const version = await exec(process.execPath, [cliEntrypoint, "--version"], {
       cwd: dir,
     });
-    expect(version.stdout.trim()).toBe("0.7.5");
+    expect(version.stdout.trim()).toBe("0.7.6");
   } finally {
     await rm(dir, { recursive: true, force: true });
   }

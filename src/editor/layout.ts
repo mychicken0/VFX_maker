@@ -30,10 +30,14 @@ export function useStudioLayout() {
     }
   });
   const [drawer, setDrawer] = useState<"left" | "right" | null>(null);
-  const compact = size.width < 1000;
-  const short = size.height < 560;
+  const compact =
+    size.width <
+    Math.max(1000, layout.left + layout.right + 24 + 480 * layout.textScale);
+  const short = size.height < (compact ? 800 : 620) * layout.textScale;
+  const [shortTimeline, setShortTimeline] = useState<boolean | null>(null);
+  const timelineOpen = short ? (shortTimeline ?? false) : layout.timelineOpen;
   useEffect(() => {
-    if (short) setLayout((l) => ({ ...l, timelineOpen: false }));
+    setShortTimeline(null);
   }, [short]);
   useEffect(() => {
     const onResize = () => setSize({ width: innerWidth, height: innerHeight });
@@ -57,7 +61,8 @@ export function useStudioLayout() {
     right = Math.max(240, Math.floor(layout.right * factor));
   const timeline = Math.max(140, Math.min(layout.timeline, size.height - 260));
   const toggle = (panel: "left" | "right" | "timeline") => {
-    if (compact && panel !== "timeline")
+    if (panel === "timeline" && short) setShortTimeline(!timelineOpen);
+    else if (compact && panel !== "timeline")
       setDrawer((d) => (d === panel ? null : panel));
     else {
       const key = `${panel}Open` as const;
@@ -104,6 +109,8 @@ export function useStudioLayout() {
   return {
     layout,
     compact,
+    short,
+    timelineOpen,
     drawer,
     setDrawer,
     leftVisible,
@@ -116,13 +123,14 @@ export function useStudioLayout() {
     reset: () => {
       setLayout(defaults);
       setDrawer(null);
+      setShortTimeline(null);
     },
     style: {
       "--left-size": `${leftVisible && !compact ? left : 0}px`,
       "--right-size": `${rightVisible && !compact ? right : 0}px`,
       "--left-handle": leftVisible && !compact ? "10px" : "0px",
       "--right-handle": rightVisible && !compact ? "10px" : "0px",
-      "--timeline-size": `${layout.timelineOpen ? timeline : 43}px`,
+      "--timeline-size": `${timelineOpen ? timeline : 43 * layout.textScale}px`,
       "--ui-text-scale": layout.textScale,
     } as React.CSSProperties,
   };

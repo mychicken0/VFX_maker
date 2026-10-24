@@ -11,6 +11,7 @@ import {
 import {
   cleanupGroups,
   duplicateEditorLayer,
+  starterLayer,
   groupLayers,
   transformLayers,
   autoKeyTransform,
@@ -205,6 +206,18 @@ export function App() {
     [backups, setBackups] = useState<BackupItem[]>([]),
     [recoveryProject, setRecoveryProject] = useState<Project | null>(null);
   const layout = useStudioLayout();
+  const timelineWasOpen = useRef(true);
+  const toggleTimelineFocus = () => {
+    if (timelineFocus) {
+      setTimelineFocus(false);
+      if (!timelineWasOpen.current && layout.timelineOpen)
+        layout.toggle("timeline");
+    } else {
+      timelineWasOpen.current = layout.timelineOpen;
+      if (!layout.timelineOpen) layout.toggle("timeline");
+      setTimelineFocus(true);
+    }
+  };
   const toast = useCallback((text: string) => setMessage(text), []);
   useEffect(() => {
     if (!message) return;
@@ -697,31 +710,15 @@ export function App() {
       toast("Import a PNG first, then add a sprite.");
       return;
     }
-    const id = type + "-" + crypto.randomUUID().slice(0, 8),
-      name = uniqueLayerName(
-        `New ${type === "path" ? "stroke" : type}`,
-        project.layers.map((l) => l.name),
-      );
-    const next = layerSchema.parse({
-      id,
-      type,
-      name,
-      position: { x: project.canvas.width / 2, y: project.canvas.height / 2 },
-      duration: project.duration,
-      ...(type === "path"
-        ? {
-            points: [
-              { x: -30, y: 20 },
-              { x: 0, y: -15 },
-              { x: 30, y: -25 },
-            ],
-          }
-        : {}),
-      ...(type === "sprite" ? { asset: project.assets[0].id } : {}),
-    });
-    safeCommit({ ...project, layers: [...project.layers, next] });
-    setSelected(id);
-    setTab("layers");
+    try {
+      const id = type + "-" + crypto.randomUUID().slice(0, 8),
+        next = starterLayer(project, type, id);
+      commit({ ...project, layers: [...project.layers, next] });
+      setSelected(id);
+      setTab("layers");
+    } catch (e) {
+      toast(readableError(e));
+    }
   }
   function addStroke(points: Vec[]) {
     try {
@@ -849,9 +846,7 @@ export function App() {
           ? "Drag to resize timeline · double-click to expand"
           : "Drag to resize panel"
       }
-      onDoubleClick={() =>
-        panel === "timeline" && setTimelineFocus((value) => !value)
-      }
+      onDoubleClick={() => panel === "timeline" && toggleTimelineFocus()}
       onKeyDown={(e) => {
         if (
           !["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(e.key)
@@ -869,7 +864,7 @@ export function App() {
   );
   return (
     <div
-      className={`studio ${canvasFocus ? "canvas-focus" : ""} ${layout.compact ? "compact" : ""} ${layout.layout.timelineOpen ? (timelineFocus ? "timeline-focus" : "") : "timeline-collapsed"}`}
+      className={`studio ${canvasFocus ? "canvas-focus" : ""} ${layout.compact ? "compact" : ""} ${layout.short ? "room-short" : ""} ${layout.timelineOpen ? (timelineFocus ? "timeline-focus" : "") : "timeline-collapsed"}`}
       data-history={historyVersion}
       style={layout.style}
       onDragOver={(e) => {
@@ -1049,10 +1044,9 @@ export function App() {
           Inspector
         </button>
         <button
-          aria-pressed={layout.layout.timelineOpen && !canvasFocus}
+          aria-pressed={layout.timelineOpen && !canvasFocus}
           onClick={() => {
-            if (!canvasFocus || !layout.layout.timelineOpen)
-              layout.toggle("timeline");
+            if (!canvasFocus || !layout.timelineOpen) layout.toggle("timeline");
             setCanvasFocus(false);
           }}
         >
@@ -1462,9 +1456,9 @@ export function App() {
                 selection={selection}
                 time={time}
                 insert={(next, ids) => {
-                  safeCommit(next);
+                  commit(next);
                   setSelection(ids);
-                  setTab("layers");
+                  layout.setDrawer(null);
                   toast("Component inserted. Edit these layers independently.");
                 }}
               />
@@ -1592,7 +1586,7 @@ export function App() {
             updateProject={safeCommit}
             addStroke={addStroke}
           />
-          {layout.layout.timelineOpen && separator("timeline")}
+          {layout.timelineOpen && separator("timeline")}
           <Timeline
             onTiming={() => {
               setPlaying(false);
@@ -1602,10 +1596,7 @@ export function App() {
             autoKey={autoKey}
             setAutoKey={setAutoKey}
             focused={timelineFocus}
-            onFocus={() => {
-              if (!layout.layout.timelineOpen) layout.toggle("timeline");
-              setTimelineFocus((v) => !v);
-            }}
+            onFocus={toggleTimelineFocus}
             onKeyframeView={(open) => {
               if (open && innerHeight < 620) setTimelineFocus(true);
               else {

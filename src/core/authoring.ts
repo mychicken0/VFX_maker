@@ -64,6 +64,80 @@ export function resizeProject(
   return parseProject({
     ...project,
     canvas: { ...project.canvas, width, height },
+    ...(mode === "scale"
+      ? {
+          controls: project.controls.map((control) => ({
+            ...control,
+            bindings: control.bindings.flatMap((binding) => {
+              const offset =
+                  binding.target === "position.x"
+                    ? dx
+                    : binding.target === "position.y"
+                      ? dy
+                      : 0,
+                scaled = [
+                  "position.x",
+                  "position.y",
+                  "motion.x",
+                  "motion.y",
+                  "scale",
+                  "glow.blur",
+                ].includes(binding.target);
+              if (!scaled) return [binding];
+              if (binding.mode === "multiply")
+                return offset === 0
+                  ? [binding]
+                  : [
+                      binding,
+                      {
+                        ...binding,
+                        mode: "add" as const,
+                        factor: -offset * binding.factor,
+                        offset: offset * (1 - binding.offset),
+                      },
+                    ];
+              return [
+                {
+                  ...binding,
+                  factor: binding.factor * factor,
+                  offset:
+                    binding.offset * factor +
+                    (binding.mode === "set" ? offset : 0),
+                },
+              ];
+            }),
+          })),
+          ...(project.stage
+            ? {
+                stage: {
+                  ...project.stage,
+                  span: project.stage.span * factor,
+                  distance: project.stage.distance * factor,
+                  target: Object.fromEntries(
+                    Object.entries(project.stage.target).map(
+                      ([axis, value]) => [axis, value * factor],
+                    ),
+                  ),
+                  layers: Object.fromEntries(
+                    Object.entries(project.stage.layers).map(
+                      ([id, placement]) => [
+                        id,
+                        {
+                          ...placement,
+                          position: Object.fromEntries(
+                            Object.entries(placement.position).map(
+                              ([axis, value]) => [axis, value * factor],
+                            ),
+                          ),
+                        },
+                      ],
+                    ),
+                  ),
+                },
+              }
+            : {}),
+        }
+      : {}),
     editor:
       mode === "scale" && project.editor.reference
         ? {

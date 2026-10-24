@@ -1,6 +1,6 @@
 {
   "format": "vfx-maker",
-  "version": "0.7.5",
+  "version": "0.7.6",
   "name": "Workspace arc and sparks",
   "seed": 42,
   "canvas": {
@@ -14,13 +14,13 @@
   "loop": true,
   "layers": [
     {
-      "id": "node-8847835e",
+      "id": "node-dc779640",
       "name": "New ring",
       "visible": true,
       "locked": false,
       "modifiers": [
         {
-          "id": "node-5831d638",
+          "id": "node-6f310498",
           "enabled": true,
           "type": "outline",
           "thickness": 1,
@@ -153,7 +153,7 @@
       ]
     },
     {
-      "id": "node-2099b082",
+      "id": "node-6689e7f8",
       "name": "New particles",
       "visible": true,
       "locked": false,
@@ -320,7 +320,7 @@
   "groups": [],
   "controls": [
     {
-      "id": "node-59b36de1",
+      "id": "node-2ac37974",
       "name": "Arc",
       "min": -4096,
       "max": 4096,
@@ -328,7 +328,7 @@
       "step": 0.1,
       "bindings": [
         {
-          "layer": "node-8847835e",
+          "layer": "node-dc779640",
           "target": "arc",
           "mode": "set",
           "factor": 1,
@@ -340,19 +340,19 @@
   "variants": [],
   "editor": {
     "blueprint": {
-      "control:node-59b36de1": {
+      "control:node-2ac37974": {
         "x": 0,
         "y": 0
       },
-      "layer:node-8847835e": {
+      "layer:node-dc779640": {
         "x": 350,
         "y": 0
       },
-      "modifier:node-8847835e:node-5831d638": {
+      "modifier:node-dc779640:node-6f310498": {
         "x": 690,
         "y": 0
       },
-      "layer:node-2099b082": {
+      "layer:node-6689e7f8": {
         "x": 350,
         "y": 420
       },
@@ -367,17 +367,17 @@
     "projection": "orthographic",
     "azimuth": 45,
     "elevation": 35.26399999999999,
-    "distance": 92.34366876077088,
+    "distance": 92.3436687607709,
     "span": 76.5,
     "fov": 45,
     "target": {
       "x": 0,
-      "y": 15.75675482230155,
+      "y": 14.532004060885514,
       "z": -0.5
     },
     "plane": "upright",
     "layers": {
-      "node-8847835e": {
+      "node-dc779640": {
         "plane": "ground",
         "position": {
           "x": 0,
@@ -396,7 +396,7 @@
           "z": 1
         }
       },
-      "node-2099b082": {
+      "node-6689e7f8": {
         "plane": "billboard",
         "position": {
           "x": 0,

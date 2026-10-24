@@ -11,7 +11,7 @@ import {
 import { validateControls } from "./parameters.js";
 import { emissionPixels } from "./emission.js";
 
-export const VERSION = "0.7.5" as const;
+export const VERSION = "0.7.6" as const;
 const finite = z.number().finite();
 const bounded = (min: number, max: number) => finite.min(min).max(max);
 export const vecSchema = z
@@ -518,6 +518,7 @@ export function parseProject(value: unknown): Project {
       "0.7.2",
       "0.7.3",
       "0.7.4",
+      "0.7.5",
     ].includes(String(value.version))
   )
     value = { ...value, version: VERSION };

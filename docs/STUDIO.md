@@ -8,7 +8,7 @@ Use the Text selector for Comfortable/Large/Extra large labels; the choice and p
 sizes are remembered locally. Reset layout restores the canvas-first defaults.
 
 **Focus canvas** hides both side panels and the timeline; **Restore panels** returns
-to your workspace. Short windows start with only the transport bar; Focus timeline
+to your workspace. Short windows and large text use only the transport bar; Focus timeline
 opens the full animation workspace. The transport scrubber stays usable while folded.
 
 The canvas fits the available workspace, up to 1600%, instead of stopping at 300%.
@@ -149,3 +149,19 @@ Set gradient also colors achromatic smoke and makes one undoable edit. It replac
 layer source gradients/tints; embedded PNG pixels, modifiers and the background
 are preserved. Fully affected hue controls reset to neutral; mixed controls lose
 only the affected hue bindings, preserving unselected or locked layer colors.
+
+## Responsive workspace and reusable parts
+
+Drawer layout adapts to panel widths and text size, not only a fixed screen width.
+Short windows temporarily fold the timeline. Desktop panel/height preferences
+remain saved and return when the window grows. Focus timeline / Restore canvas
+returns to the previous folded state. View options stay clickable in short windows.
+
+Library → Saved stores selected parts. Insert keeps that library tab available
+for repeated placement on desktop; narrow drawers close to show the canvas.
+Inserted layers, groups and independent controls receive distinct names. Stage
+planes/placements are remapped to the inserted layer IDs; the receiving camera
+stays in charge. A component with no Stage metadata keeps its ordinary 2D behavior.
+
+Resize canvas → scale also transforms spatial control bindings and the saved
+Stage camera/world positions. Canvas-only mode keeps those settings unchanged.

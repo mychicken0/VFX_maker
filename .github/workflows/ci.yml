@@ -26,13 +26,13 @@ jobs:
       - run: node scripts/package-release.mjs
       - uses: actions/upload-artifact@v4
         with:
-          name: vfx-maker-0.7.5
+          name: vfx-maker-0.7.6
           path: |
-            vfx-maker-0.7.5.tgz
-            vfx-maker-0.7.5-studio.zip
-            vfx-maker-0.7.5-studio.zip.sha256
+            vfx-maker-0.7.6.tgz
+            vfx-maker-0.7.6-studio.zip
+            vfx-maker-0.7.6-studio.zip.sha256
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: browser-checks-0.7.5
+          name: browser-checks-0.7.6
           path: test-results

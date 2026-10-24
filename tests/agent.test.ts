@@ -207,7 +207,7 @@ describe("agent coordinates and atomic editing", () => {
   });
   it("reads 0.7.1 projects without changing source data", () => {
     const p = { ...getPreset(), version: "0.7.1" };
-    expect(parseProject(p).version).toBe("0.7.5");
+    expect(parseProject(p).version).toBe("0.7.6");
     expect(p.version).toBe("0.7.1");
   });
 });

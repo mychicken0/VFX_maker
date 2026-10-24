@@ -1,0 +1,15 @@
+{
+  "version": "0.7.6",
+  "viewport": {
+    "width": 1024,
+    "height": 600
+  },
+  "textScale": 1.3,
+  "canvas": {
+    "x": 367.4453125,
+    "y": 176.9921875,
+    "width": 289.109375,
+    "height": 289.109375
+  },
+  "pageErrors": []
+}

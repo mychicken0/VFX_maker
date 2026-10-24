@@ -166,13 +166,14 @@ SDK can reject malformed tool inputs before these handlers run.
 
 ## Available tools
 
-40 tools are available. Existing direct tools remain supported.
+41 tools are available. Existing direct tools remain supported.
 
 | Tool                                                       | Purpose                                                                                              |
 | ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
 | capabilities                                               | Installed version, root, coordinates, workflows and budgets                                          |
 | list_presets / get_preset                                  | Editable example discovery                                                                           |
 | get_schema                                                 | Project/layer/asset/pixels/export/creative/modifier/control/edits/observation/analysis/batch schemas |
+| get_node_catalog                                           | Shared Add catalog with availability reasons and validated example edits                             |
 | new_project / inspect_project                              | Create or read full source                                                                           |
 | set_gradient                                               | Exact solid color or gradient for all/selected layer source colors                                   |
 | preflight_export                                           | Numeric resource usage/limits without a browser                                                      |

@@ -132,7 +132,7 @@ guides are not exported. `view` distinguishes 2D and Stage QA baselines.
 ## 0.7.5 workspaces
 
 `core/catalog.ts` owns starter layer data, modifier/control availability and shared
-creation/duplication. Blueprint and MCP get_node_catalog consume it; generated
+creation/duplication. 2D Add, Blueprint, Stage and MCP get_node_catalog consume it; generated
 example edits use the normal atomic edit validator. Existing presets are data and
 are unchanged by starter defaults.
 
@@ -144,3 +144,15 @@ redraws, supports native editor viewport size and alpha picking/bounds. The Stag
 UI owns a separate output renderer for exact PNG previews and exports, so guides,
 selection and live scene navigation cannot contaminate output pixels. Exit disposes
 both renderers, textures, helpers and event listeners.
+
+## 0.7.6 workflow repairs
+
+`core/authoring.ts` transforms spatial control bindings along with resized base
+geometry, and rescales Stage world/camera coordinates. `core/components.ts` keeps
+only selected placements when saving and remaps them on insertion without
+changing the receiving camera; names are allocated independently from IDs.
+
+`editor/layout.ts` separates temporary compact/short-window state from persisted
+desktop preferences. Canvas space is considered alongside panel widths and text
+scale. The file hook recognizes a connection link pasted into an existing tab
+and reloads that session, so fragment-only navigation runs normal attachment.

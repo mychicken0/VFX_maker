@@ -278,6 +278,10 @@ test("Save writes the connected disk file, restores backups, remembers Save As a
     document: { store, file: "original.vfx.json" },
   });
   try {
+    // A user can paste the CLI's file link into an existing Studio tab.
+    // Hash-only navigation must establish the file session as a new tab does.
+    await page.goto(server.url + "/");
+    await expect(page.locator(".pixi-host canvas")).toBeVisible();
     await page.goto(server.url + "/#project=" + server.token);
     await expect(page.locator(".document-status")).toContainText(
       "original.vfx.json",

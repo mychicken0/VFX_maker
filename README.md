@@ -1,15 +1,16 @@
-# VFX Maker 0.7.5 — AI-native pixel VFX studio
+# VFX Maker 0.7.6 — AI-native pixel VFX studio
 
 **Draw and customize effects in a visual editor. Let an AI agent use the same tools through MCP.**
 Built with TypeScript, PixiJS 8 and React 19. MIT licensed, local, and usable from
 any game/project folder. The browser editor, Terminal and MCP share validated
 project operations and the same renderer.
 
-**0.7.5:** searchable **Add** creates real layers, modifiers and controls in
-Blueprint. Scene editing has native-resolution handles, an outliner, alpha picking,
-Move/Rotate/Scale gizmos, orbit/pan/zoom and a separate exact camera preview.
-2D remains the canvas-first default.
-[Release notes](docs/RELEASE_0.7.5.md) · [Blender interaction research](docs/RESEARCH_0.7.5.md).
+**0.7.6:** fixes found during browser and MCP workflows: PNG import through MCP,
+fitted layer generators shared by 2D/Blueprint/MCP, Stage component reuse, controlled
+composition resizing and adaptive layouts for short windows/large text.
+2D remains the canvas-first default. [Audit and coverage](docs/AUDIT_0.7.6.md) ·
+[Small-window screenshot](examples/usability/README.md).
+[Release notes](docs/RELEASE_0.7.6.md) · [Blender interaction research](docs/RESEARCH_0.7.5.md).
 
 ![VFX Maker Studio](examples/studio.png)
 
@@ -98,8 +99,8 @@ Actual GIFs exported by VFX Maker. Each caption opens its editable project.
 
 ## Run
 
-For people using Studio: download **vfx-maker-0.7.5-studio.zip** from the
-[release](https://github.com/mychicken0/VFX_maker/releases/tag/v0.7.5), extract it,
+For people using Studio: download **vfx-maker-0.7.6-studio.zip** from the
+[release](https://github.com/mychicken0/VFX_maker/releases/tag/v0.7.6), extract it,
 and open **Start VFX Maker.cmd** on Windows or **Start VFX Maker.command** on macOS.
 On Linux run `./Start-VFX-Maker.sh` (or `node launch.mjs`). Install **Node.js 24 LTS**
 once first. The first launch installs dependencies locally; subsequent launches
@@ -108,7 +109,7 @@ These are Node launchers, not a bundled desktop binary; Windows/macOS scripts
 have not been tested on those operating systems.
 
 **Updating:** stop the old Studio Terminal, then open Start from the newly
-extracted 0.7.5 folder. Import your saved project or use connected Open/Save.
+extracted 0.7.6 folder. Import your saved project or use connected Open/Save.
 When reusing a launcher folder, it checks the installed version before starting.
 
 Requires **Node 22.18+** (Node 24 recommended). From source:
@@ -119,10 +120,10 @@ npm run build
 node dist/cli.js studio --open
 ```
 
-Or install the prepared `vfx-maker-0.7.5.tgz` once and use it in any folder:
+Or install the prepared `vfx-maker-0.7.6.tgz` once and use it in any folder:
 
 ```bash
-npm install -g /path/to/vfx-maker-0.7.5.tgz
+npm install -g /path/to/vfx-maker-0.7.6.tgz
 cd /path/to/your/game
 vfx studio --open
 ```
@@ -348,7 +349,7 @@ See [pixel workflows](docs/PIXEL_WORKFLOWS.md),
 [0.7.2 agent tools](docs/RELEASE_0.7.2.md),
 [0.7.1 UI fixes](docs/RELEASE_0.7.1.md),
 [0.7.0 features](docs/RELEASE_0.7.0.md),
-[validation](docs/VALIDATION_0.7.5.md),
+[validation](docs/VALIDATION_0.7.6.md),
 [previous authoring release](docs/RELEASE_0.6.0.md), and
 [project compatibility](docs/MIGRATION.md).
 

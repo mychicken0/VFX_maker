@@ -159,7 +159,7 @@ describe("shared Blueprint operations", () => {
   it("opens 0.7.3 files without changing base effect values", () => {
     const p = source(),
       opened = parseProject({ ...p, version: "0.7.3" });
-    expect(opened.version).toBe("0.7.5");
+    expect(opened.version).toBe("0.7.6");
     expect(opened.layers).toEqual(p.layers);
   });
 });

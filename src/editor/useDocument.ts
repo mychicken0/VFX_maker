@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { parseText, type Project } from "../core/model.js";
 import { serialize } from "../core/api.js";
 import { downloadFile, safeFilename } from "./files.js";
@@ -37,6 +37,16 @@ function sessionToken(value?: string | null): string | null {
 }
 export type BackupItem = { id: string; updated: number; bytes: number };
 export function useDocument() {
+  useEffect(() => {
+    // Pasting the CLI's connection link into an already open Studio tab only
+    // changes the hash. Start a fresh document session just as a new tab does.
+    const connectLink = () => {
+      if (new URLSearchParams(location.hash.slice(1)).get("project"))
+        location.reload();
+    };
+    window.addEventListener("hashchange", connectLink);
+    return () => window.removeEventListener("hashchange", connectLink);
+  }, []);
   const [binding, setState] = useState<Binding | null>(null),
     [busy, setBusy] = useState(false);
   const current = useRef<Binding | null>(null),

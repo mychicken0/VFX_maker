@@ -434,7 +434,13 @@ tool(
     rows: z.number().int().optional(),
     frames: z.number().int().optional(),
   },
-  (a) => s.importAsset(a.file, a.revision, a.png, a),
+  (a) =>
+    s.importAsset(a.file, a.revision, a.png, {
+      id: a.id,
+      columns: a.columns,
+      rows: a.rows,
+      frames: a.frames,
+    }),
 );
 tool(
   "optimize_png",

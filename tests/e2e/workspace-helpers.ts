@@ -2,7 +2,11 @@ import type { Page } from "@playwright/test";
 /** Existing authoring flows explicitly open optional panels; fresh defaults are
  * exercised separately in usability.spec.ts. Use the same controls as an artist. */
 export async function editingWorkspace(page: Page) {
-  if ((page.viewportSize()?.width ?? 0) >= 1000) {
+  if (
+    !(await page
+      .locator(".studio")
+      .evaluate((el) => el.classList.contains("compact")))
+  ) {
     const library = page.getByRole("button", { name: "Library", exact: true });
     if ((await library.getAttribute("aria-pressed")) === "false")
       await library.click();
