@@ -1,6 +1,6 @@
 # Project compatibility
 
-Version 0.7.4 opens 0.4.0, 0.5.0, 0.6.0, 0.7.0, 0.7.1, 0.7.2 and 0.7.3 `.vfx.json` projects and supplies defaults for
+Version 0.7.5 opens 0.4.0, 0.5.0, 0.6.0, 0.7.0, 0.7.1, 0.7.2, 0.7.3 and 0.7.4 `.vfx.json` projects and supplies defaults for
 output settings, groups, editor settings, controls, variants, modifiers and particle trails. Reading does not overwrite the source file. Saving or editing writes
 the current version. Unknown formats and future versions are rejected.
 
@@ -42,3 +42,7 @@ Optional `stage` data stores camera and plane placement for the separate 2.5D /
 3D workspace. Opening a normal 2D project does not add it. The default renderer
 ignores camera metadata; use explicit `view:"stage"` for baked camera output and
 Stage QA. Removing layers also removes their plane placements.
+
+0.7.5 supplies a default `stage.layers[ID].stretch` of `{x:1,y:1,z:1}` for older
+placements. Uniform scale and previous placement behavior remain. Editing-view
+navigation stays outside project data; explicit camera alignment is saved.

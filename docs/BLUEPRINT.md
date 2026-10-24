@@ -4,6 +4,12 @@ Open **Blueprint** in Studio. The canvas workspace remains the simple default.
 The graph starts with the chosen layer to keep nodes readable; choose **All layers**
 for the complete composition. A live effect preview remains beside the graph.
 
+**+ Add** / **Shift+A** / right-click opens a searchable catalog. Add Particles,
+Stroke, Ring, Sprite, Texture, a modifier on the selected layer, or Number control.
+Sprite needs an imported PNG; unavailable entries explain the required action.
+Select a new node to edit it; use Delete/X and Duplicate/Shift+D. The preview has
+playback and a scrubber. Properties can be folded for more graph room.
+
 A **Number control** has one purple value output. A layer exposes numeric/curve/hue
 input ports. Drag the output to a port or use **Connect parameters** for a keyboard
 accessible alternative. **Show input port** exposes any field from the validated
@@ -21,8 +27,9 @@ Controls run in project order. Their current evaluated result must satisfy layer
 and resource limits; choosing a connection or value that violates them fails and
 keeps the previous effect. A control's entire slider range is not pre-certified.
 
-Select a control node to edit its name and min/max or remove it. Select a layer or
-modifier node for its **Modifiers** panel. Green dashed image wires show the
+New controls accept -4096..4096 by default. Scalar wires use Set, while curve/scale
+wires use Multiply; click a wire to change this. Select a control node to edit its
+name/range or remove it. Select a layer for its Inspector or a modifier for its settings. Green dashed image wires show the
 renderer order: layer → ordered modifiers → composite output. They are informative,
 not rewirable image sockets. Reorder/bypass/remove modifiers in that panel.
 There are no arbitrary expressions, control-to-control links or graph cycles.
@@ -83,3 +90,8 @@ A binding's `index` is valid only for its observed revision; stale mutations fai
 Bezier handles aligned. For coordinates use `set_path_points` with explicit
 local/canvas/normalized space; port/curve discovery uses `get_schema` and
 `get_blueprint`. Existing creative operations still edit controls and modifiers.
+
+MCP `get_node_catalog {file,layer?}` returns the same entries and disabled reasons,
+plus ready-to-use `edit` payloads. Apply a payload using the returned revision;
+preview it first through `observe_project` draft edits. Source bytes remain unchanged
+until commit.

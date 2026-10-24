@@ -128,3 +128,19 @@ encoders. Stage is lazy-loaded in a separate `StageStudio` dialog and headless
 render bridge; the default 2D renderer never applies camera metadata. Export
 preflight additionally checks source-layer pixel work. Node layout and preview
 guides are not exported. `view` distinguishes 2D and Stage QA baselines.
+
+## 0.7.5 workspaces
+
+`core/catalog.ts` owns starter layer data, modifier/control availability and shared
+creation/duplication. Blueprint and MCP get_node_catalog consume it; generated
+example edits use the normal atomic edit validator. Existing presets are data and
+are unchanged by starter defaults.
+
+`editor/StageScene.ts` uses Three OrbitControls and TransformControls with an
+editor-only proxy and transient project drafts. It serializes accepted plane
+transforms through shared operations. The view camera is ephemeral until explicit
+alignment. `render/stage.ts` caches source layer textures for repeated camera-only
+redraws, supports native editor viewport size and alpha picking/bounds. The Stage
+UI owns a separate output renderer for exact PNG previews and exports, so guides,
+selection and live scene navigation cannot contaminate output pixels. Exit disposes
+both renderers, textures, helpers and event listeners.

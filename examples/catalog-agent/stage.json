@@ -1,0 +1,74 @@
+{
+  "revision": "3491b68aa0e8976934b06bb053251e8ea4d03c047c402f9056455a51fbbe681a",
+  "configured": true,
+  "stage": {
+    "mode": "2.5d",
+    "projection": "orthographic",
+    "azimuth": 30,
+    "elevation": 38,
+    "distance": 320,
+    "span": 110,
+    "fov": 45,
+    "target": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "plane": "ground",
+    "layers": {
+      "layer-particles-new": {
+        "plane": "billboard",
+        "position": {
+          "x": 0,
+          "y": 18,
+          "z": 0
+        },
+        "rotation": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "scale": 1,
+        "stretch": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      }
+    }
+  },
+  "coordinates": {
+    "units": "canvas-pixel world units",
+    "x": "right",
+    "y": "up",
+    "z": "world front (+Z); camera orbits independently",
+    "rotation": "local XYZ Euler degrees",
+    "source": "each layer is its full original canvas rendered on a plane, centered at world origin",
+    "export": "camera-baked RGBA; grid, axes and reference character are preview-only",
+    "geometry": "textured effect planes, not volumetric XYZ particles or mesh simulation"
+  },
+  "layers": [
+    {
+      "id": "layer-ring-new",
+      "name": "Arc field",
+      "locked": false,
+      "visible": true
+    },
+    {
+      "id": "layer-particles-new",
+      "name": "Rising motes",
+      "locked": false,
+      "visible": true
+    }
+  ],
+  "render": {
+    "tool": "render_preview",
+    "file": "aura.vfx.json",
+    "view": "stage"
+  },
+  "export": {
+    "options": {
+      "view": "stage"
+    }
+  }
+}

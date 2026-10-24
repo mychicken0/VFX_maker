@@ -1,0 +1,385 @@
+{
+  "format": "vfx-maker",
+  "version": "0.7.5",
+  "name": "Catalog aura",
+  "seed": 75,
+  "canvas": {
+    "width": 128,
+    "height": 128,
+    "pixelArt": true,
+    "background": "#110f19"
+  },
+  "duration": 1.2,
+  "fps": 24,
+  "loop": true,
+  "layers": [
+    {
+      "id": "layer-ring-new",
+      "name": "Arc field",
+      "visible": true,
+      "locked": false,
+      "modifiers": [
+        {
+          "id": "modifier-outline-new",
+          "enabled": true,
+          "type": "outline",
+          "thickness": 1,
+          "color": "#ffffff",
+          "alpha": 1
+        }
+      ],
+      "start": 0,
+      "duration": 1.2,
+      "repeat": false,
+      "position": {
+        "x": 64,
+        "y": 64
+      },
+      "rotation": 0,
+      "scale": 1,
+      "opacity": [
+        {
+          "t": 0,
+          "value": 1,
+          "ease": "linear"
+        },
+        {
+          "t": 1,
+          "value": 0,
+          "ease": "linear"
+        }
+      ],
+      "motion": {
+        "x": [
+          {
+            "t": 0,
+            "value": 0,
+            "ease": "linear"
+          },
+          {
+            "t": 1,
+            "value": 0,
+            "ease": "linear"
+          }
+        ],
+        "y": [
+          {
+            "t": 0,
+            "value": 0,
+            "ease": "linear"
+          },
+          {
+            "t": 1,
+            "value": 0,
+            "ease": "linear"
+          }
+        ],
+        "rotation": [
+          {
+            "t": 0,
+            "value": 0,
+            "ease": "linear"
+          },
+          {
+            "t": 1,
+            "value": 0,
+            "ease": "linear"
+          }
+        ],
+        "scale": [
+          {
+            "t": 0,
+            "value": 1,
+            "ease": "linear"
+          },
+          {
+            "t": 1,
+            "value": 1,
+            "ease": "linear"
+          }
+        ]
+      },
+      "blend": "add",
+      "glow": {
+        "strength": 0,
+        "blur": 3
+      },
+      "type": "ring",
+      "radius": [
+        {
+          "t": 0,
+          "value": 6.4,
+          "ease": "linear"
+        },
+        {
+          "t": 0.4,
+          "value": 38.4,
+          "ease": "linear"
+        },
+        {
+          "t": 1,
+          "value": 46.08,
+          "ease": "linear"
+        }
+      ],
+      "width": [
+        {
+          "t": 0,
+          "value": 3.2,
+          "ease": "linear"
+        },
+        {
+          "t": 0.5,
+          "value": 2.56,
+          "ease": "linear"
+        },
+        {
+          "t": 1,
+          "value": 0,
+          "ease": "linear"
+        }
+      ],
+      "arc": 360,
+      "segments": 64,
+      "colors": [
+        {
+          "t": 0,
+          "color": "#e0ffff"
+        },
+        {
+          "t": 1,
+          "color": "#49baff"
+        }
+      ]
+    },
+    {
+      "id": "layer-particles-new",
+      "name": "Rising motes",
+      "visible": true,
+      "locked": false,
+      "modifiers": [],
+      "start": 0,
+      "duration": 1.2,
+      "repeat": false,
+      "position": {
+        "x": 64,
+        "y": 82
+      },
+      "rotation": 0,
+      "scale": 1,
+      "opacity": [
+        {
+          "t": 0,
+          "value": 1,
+          "ease": "linear"
+        },
+        {
+          "t": 1,
+          "value": 0,
+          "ease": "linear"
+        }
+      ],
+      "motion": {
+        "x": [
+          {
+            "t": 0,
+            "value": 0,
+            "ease": "linear"
+          },
+          {
+            "t": 1,
+            "value": 0,
+            "ease": "linear"
+          }
+        ],
+        "y": [
+          {
+            "t": 0,
+            "value": 0,
+            "ease": "linear"
+          },
+          {
+            "t": 1,
+            "value": 0,
+            "ease": "linear"
+          }
+        ],
+        "rotation": [
+          {
+            "t": 0,
+            "value": 0,
+            "ease": "linear"
+          },
+          {
+            "t": 1,
+            "value": 0,
+            "ease": "linear"
+          }
+        ],
+        "scale": [
+          {
+            "t": 0,
+            "value": 1,
+            "ease": "linear"
+          },
+          {
+            "t": 1,
+            "value": 1,
+            "ease": "linear"
+          }
+        ]
+      },
+      "blend": "add",
+      "glow": {
+        "strength": 0,
+        "blur": 3
+      },
+      "type": "particles",
+      "mode": "burst",
+      "count": 48,
+      "rate": 60,
+      "life": [
+        0.5,
+        1
+      ],
+      "speed": [
+        30,
+        65
+      ],
+      "angle": -90,
+      "spread": 35,
+      "spawn": {
+        "shape": "point",
+        "threshold": 0.1,
+        "radius": 10,
+        "width": 20,
+        "height": 20
+      },
+      "trail": {
+        "samples": 0,
+        "seconds": 0.12,
+        "width": 1,
+        "opacity": 0.5
+      },
+      "points": [
+        {
+          "x": -35,
+          "y": -35
+        },
+        {
+          "x": 35,
+          "y": 35
+        }
+      ],
+      "travel": 0.2,
+      "gravity": {
+        "x": 0,
+        "y": 0
+      },
+      "drag": 0.6,
+      "turbulence": 0,
+      "frequency": 4,
+      "shape": "spark",
+      "size": [
+        {
+          "t": 0,
+          "value": 4.48,
+          "ease": "linear"
+        },
+        {
+          "t": 0.5,
+          "value": 2.56,
+          "ease": "linear"
+        },
+        {
+          "t": 1,
+          "value": 0,
+          "ease": "linear"
+        }
+      ],
+      "colors": [
+        {
+          "t": 0,
+          "color": "#e0ffff"
+        },
+        {
+          "t": 1,
+          "color": "#49baff"
+        }
+      ],
+      "spin": [
+        -180,
+        180
+      ],
+      "stretch": 2,
+      "frameMode": "life",
+      "frameFps": 12
+    }
+  ],
+  "assets": [],
+  "groups": [],
+  "controls": [
+    {
+      "id": "control-number-new",
+      "name": "Arc",
+      "min": -4096,
+      "max": 4096,
+      "value": 270,
+      "step": 0.1,
+      "bindings": [
+        {
+          "layer": "layer-ring-new",
+          "target": "arc",
+          "mode": "set",
+          "factor": 1,
+          "offset": 0
+        }
+      ]
+    }
+  ],
+  "variants": [],
+  "editor": {},
+  "stage": {
+    "mode": "2.5d",
+    "projection": "orthographic",
+    "azimuth": 30,
+    "elevation": 38,
+    "distance": 320,
+    "span": 110,
+    "fov": 45,
+    "target": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "plane": "ground",
+    "layers": {
+      "layer-particles-new": {
+        "plane": "billboard",
+        "position": {
+          "x": 0,
+          "y": 18,
+          "z": 0
+        },
+        "rotation": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "scale": 1,
+        "stretch": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      }
+    }
+  },
+  "output": {
+    "scale": 1,
+    "colors": 0,
+    "dither": false,
+    "pixelSize": 1,
+    "alphaLevels": 0
+  }
+}

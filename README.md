@@ -1,15 +1,15 @@
-# VFX Maker 0.7.4 — AI-native pixel VFX studio
+# VFX Maker 0.7.5 — AI-native pixel VFX studio
 
 **Draw and customize effects in a visual editor. Let an AI agent use the same tools through MCP.**
 Built with TypeScript, PixiJS 8 and React 19. MIT licensed, local, and usable from
 any game/project folder. The browser editor, Terminal and MCP share validated
 project operations and the same renderer.
 
-**0.7.4:** larger canvas-first workspace, comfortable text sizes, direct Move /
-Scale / Rotate tools, editable pen/Bezier paths and draggable curves, a resizable
-and zoomable timeline, **Blueprint** for visual parameter connections, and a
-separate **2.5D / 3D Stage** for camera-baked game effects.
-[Release notes](docs/RELEASE_0.7.4.md) · [Research and upstream licenses](docs/RESEARCH_0.7.4.md).
+**0.7.5:** searchable **Add** creates real layers, modifiers and controls in
+Blueprint. Scene editing has native-resolution handles, an outliner, alpha picking,
+Move/Rotate/Scale gizmos, orbit/pan/zoom and a separate exact camera preview.
+2D remains the canvas-first default.
+[Release notes](docs/RELEASE_0.7.5.md) · [Blender interaction research](docs/RESEARCH_0.7.5.md).
 
 ![VFX Maker Studio](examples/studio.png)
 
@@ -20,14 +20,24 @@ separate **2.5D / 3D Stage** for camera-baked game effects.
 
 </details>
 
+<details>
+<summary>Built from an empty file through the actual UI</summary>
+
+![Searchable Add](examples/workspaces/blueprint-add.png)
+![Scene editing with gizmos](examples/workspaces/stage-scene.png)
+
+[Step-by-step screenshots, editable project and exported GIF](examples/workspaces/README.md).
+
+</details>
+
 ## AI-native, with results an agent can verify
 
-MCP exposes **40 tools**: discovery and schemas, editable projects, layer/path
+MCP exposes **41 tools**: discovery and schemas, editable projects, layer/path
 operations, Blueprint ports and connections, annotated PNG previews, exact canvas
 coordinates, dry-run transactions, revisions/backups, independent project batches,
 render budget preflight, numeric RGBA parity/baselines and game exports.
 
-A practical workflow is **capabilities → new_project → get_blueprint /
+A practical workflow is **capabilities → new_project → get_node_catalog / get_blueprint /
 observe_project → preview edits → apply_edits → analyze_project → export**.
 Agents can edit the same parameters and paths as a person, then open the resulting
 `.vfx.json` in Studio. Image resources can be read/saved when a host omits inline
@@ -36,27 +46,34 @@ images; an agent must report that limitation rather than claiming to have seen a
 This is a local authoring tool for external MCP clients; Studio does not contain a
 hosted AI model or chat service. [MCP setup and examples](docs/MCP.md) ·
 [Shared Blueprint operations](docs/BLUEPRINT.md) ·
-[Real MCP-created effect, transcript and QA](examples/blueprint-agent/README.md).
+[Real catalog MCP example, transcript and QA](examples/catalog-agent/README.md).
 
 ## Optional 2.5D / 3D Stage
 
-**2D remains the default editor.** Open **2.5D / 3D** for a separate workspace:
-isometric or perspective camera, orbit controls, ground/upright/billboard planes,
-per-layer depth and camera exports. Advanced settings stay folded.
-The same editable effect layers become textured planes; this release does not
-simulate volumetric XYZ particles. GIFs, atlases and game exports bake the selected
-camera, with grid/axes excluded. Agents use `get_stage`, shared edit batches,
-`render_preview` and `analyze_project` with `view:"stage"`, and export `options.view`.
-[Stage guide](docs/STAGE.md) · [Editable examples and MCP evidence](examples/stage/README.md).
+**2D remains the default editor.** Open **2.5D / 3D** to place effect layers in a
+scene. Select from the outliner or click visible effect pixels. Use **G / R / S**
+or the Move/Rotate/Scale buttons and drag an axis handle. **Escape** cancels a
+transform; Undo restores it. Middle-drag or Alt+drag orbits, Shift+middle-drag pans,
+and wheel zooms. **F** frames selected, Shift+F frames all.
+
+Scene navigation is independent from the saved output camera. **Use view for
+export** aligns that camera; **Camera preview** displays its actual output pixels.
+Grid starts off. A native-resolution editing canvas keeps handles clear; exports
+keep their chosen pixel resolution. Layer position, rotation and independent axis
+scale are editable and saved.
+
+This stage projects animated effect planes through a real camera. Game outputs
+are baked GIF/PNG/atlases; volumetric particles and mesh exports are outside its
+scope. [Stage guide](docs/STAGE.md) · [Camera examples](examples/stage/README.md).
 
 <details>
 <summary>Camera-stage GIF examples</summary>
 
-| Isometric healing field                                                                   | Crimson cross in depth                                                                 |
-| ----------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
-| ![Healing field through an isometric camera](examples/stage/isometric-heal/animation.gif) | ![Sword planes through a perspective camera](examples/stage/depth-cross/animation.gif) |
+| Isometric healing field                                         | Crimson cross in depth                                                                 |
+| --------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| ![Isometric field](examples/stage/isometric-heal/animation.gif) | ![Sword planes through a perspective camera](examples/stage/depth-cross/animation.gif) |
 
-[Open the projects](examples/stage/README.md). These are camera-baked exports.
+[Open editable projects](examples/stage/README.md).
 
 </details>
 
@@ -81,14 +98,18 @@ Actual GIFs exported by VFX Maker. Each caption opens its editable project.
 
 ## Run
 
-For people using Studio: download **vfx-maker-0.7.4-studio.zip** from the
-[release](https://github.com/mychicken0/VFX_maker/releases/tag/v0.7.4), extract it,
+For people using Studio: download **vfx-maker-0.7.5-studio.zip** from the
+[release](https://github.com/mychicken0/VFX_maker/releases/tag/v0.7.5), extract it,
 and open **Start VFX Maker.cmd** on Windows or **Start VFX Maker.command** on macOS.
 On Linux run `./Start-VFX-Maker.sh` (or `node launch.mjs`). Install **Node.js 24 LTS**
 once first. The first launch installs dependencies locally; subsequent launches
 open Studio in your browser. Keep the launcher Terminal running while editing.
 These are Node launchers, not a bundled desktop binary; Windows/macOS scripts
 have not been tested on those operating systems.
+
+**Updating:** stop the old Studio Terminal, then open Start from the newly
+extracted 0.7.5 folder. Import your saved project or use connected Open/Save.
+When reusing a launcher folder, it checks the installed version before starting.
 
 Requires **Node 22.18+** (Node 24 recommended). From source:
 
@@ -98,10 +119,10 @@ npm run build
 node dist/cli.js studio --open
 ```
 
-Or install the prepared `vfx-maker-0.7.4.tgz` once and use it in any folder:
+Or install the prepared `vfx-maker-0.7.5.tgz` once and use it in any folder:
 
 ```bash
-npm install -g /path/to/vfx-maker-0.7.4.tgz
+npm install -g /path/to/vfx-maker-0.7.5.tgz
 cd /path/to/your/game
 vfx studio --open
 ```
@@ -277,7 +298,7 @@ For clients with `mcpServers`, merge this entry into their settings:
 }
 ```
 
-40 tools cover templates, schemas, portable projects, layer/group transforms,
+41 tools cover templates, schemas, portable projects, layer/group transforms,
 keyframes, backups and restoration, direct layer updates,
 embedded assets, inline image previews, PNG optimization, canvas resizing,
 recoloring, ordered modifiers, macro controls, components, variants, exports and
@@ -327,7 +348,7 @@ See [pixel workflows](docs/PIXEL_WORKFLOWS.md),
 [0.7.2 agent tools](docs/RELEASE_0.7.2.md),
 [0.7.1 UI fixes](docs/RELEASE_0.7.1.md),
 [0.7.0 features](docs/RELEASE_0.7.0.md),
-[validation](docs/VALIDATION_0.7.4.md),
+[validation](docs/VALIDATION_0.7.5.md),
 [previous authoring release](docs/RELEASE_0.6.0.md), and
 [project compatibility](docs/MIGRATION.md).
 

@@ -1,0 +1,16 @@
+{
+  "version": "0.7.5",
+  "tools": 41,
+  "draftKeptSource": true,
+  "draftCommitPngSha256": "33ac9150a2dfc7edf08a0c020d523efe63d9a28d1d54d2da167a95a4cf4b74e4",
+  "parity": {
+    "checked": true,
+    "passed": true,
+    "order": "reverse",
+    "mismatches": []
+  },
+  "formats": [
+    "gif",
+    "godot"
+  ]
+}

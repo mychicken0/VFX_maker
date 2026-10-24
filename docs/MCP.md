@@ -414,3 +414,11 @@ and optional revision/edits for a source-preserving draft.
 `analyze_project {view:"stage"}` checks projected raw RGBA; it will not accept a
 2D baseline as a matching Stage baseline. Export jobs/batches accept
 `options:{view:"stage"}`. See [Stage examples and limitations](STAGE.md).
+
+## Add catalog
+
+`get_node_catalog {file,layer?}` reads the same catalog as Studio Add. Each available
+entry includes a validated example `edit`; unavailable entries explain why.
+Preview/commit it using the returned revision. IDs are chosen to avoid current
+project IDs. You can customize its generated layer/control values before the normal
+atomic validation. Catalog lookup does not open a browser or write files.

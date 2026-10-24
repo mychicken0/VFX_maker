@@ -1,6 +1,6 @@
 {
   "format": "vfx-maker.export",
-  "version": "0.7.4",
+  "version": "0.7.5",
   "name": "Isometric healing field",
   "renderer": "three-stage-pixi-planes",
   "view": "stage",
@@ -438,6 +438,6 @@
     "atlas.png": "63e7bf0d67444cbe0f4b18430596d3e4dd52fe7a807a4558d88f2d94c8424ae6",
     "effect.tres": "578f5f824d5eae894881f680c6444157a31d90dad6b900211c20d2d8183a431b",
     "IMPORT.txt": "ca7d71cea304d30f0e221ba74c9ebda47c1ccfb805576fce103525ff9d08b359",
-    "effect.vfx.json": "0fbd0b22b208e6db582662c7582643e09ffcf1c0a9751feeeb42bee7ac3fc672"
+    "effect.vfx.json": "28c56fafc36b056ea03a6916baae7e6d7ced42722988adee74e5dfabb1e251a1"
   }
 }

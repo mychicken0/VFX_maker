@@ -1,0 +1,103 @@
+{
+  "kind": "vfx-analysis",
+  "formatVersion": 1,
+  "view": "stage",
+  "canvas": {
+    "width": 128,
+    "height": 128
+  },
+  "duration": 1.2,
+  "fps": 24,
+  "frames": [
+    {
+      "time": 0.2,
+      "frameIndex": 4,
+      "sha256": "b05c8b2e3150b9228782e48cf4e090e8e32b56e58253c998814365651606b3ae",
+      "visiblePixels": 761,
+      "alphaMass": 690.075,
+      "bounds": {
+        "x": 38,
+        "y": 45,
+        "width": 49,
+        "height": 35
+      },
+      "touches": []
+    },
+    {
+      "time": 0.35,
+      "frameIndex": 8,
+      "sha256": "828b389574d8a546a03ad5936e97f59f5f490df9bd6db722cf449f2f403c6eaa",
+      "visiblePixels": 1006,
+      "alphaMass": 834.565,
+      "bounds": {
+        "x": 26,
+        "y": 39,
+        "width": 71,
+        "height": 48
+      },
+      "touches": []
+    },
+    {
+      "time": 0.55,
+      "frameIndex": 13,
+      "sha256": "18a682afff26e235c2a4b37cb988e3b3e10b62072f1812d4072f1f0fd246f372",
+      "visiblePixels": 1096,
+      "alphaMass": 734.78,
+      "bounds": {
+        "x": 15,
+        "y": 31,
+        "width": 91,
+        "height": 63
+      },
+      "touches": []
+    },
+    {
+      "time": 0.75,
+      "frameIndex": 18,
+      "sha256": "069c4c8ecf72c96c0cf024f7bcf8ff15d2bbe83eaed52487186b31b6fc6fd3b5",
+      "visiblePixels": 812,
+      "alphaMass": 346.129,
+      "bounds": {
+        "x": 13,
+        "y": 24,
+        "width": 95,
+        "height": 71
+      },
+      "touches": []
+    }
+  ],
+  "summary": {
+    "sampledFrames": 4,
+    "visibleFrames": 4,
+    "emptyFrames": 0,
+    "firstVisibleTime": 0.2,
+    "lastVisibleTime": 0.75,
+    "peakAlphaMass": {
+      "time": 0.35,
+      "value": 834.565
+    },
+    "peakVisiblePixels": {
+      "time": 0.55,
+      "value": 1096
+    },
+    "edgeTimes": []
+  },
+  "parity": {
+    "checked": true,
+    "passed": true,
+    "order": "reverse",
+    "mismatches": []
+  },
+  "file": "aura.vfx.json",
+  "revision": "3491b68aa0e8976934b06bb053251e8ea4d03c047c402f9056455a51fbbe681a",
+  "ok": true,
+  "renderer": {
+    "launches": 1,
+    "requests": 3,
+    "reuses": 2,
+    "active": 0,
+    "idle": 1,
+    "maxWorkers": 2,
+    "idleSeconds": 30
+  }
+}

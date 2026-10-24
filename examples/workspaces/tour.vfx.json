@@ -1,0 +1,427 @@
+{
+  "format": "vfx-maker",
+  "version": "0.7.5",
+  "name": "Workspace arc and sparks",
+  "seed": 42,
+  "canvas": {
+    "width": 128,
+    "height": 128,
+    "pixelArt": true,
+    "background": "#110f19"
+  },
+  "duration": 1.2,
+  "fps": 24,
+  "loop": true,
+  "layers": [
+    {
+      "id": "node-8847835e",
+      "name": "New ring",
+      "visible": true,
+      "locked": false,
+      "modifiers": [
+        {
+          "id": "node-5831d638",
+          "enabled": true,
+          "type": "outline",
+          "thickness": 1,
+          "color": "#ffffff",
+          "alpha": 1
+        }
+      ],
+      "start": 0,
+      "duration": 1.2,
+      "repeat": false,
+      "position": {
+        "x": 64,
+        "y": 64
+      },
+      "rotation": 0,
+      "scale": 1,
+      "opacity": [
+        {
+          "t": 0,
+          "value": 1,
+          "ease": "linear"
+        },
+        {
+          "t": 1,
+          "value": 0,
+          "ease": "linear"
+        }
+      ],
+      "motion": {
+        "x": [
+          {
+            "t": 0,
+            "value": 0,
+            "ease": "linear"
+          },
+          {
+            "t": 1,
+            "value": 0,
+            "ease": "linear"
+          }
+        ],
+        "y": [
+          {
+            "t": 0,
+            "value": 0,
+            "ease": "linear"
+          },
+          {
+            "t": 1,
+            "value": 0,
+            "ease": "linear"
+          }
+        ],
+        "rotation": [
+          {
+            "t": 0,
+            "value": 0,
+            "ease": "linear"
+          },
+          {
+            "t": 1,
+            "value": 0,
+            "ease": "linear"
+          }
+        ],
+        "scale": [
+          {
+            "t": 0,
+            "value": 1,
+            "ease": "linear"
+          },
+          {
+            "t": 1,
+            "value": 1,
+            "ease": "linear"
+          }
+        ]
+      },
+      "blend": "add",
+      "glow": {
+        "strength": 0,
+        "blur": 3
+      },
+      "type": "ring",
+      "radius": [
+        {
+          "t": 0,
+          "value": 6.4,
+          "ease": "linear"
+        },
+        {
+          "t": 0.4,
+          "value": 38.4,
+          "ease": "linear"
+        },
+        {
+          "t": 1,
+          "value": 46.08,
+          "ease": "linear"
+        }
+      ],
+      "width": [
+        {
+          "t": 0,
+          "value": 3.2,
+          "ease": "linear"
+        },
+        {
+          "t": 0.5,
+          "value": 2.56,
+          "ease": "linear"
+        },
+        {
+          "t": 1,
+          "value": 0,
+          "ease": "linear"
+        }
+      ],
+      "arc": 360,
+      "segments": 64,
+      "colors": [
+        {
+          "t": 0,
+          "color": "#ffffff"
+        },
+        {
+          "t": 1,
+          "color": "#ff3159"
+        }
+      ]
+    },
+    {
+      "id": "node-2099b082",
+      "name": "New particles",
+      "visible": true,
+      "locked": false,
+      "modifiers": [],
+      "start": 0,
+      "duration": 1.2,
+      "repeat": false,
+      "position": {
+        "x": 64,
+        "y": 64
+      },
+      "rotation": 0,
+      "scale": 1,
+      "opacity": [
+        {
+          "t": 0,
+          "value": 1,
+          "ease": "linear"
+        },
+        {
+          "t": 1,
+          "value": 0,
+          "ease": "linear"
+        }
+      ],
+      "motion": {
+        "x": [
+          {
+            "t": 0,
+            "value": 0,
+            "ease": "linear"
+          },
+          {
+            "t": 1,
+            "value": 0,
+            "ease": "linear"
+          }
+        ],
+        "y": [
+          {
+            "t": 0,
+            "value": 0,
+            "ease": "linear"
+          },
+          {
+            "t": 1,
+            "value": 0,
+            "ease": "linear"
+          }
+        ],
+        "rotation": [
+          {
+            "t": 0,
+            "value": 0,
+            "ease": "linear"
+          },
+          {
+            "t": 1,
+            "value": 0,
+            "ease": "linear"
+          }
+        ],
+        "scale": [
+          {
+            "t": 0,
+            "value": 1,
+            "ease": "linear"
+          },
+          {
+            "t": 1,
+            "value": 1,
+            "ease": "linear"
+          }
+        ]
+      },
+      "blend": "add",
+      "glow": {
+        "strength": 0,
+        "blur": 3
+      },
+      "type": "particles",
+      "mode": "burst",
+      "count": 36,
+      "rate": 60,
+      "life": [
+        0.48,
+        1.08
+      ],
+      "speed": [
+        21.333333333333336,
+        53.333333333333336
+      ],
+      "angle": -90,
+      "spread": 360,
+      "spawn": {
+        "shape": "point",
+        "threshold": 0.1,
+        "radius": 10,
+        "width": 20,
+        "height": 20
+      },
+      "trail": {
+        "samples": 0,
+        "seconds": 0.12,
+        "width": 1,
+        "opacity": 0.5
+      },
+      "points": [
+        {
+          "x": -35,
+          "y": -35
+        },
+        {
+          "x": 35,
+          "y": 35
+        }
+      ],
+      "travel": 0.2,
+      "gravity": {
+        "x": 0,
+        "y": 0
+      },
+      "drag": 0.6,
+      "turbulence": 0,
+      "frequency": 4,
+      "shape": "spark",
+      "size": [
+        {
+          "t": 0,
+          "value": 4.48,
+          "ease": "linear"
+        },
+        {
+          "t": 0.5,
+          "value": 2.56,
+          "ease": "linear"
+        },
+        {
+          "t": 1,
+          "value": 0,
+          "ease": "linear"
+        }
+      ],
+      "colors": [
+        {
+          "t": 0,
+          "color": "#fff2b5"
+        },
+        {
+          "t": 1,
+          "color": "#ff4b22"
+        }
+      ],
+      "spin": [
+        -180,
+        180
+      ],
+      "stretch": 2,
+      "frameMode": "life",
+      "frameFps": 12
+    }
+  ],
+  "assets": [],
+  "groups": [],
+  "controls": [
+    {
+      "id": "node-59b36de1",
+      "name": "Arc",
+      "min": -4096,
+      "max": 4096,
+      "value": 270,
+      "step": 0.1,
+      "bindings": [
+        {
+          "layer": "node-8847835e",
+          "target": "arc",
+          "mode": "set",
+          "factor": 1,
+          "offset": 0
+        }
+      ]
+    }
+  ],
+  "variants": [],
+  "editor": {
+    "blueprint": {
+      "control:node-59b36de1": {
+        "x": 0,
+        "y": 0
+      },
+      "layer:node-8847835e": {
+        "x": 350,
+        "y": 0
+      },
+      "modifier:node-8847835e:node-5831d638": {
+        "x": 690,
+        "y": 0
+      },
+      "layer:node-2099b082": {
+        "x": 350,
+        "y": 420
+      },
+      "output": {
+        "x": 1030,
+        "y": 100
+      }
+    }
+  },
+  "stage": {
+    "mode": "3d",
+    "projection": "orthographic",
+    "azimuth": 45,
+    "elevation": 35.26399999999999,
+    "distance": 92.34366876077088,
+    "span": 76.5,
+    "fov": 45,
+    "target": {
+      "x": 0,
+      "y": 15.75675482230155,
+      "z": -0.5
+    },
+    "plane": "upright",
+    "layers": {
+      "node-8847835e": {
+        "plane": "ground",
+        "position": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "rotation": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "scale": 1,
+        "stretch": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "node-2099b082": {
+        "plane": "billboard",
+        "position": {
+          "x": 0,
+          "y": 16,
+          "z": 0
+        },
+        "rotation": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "scale": 1,
+        "stretch": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      }
+    }
+  },
+  "output": {
+    "scale": 1,
+    "colors": 0,
+    "dither": false,
+    "pixelSize": 1,
+    "alphaLevels": 0
+  }
+}

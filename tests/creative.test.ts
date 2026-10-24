@@ -335,7 +335,7 @@ describe("portable creative authoring", () => {
         controls: undefined,
         variants: undefined,
       }).version,
-    ).toBe("0.7.4");
+    ).toBe("0.7.5");
     const l = field({ id: "cloud", name: "Cloud" });
     expect(parameterTargets(l).some((t) => t.path === "cutoff")).toBe(true);
     expect(() =>

@@ -1,6 +1,6 @@
 # Third-party notices
 
-VFX Maker 0.7.4 uses pinned npm packages. The browser build includes PixiJS, PixiJS Filters, React, React Flow, Three.js,
+VFX Maker 0.7.5 uses pinned npm packages. The browser build includes PixiJS, PixiJS Filters, React, React Flow, Three.js,
 Zod, gifenc, fflate, UPNG.js, pako and their dependencies. Node tools use the official MCP SDK,
 Commander, Playwright Core and esbuild.
 
@@ -14,6 +14,6 @@ Demonstration textures are original project assets. Application code is original
 upstream packages are included with their notices.
 
 VFX Maker application code is MIT licensed; see [LICENSE](LICENSE).
-Upstream packages retain their own licenses. Artcraft and Pixel Composer are
+Upstream packages retain their own licenses. Blender, Artcraft and Pixel Composer are
 design references only; no source or assets were copied from them. See
-[research notes](docs/RESEARCH_0.7.4.md) for inspected sources and decisions.
+[research notes](docs/RESEARCH_0.7.5.md) for inspected sources and decisions.

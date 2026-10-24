@@ -1,0 +1,73 @@
+[
+  {
+    "action": "creative",
+    "operation": {
+      "action": "put_modifier",
+      "layer": "layer-ring-new",
+      "modifier": {
+        "id": "modifier-outline-new",
+        "enabled": true,
+        "type": "outline",
+        "thickness": 1,
+        "color": "#ffffff",
+        "alpha": 1
+      }
+    }
+  },
+  {
+    "action": "creative",
+    "operation": {
+      "action": "put_control",
+      "control": {
+        "id": "control-number-new",
+        "name": "Arc",
+        "min": -4096,
+        "max": 4096,
+        "value": 270,
+        "step": 0.1,
+        "bindings": []
+      }
+    }
+  },
+  {
+    "action": "connect_control",
+    "control": "control-number-new",
+    "layer": "layer-ring-new",
+    "target": "arc",
+    "mode": "set"
+  },
+  {
+    "action": "set_gradient",
+    "colors": [
+      {
+        "t": 0,
+        "color": "#e0ffff"
+      },
+      {
+        "t": 1,
+        "color": "#49baff"
+      }
+    ]
+  },
+  {
+    "action": "configure_stage",
+    "patch": {
+      "mode": "2.5d",
+      "projection": "orthographic",
+      "azimuth": 30,
+      "elevation": 38,
+      "span": 110,
+      "plane": "ground"
+    }
+  },
+  {
+    "action": "place_stage_layer",
+    "id": "layer-particles-new",
+    "patch": {
+      "plane": "billboard",
+      "position": {
+        "y": 18
+      }
+    }
+  }
+]

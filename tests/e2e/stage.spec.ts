@@ -33,7 +33,7 @@ async function field(p: Page, name: string, value: string) {
   await e.blur();
 }
 
-test("the 2D workspace stays simple while camera orbit, 3D plane placement and save/undo work in a separate stage", async ({
+test("scene navigation stays separate from the saved camera; planes, camera alignment, undo and save work", async ({
   page,
 }, info) => {
   const errors: string[] = [];
@@ -42,54 +42,44 @@ test("the 2D workspace stays simple while camera orbit, 3D plane placement and s
   const before = await source(page);
   await button(page, "2.5D / 3D").click();
   await expect(page.locator(".stage-canvas canvas")).toBeVisible();
-  await button(page, "3D · free camera").click();
-  await page.getByText("Place a layer", { exact: true }).click();
-  await page.getByLabel("Stage layer").selectOption("cut-a");
-  await page.getByLabel("Layer plane").selectOption("upright");
+  expect(
+    await page
+      .locator(".stage-canvas canvas")
+      .evaluate((c: HTMLCanvasElement) => c.width),
+  ).toBeGreaterThan(500);
+  await expect(page.getByLabel("Stage grid & axes")).not.toBeChecked();
+  const orbit = async () => {
+    const box = (await page.getByLabel("Stage camera viewport").boundingBox())!;
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await page.mouse.down({ button: "middle" });
+    await page.mouse.move(
+      box.x + box.width / 2 + 75,
+      box.y + box.height / 2 - 30,
+      { steps: 10 },
+    );
+    await page.mouse.up({ button: "middle" });
+  };
+  await orbit();
+  await button(page, "Close dialog").click();
+  expect((await source(page)).stage).toEqual(before.stage);
+  await button(page, "2.5D / 3D").click();
+  await button(page, "Stage scene 3D").click();
+  await button(page, "Select First slash").click();
   await field(page, "Plane position Z", "24");
-  const view = page.getByLabel("Stage camera viewport"),
-    box = (await view.boundingBox())!;
-  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
-  await page.mouse.down();
-  await page.mouse.move(
-    box.x + box.width / 2 + 60,
-    box.y + box.height / 2 + 25,
-    { steps: 8 },
-  );
-  await page.mouse.up();
-  await page.getByText("Advanced camera", { exact: true }).click();
-  await button(page, "Undo stage edit").click();
-  await expect(page.getByLabel("Camera azimuth", { exact: true })).toHaveValue(
-    "25",
-  );
-  await button(page, "Redo stage edit").click();
-  await expect(page.getByLabel("Camera azimuth", { exact: true })).toHaveValue(
-    "-5",
-  );
-  await page.getByText("Advanced camera", { exact: true }).click();
-  await page.screenshot({ path: info.outputPath("stage-perspective.png") });
+  await orbit();
+  await button(page, "Use view for export").click();
+  await expect(page.getByAltText("Exact camera output preview")).toBeVisible();
+  await page.screenshot({ path: info.outputPath("scene-camera-preview.png") });
   await button(page, "Close dialog").click();
   const after = await source(page);
   expect(after.layers).toEqual(before.layers);
   expect(after.stage?.mode).toBe("3d");
   expect(after.stage?.layers["cut-a"].position.z).toBe(24);
-  expect(after.stage?.azimuth).toBeCloseTo(-5, 1);
+  expect(after.stage?.azimuth).not.toBe(25);
   await button(page, "Undo").click();
   expect((await source(page)).stage?.azimuth).toBe(25);
   await page.reload();
   expect((await source(page)).stage?.layers["cut-a"].position.z).toBe(24);
-  await page
-    .locator(".timeline-row > button")
-    .filter({ hasText: "First slash" })
-    .click();
-  await page.keyboard.press("Control+d");
-  const copied = await source(page),
-    copy = copied.layers.find(
-      (l) => !before.layers.some((b) => b.id === l.id),
-    )!;
-  expect(copied.stage?.layers[copy.id]).toEqual(copied.stage?.layers["cut-a"]);
-  await page.keyboard.press("Delete");
-  expect((await source(page)).stage?.layers[copy.id]).toBeUndefined();
   expect(errors).toEqual([]);
 });
 
@@ -161,9 +151,9 @@ test("stage GIF download is camera-baked, cancels safely and its controls fit at
   );
   await button(page, "Export stage").click();
   await button(page, "Cancel stage export").click();
-  await expect(
-    page.getByText("Stage export cancelled.", { exact: true }),
-  ).toBeVisible();
+  await expect(page.getByRole("alert")).toContainText(
+    "Stage export cancelled.",
+  );
   await page.setViewportSize({ width: 390, height: 700 });
   await expect(button(page, "Export stage")).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(

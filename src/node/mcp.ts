@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { closeRenderPool, renderStats } from "./driver.js";
+import { nodeCatalog, addCatalogNode } from "../core/catalog.js";
 import { MAX_LAYERS } from "../core/limits.js";
 import { MAX_BATCH_PROJECTS } from "../core/limits.js";
 import { batchSchema } from "./batch.js";
@@ -158,6 +159,8 @@ tool(
     version: VERSION,
     root: s.store.root,
     renderer: renderStats(),
+    nodeCatalog:
+      "get_node_catalog returns the real Add menu, limits/availability and validated example apply_edits operations. Studio and MCP share these factories.",
     projectBatch:
       "batch_projects prepares independent projects, edits and optional exports. dryRun writes nothing; real runs return a background job. Inspect result.ok and each item, even when the job completes. Transactions are per file, not across files.",
     qa: "analyze_project hashes straight RGBA at each requested frame (all export frames by default), rerenders in reverse order for parity, and optionally compares a root-scoped saved baseline. Peak activity is not a game hit marker.",
@@ -209,6 +212,39 @@ tool(
     editing:
       "get_blueprint discovers control outputs, typed layer inputs, connections and ordered modifiers. apply_edits connect_control/disconnect_control routes parameters; edit_path_point maintains Bezier anchors and handles. Merge base fields directly when appropriate; curves are {t,value,ease} arrays, colors are {t,color} stops.",
   }),
+  true,
+);
+tool(
+  "get_node_catalog",
+  "Discover the same searchable Add menu as Studio: layer generators, modifiers and Number controls, availability reasons and validated example atomic edits for this project. No browser or file write. Use an available entry.edit through apply_edits with the returned revision, optionally dryRun and observe_project edits first.",
+  { file, layer: z.string().optional() },
+  async (a) => {
+    const { project, revision } = await s.store.read(a.file),
+      layer = a.layer ?? project.layers.find((l) => !l.locked)?.id;
+    if (a.layer && !project.layers.some((l) => l.id === a.layer))
+      throw Error(`Unknown layer ${a.layer}`);
+    const occupied = new Set([
+      ...project.layers.map((l) => l.id),
+      ...project.controls.map((c) => c.id),
+      ...project.layers.flatMap((l) => l.modifiers.map((m) => m.id)),
+    ]);
+    return {
+      revision,
+      layer,
+      entries: nodeCatalog(project, layer).map((entry) => {
+        if (entry.disabled) return entry;
+        let id = entry.id.replace(":", "-") + "-new",
+          i = 2;
+        while (occupied.has(id))
+          id = entry.id.replace(":", "-") + "-new-" + i++;
+        return {
+          ...entry,
+          edit: addCatalogNode(project, entry.id, id, layer).edit,
+        };
+      }),
+      limits: { layers: 64, controls: 16, modifiersPerLayer: 8 },
+    };
+  },
   true,
 );
 tool(

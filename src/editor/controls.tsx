@@ -3,6 +3,7 @@ import type { Curve, Gradient } from "../core/model.js";
 import { clamp, evaluate } from "../core/math.js";
 export function NumberField({
   label,
+  caption,
   value,
   onChange,
   min = -4096,
@@ -11,6 +12,7 @@ export function NumberField({
   unit,
 }: {
   label: string;
+  caption?: string;
   value: number;
   onChange: (v: number) => void;
   min?: number;
@@ -22,7 +24,7 @@ export function NumberField({
   useEffect(() => setDraft(String(Number(value.toFixed(4)))), [value]);
   return (
     <label className="field">
-      <span>{label}</span>
+      <span>{caption ?? label}</span>
       <div className="number-wrap">
         <input
           aria-label={label}

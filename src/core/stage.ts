@@ -9,6 +9,10 @@ export const stagePlacementSchema = z
     position: stageVectorSchema.default({ x: 0, y: 0, z: 0 }),
     rotation: stageVectorSchema.default({ x: 0, y: 0, z: 0 }),
     scale: n(0.01, 16).default(1),
+    stretch: z
+      .object({ x: n(0.01, 16), y: n(0.01, 16), z: n(0.01, 16) })
+      .strict()
+      .default({ x: 1, y: 1, z: 1 }),
   })
   .strict();
 export const stageSchema = z

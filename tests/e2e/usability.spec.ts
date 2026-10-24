@@ -208,9 +208,16 @@ test("Blueprint wires a control through real ports, edits the wire, saves positi
   const before = await snapshot(page);
   await button(page, "Blueprint").click();
   await page
+    .locator(".blueprint-properties > details")
+    .filter({ has: page.getByText("Connect parameters", { exact: true }) })
+    .evaluate((el) => {
+      (el as HTMLDetailsElement).open = true;
+    });
+  await page
     .getByLabel("Blueprint layer", { exact: true })
     .selectOption("cut-a");
-  await button(page, "+ Number control").click();
+  await button(page, "Add node").click();
+  await page.locator('[data-node="control:number"]').click();
   await page.getByRole("button", { name: "Fit nodes", exact: true }).click();
   // Newly created Number control appears in the form and can also be wired by drag.
   const sourceId = await page.getByLabel("Blueprint control").inputValue();
@@ -266,6 +273,14 @@ test("Blueprint and transform tools remain reachable at 390px with large text", 
   await page.getByLabel("Interface text size").selectOption("1.3");
   await button(page, "Blueprint").click();
   await expect(page.getByLabel("Blueprint node graph")).toBeVisible();
+  if (!(await page.locator(".blueprint-sidebar").count()))
+    await button(page, "Properties").click();
+  await page
+    .locator(".blueprint-properties > details")
+    .filter({ has: page.getByText("Connect parameters", { exact: true }) })
+    .evaluate((el) => {
+      (el as HTMLDetailsElement).open = true;
+    });
   await page
     .getByLabel("Blueprint layer", { exact: true })
     .selectOption("cut-a");

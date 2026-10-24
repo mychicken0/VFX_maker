@@ -1,0 +1,3806 @@
+[
+  {
+    "tool": "capabilities",
+    "arguments": {},
+    "result": {
+      "version": "0.7.5",
+      "root": "/workspace/vfx-catalog-agent-0.7.5-release",
+      "renderer": {
+        "launches": 0,
+        "requests": 0,
+        "reuses": 0,
+        "active": 0,
+        "idle": 0,
+        "maxWorkers": 2,
+        "idleSeconds": 30
+      },
+      "nodeCatalog": "get_node_catalog returns the real Add menu, limits/availability and validated example apply_edits operations. Studio and MCP share these factories.",
+      "projectBatch": "batch_projects prepares independent projects, edits and optional exports. dryRun writes nothing; real runs return a background job. Inspect result.ok and each item, even when the job completes. Transactions are per file, not across files.",
+      "qa": "analyze_project hashes straight RGBA at each requested frame (all export frames by default), rerenders in reverse order for parity, and optionally compares a root-scoped saved baseline. Peak activity is not a game hit marker.",
+      "coordinates": {
+        "origin": "top-left",
+        "x": "right",
+        "y": "down",
+        "units": "canvas pixels before export scaling",
+        "rotation": "clockwise degrees; zero points right",
+        "position": "layer anchor in canvas pixels, before animated motion",
+        "points": "layer-local offsets from the animated anchor",
+        "geometry": "width/radius/handle offsets and masks are layer-local; worldPoints and pixel bounds are canvas coordinates",
+        "normalized": "x * canvas.width, y * canvas.height",
+        "time": "project seconds; keyframe t is normalized within each layer",
+        "layerOrder": "bottom to top; the last layer is in front"
+      },
+      "agentWorkflow": {
+        "observe": "observe_project returns an annotated image, scene positions, isolated pixel bounds, timing, picks and revision. Try view=storyboard before editing.",
+        "edit": "apply_edits performs 1..64 atomic operations with one backup. Preview the same edits through observe_project with file/revision/edits; drafts do not write.",
+        "visionFallback": "images[].uri can be read through resources/read or saved by save_preview for a host image viewer. If no image viewer is available, use structured scene metadata; do not claim to have seen an image.",
+        "guide": "vfx://guide",
+        "schemas": [
+          "observation",
+          "edits"
+        ],
+        "resources": {
+          "maxImages": 16,
+          "maxBytes": 25165824,
+          "sessionLocal": true
+        }
+      },
+      "layerTypes": [
+        "particles",
+        "path",
+        "ring",
+        "sprite",
+        "field"
+      ],
+      "modifiers": [
+        "outline",
+        "pixelate",
+        "color-replace",
+        "ramp",
+        "shockwave",
+        "noise-warp",
+        "dissolve"
+      ],
+      "creative": "inspect_creative lists macro controls, variants and valid layer binding targets. edit_creative edits modifiers, controls, variants and timing. save_component and insert_component reuse selected layers across projects. start_variant_export queues a batch of 1..8 variants.",
+      "stage": "Optional separate camera scene: get_stage and get_schema stage/stage_placement, apply_edits configure_stage/place_stage_layer, render_preview and analyze_project view=stage, export options.view=stage. Same source layer frames on ground/upright/billboard planes; camera-baked output, not volumetric XYZ particles.",
+      "formats": [
+        "gif",
+        "spritesheet",
+        "sequence",
+        "godot",
+        "unity"
+      ],
+      "limits": {
+        "layers": 64,
+        "particleBirths": 4000,
+        "frames": 300,
+        "stageLayerPixels": 67108864,
+        "sourcePixels": 16777216,
+        "fileBytes": 4194304,
+        "pngInputSide": 1024,
+        "outputScale": [
+          0.125,
+          8
+        ],
+        "pngOutputPixels": 16777216,
+        "gifOutputPixels": 33554432,
+        "paletteColors": [
+          2,
+          256
+        ],
+        "observationInlinePngBytes": 2097152,
+        "observationTimes": 9,
+        "editOperations": 64,
+        "batchProjects": 32
+      },
+      "imageProcessing": "Local PNG optimization needs no browser. Palette, scale, block and alpha reductions are lossy; default PNG recompression preserves decoded RGBA.",
+      "editing": "get_blueprint discovers control outputs, typed layer inputs, connections and ordered modifiers. apply_edits connect_control/disconnect_control routes parameters; edit_path_point maintains Bezier anchors and handles. Merge base fields directly when appropriate; curves are {t,value,ease} arrays, colors are {t,color} stops."
+    }
+  },
+  {
+    "tool": "new_project",
+    "arguments": {
+      "file": "aura.vfx.json",
+      "project": {
+        "name": "Catalog aura",
+        "duration": 1.2,
+        "fps": 24,
+        "seed": 75,
+        "layers": []
+      }
+    },
+    "result": {
+      "project": {
+        "format": "vfx-maker",
+        "version": "0.7.5",
+        "name": "Catalog aura",
+        "seed": 75,
+        "canvas": {
+          "width": 128,
+          "height": 128,
+          "pixelArt": true,
+          "background": "#110f19"
+        },
+        "duration": 1.2,
+        "fps": 24,
+        "loop": true,
+        "layers": [],
+        "assets": [],
+        "groups": [],
+        "controls": [],
+        "variants": [],
+        "editor": {},
+        "output": {
+          "scale": 1,
+          "colors": 0,
+          "dither": false,
+          "pixelSize": 1,
+          "alphaLevels": 0
+        }
+      },
+      "revision": "61d4a9fed5a5ac4706b301e7d5e424f7d5f18d608557889c261851f71e677de4"
+    }
+  },
+  {
+    "tool": "get_node_catalog",
+    "arguments": {
+      "file": "aura.vfx.json"
+    },
+    "result": {
+      "revision": "61d4a9fed5a5ac4706b301e7d5e424f7d5f18d608557889c261851f71e677de4",
+      "entries": [
+        {
+          "id": "layer:particles",
+          "name": "Particles",
+          "category": "Layers",
+          "description": "Animated particle emitter",
+          "edit": {
+            "action": "add_layer",
+            "layer": {
+              "id": "layer-particles-new",
+              "name": "New particles",
+              "visible": true,
+              "locked": false,
+              "modifiers": [],
+              "start": 0,
+              "duration": 1.2,
+              "repeat": false,
+              "position": {
+                "x": 64,
+                "y": 64
+              },
+              "rotation": 0,
+              "scale": 1,
+              "opacity": [
+                {
+                  "t": 0,
+                  "value": 1,
+                  "ease": "linear"
+                },
+                {
+                  "t": 1,
+                  "value": 0,
+                  "ease": "linear"
+                }
+              ],
+              "motion": {
+                "x": [
+                  {
+                    "t": 0,
+                    "value": 0,
+                    "ease": "linear"
+                  },
+                  {
+                    "t": 1,
+                    "value": 0,
+                    "ease": "linear"
+                  }
+                ],
+                "y": [
+                  {
+                    "t": 0,
+                    "value": 0,
+                    "ease": "linear"
+                  },
+                  {
+                    "t": 1,
+                    "value": 0,
+                    "ease": "linear"
+                  }
+                ],
+                "rotation": [
+                  {
+                    "t": 0,
+                    "value": 0,
+                    "ease": "linear"
+                  },
+                  {
+                    "t": 1,
+                    "value": 0,
+                    "ease": "linear"
+                  }
+                ],
+                "scale": [
+                  {
+                    "t": 0,
+                    "value": 1,
+                    "ease": "linear"
+                  },
+                  {
+                    "t": 1,
+                    "value": 1,
+                    "ease": "linear"
+                  }
+                ]
+              },
+              "blend": "add",
+              "glow": {
+                "strength": 0,
+                "blur": 3
+              },
+              "type": "particles",
+              "mode": "burst",
+              "count": 36,
+              "rate": 60,
+              "life": [
+                0.48,
+                1.08
+              ],
+              "speed": [
+                21.333333333333336,
+                53.333333333333336
+              ],
+              "angle": -90,
+              "spread": 360,
+              "spawn": {
+                "shape": "point",
+                "radius": 10,
+                "width": 20,
+                "height": 20,
+                "threshold": 0.1
+              },
+              "trail": {
+                "samples": 0,
+                "seconds": 0.12,
+                "width": 1,
+                "opacity": 0.5
+              },
+              "points": [
+                {
+                  "x": -35,
+                  "y": -35
+                },
+                {
+                  "x": 35,
+                  "y": 35
+                }
+              ],
+              "travel": 0.2,
+              "gravity": {
+                "x": 0,
+                "y": 0
+              },
+              "drag": 0.6,
+              "turbulence": 0,
+              "frequency": 4,
+              "shape": "spark",
+              "size": [
+                {
+                  "t": 0,
+                  "value": 4.48,
+                  "ease": "linear"
+                },
+                {
+                  "t": 0.5,
+                  "value": 2.56,
+                  "ease": "linear"
+                },
+                {
+                  "t": 1,
+                  "value": 0,
+                  "ease": "linear"
+                }
+              ],
+              "colors": [
+                {
+                  "t": 0,
+                  "color": "#fff2b5"
+                },
+                {
+                  "t": 1,
+                  "color": "#ff4b22"
+                }
+              ],
+              "spin": [
+                -180,
+                180
+              ],
+              "stretch": 2,
+              "frameMode": "life",
+              "frameFps": 12
+            }
+          }
+        },
+        {
+          "id": "layer:path",
+          "name": "Stroke",
+          "category": "Layers",
+          "description": "Editable line and Bezier path",
+          "edit": {
+            "action": "add_layer",
+            "layer": {
+              "id": "layer-path-new",
+              "name": "New stroke",
+              "visible": true,
+              "locked": false,
+              "modifiers": [],
+              "start": 0,
+              "duration": 1.2,
+              "repeat": false,
+              "position": {
+                "x": 64,
+                "y": 64
+              },
+              "rotation": 0,
+              "scale": 1,
+              "opacity": [
+                {
+                  "t": 0,
+                  "value": 1,
+                  "ease": "linear"
+                },
+                {
+                  "t": 1,
+                  "value": 0,
+                  "ease": "linear"
+                }
+              ],
+              "motion": {
+                "x": [
+                  {
+                    "t": 0,
+                    "value": 0,
+                    "ease": "linear"
+                  },
+                  {
+                    "t": 1,
+                    "value": 0,
+                    "ease": "linear"
+                  }
+                ],
+                "y": [
+                  {
+                    "t": 0,
+                    "value": 0,
+                    "ease": "linear"
+                  },
+                  {
+                    "t": 1,
+                    "value": 0,
+                    "ease": "linear"
+                  }
+                ],
+                "rotation": [
+                  {
+                    "t": 0,
+                    "value": 0,
+                    "ease": "linear"
+                  },
+                  {
+                    "t": 1,
+                    "value": 0,
+                    "ease": "linear"
+                  }
+                ],
+                "scale": [
+                  {
+                    "t": 0,
+                    "value": 1,
+                    "ease": "linear"
+                  },
+                  {
+                    "t": 1,
+                    "value": 1,
+                    "ease": "linear"
+                  }
+                ]
+              },
+              "blend": "add",
+              "glow": {
+                "strength": 0,
+                "blur": 3
+              },
+              "type": "path",
+              "points": [
+                {
+                  "x": -32,
+                  "y": 20.48
+                },
+                {
+                  "x": 0,
+                  "y": -12.8
+                },
+                {
+                  "x": 32,
+                  "y": -25.6
+                }
+              ],
+              "closed": false,
+              "width": [
+                {
+                  "t": 0,
+                  "value": 4.48,
+                  "ease": "linear"
+                },
+                {
+                  "t": 0.5,
+                  "value": 3.2,
+                  "ease": "linear"
+                },
+                {
+                  "t": 1,
+                  "value": 0,
+                  "ease": "linear"
+                }
+              ],
+              "draw": [
+                {
+                  "t": 0,
+                  "value": 0,
+                  "ease": "linear"
+                },
+                {
+                  "t": 0.2,
+                  "value": 1,
+                  "ease": "smooth"
+                },
+                {
+                  "t": 1,
+                  "value": 1,
+                  "ease": "linear"
+                }
+              ],
+              "taper": 0.8,
+              "colors": [
+                {
+                  "t": 0,
+                  "color": "#fff6df"
+                },
+                {
+                  "t": 1,
+                  "color": "#ff2459"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "id": "layer:ring",
+          "name": "Ring",
+          "category": "Layers",
+          "description": "Expanding circle or shock ring",
+          "edit": {
+            "action": "add_layer",
+            "layer": {
+              "id": "layer-ring-new",
+              "name": "New ring",
+              "visible": true,
+              "locked": false,
+              "modifiers": [],
+              "start": 0,
+              "duration": 1.2,
+              "repeat": false,
+              "position": {
+                "x": 64,
+                "y": 64
+              },
+              "rotation": 0,
+              "scale": 1,
+              "opacity": [
+                {
+                  "t": 0,
+                  "value": 1,
+                  "ease": "linear"
+                },
+                {
+                  "t": 1,
+                  "value": 0,
+                  "ease": "linear"
+                }
+              ],
+              "motion": {
+                "x": [
+                  {
+                    "t": 0,
+                    "value": 0,
+                    "ease": "linear"
+                  },
+                  {
+                    "t": 1,
+                    "value": 0,
+                    "ease": "linear"
+                  }
+                ],
+                "y": [
+                  {
+                    "t": 0,
+                    "value": 0,
+                    "ease": "linear"
+                  },
+                  {
+                    "t": 1,
+                    "value": 0,
+                    "ease": "linear"
+                  }
+                ],
+                "rotation": [
+                  {
+                    "t": 0,
+                    "value": 0,
+                    "ease": "linear"
+                  },
+                  {
+                    "t": 1,
+                    "value": 0,
+                    "ease": "linear"
+                  }
+                ],
+                "scale": [
+                  {
+                    "t": 0,
+                    "value": 1,
+                    "ease": "linear"
+                  },
+                  {
+                    "t": 1,
+                    "value": 1,
+                    "ease": "linear"
+                  }
+                ]
+              },
+              "blend": "add",
+              "glow": {
+                "strength": 0,
+                "blur": 3
+              },
+              "type": "ring",
+              "radius": [
+                {
+                  "t": 0,
+                  "value": 6.4,
+                  "ease": "linear"
+                },
+                {
+                  "t": 0.4,
+                  "value": 38.4,
+                  "ease": "linear"
+                },
+                {
+                  "t": 1,
+                  "value": 46.08,
+                  "ease": "linear"
+                }
+              ],
+              "width": [
+                {
+                  "t": 0,
+                  "value": 3.2,
+                  "ease": "linear"
+                },
+                {
+                  "t": 0.5,
+                  "value": 2.56,
+                  "ease": "linear"
+                },
+                {
+                  "t": 1,
+                  "value": 0,
+                  "ease": "linear"
+                }
+              ],
+              "arc": 360,
+              "segments": 64,
+              "colors": [
+                {
+                  "t": 0,
+                  "color": "#ffffff"
+                },
+                {
+                  "t": 1,
+                  "color": "#ff3159"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "id": "layer:sprite",
+          "name": "Sprite",
+          "category": "Layers",
+          "description": "An imported image or flipbook",
+          "disabled": "Import a PNG in Library → Assets first."
+        },
+        {
+          "id": "layer:field",
+          "name": "Texture",
+          "category": "Layers",
+          "description": "Generated noise and shapes",
+          "edit": {
+            "action": "add_layer",
+            "layer": {
+              "id": "layer-field-new",
+              "name": "New texture",
+              "visible": true,
+              "locked": false,
+              "modifiers": [],
+              "start": 0,
+              "duration": 1.2,
+              "repeat": false,
+              "position": {
+                "x": 64,
+                "y": 64
+              },
+              "rotation": 0,
+              "scale": 1,
+              "opacity": [
+                {
+                  "t": 0,
+                  "value": 1,
+                  "ease": "linear"
+                },
+                {
+                  "t": 1,
+                  "value": 0,
+                  "ease": "linear"
+                }
+              ],
+              "motion": {
+                "x": [
+                  {
+                    "t": 0,
+                    "value": 0,
+                    "ease": "linear"
+                  },
+                  {
+                    "t": 1,
+                    "value": 0,
+                    "ease": "linear"
+                  }
+                ],
+                "y": [
+                  {
+                    "t": 0,
+                    "value": 0,
+                    "ease": "linear"
+                  },
+                  {
+                    "t": 1,
+                    "value": 0,
+                    "ease": "linear"
+                  }
+                ],
+                "rotation": [
+                  {
+                    "t": 0,
+                    "value": 0,
+                    "ease": "linear"
+                  },
+                  {
+                    "t": 1,
+                    "value": 0,
+                    "ease": "linear"
+                  }
+                ],
+                "scale": [
+                  {
+                    "t": 0,
+                    "value": 1,
+                    "ease": "linear"
+                  },
+                  {
+                    "t": 1,
+                    "value": 1,
+                    "ease": "linear"
+                  }
+                ]
+              },
+              "blend": "add",
+              "glow": {
+                "strength": 0,
+                "blur": 3
+              },
+              "type": "field",
+              "pattern": "noise",
+              "width": [
+                {
+                  "t": 0,
+                  "value": 76.8,
+                  "ease": "linear"
+                }
+              ],
+              "height": [
+                {
+                  "t": 0,
+                  "value": 76.8,
+                  "ease": "linear"
+                }
+              ],
+              "frequency": 6,
+              "speed": 1,
+              "octaves": 3,
+              "cutoff": [
+                {
+                  "t": 0,
+                  "value": 0.2,
+                  "ease": "linear"
+                },
+                {
+                  "t": 1,
+                  "value": 0.85,
+                  "ease": "linear"
+                }
+              ],
+              "softness": 0.2,
+              "falloff": 0,
+              "highlight": "#fff2b5",
+              "colors": [
+                {
+                  "t": 0,
+                  "color": "#ff3159"
+                },
+                {
+                  "t": 1,
+                  "color": "#7e1b70"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "id": "modifier:outline",
+          "name": "Outline",
+          "category": "Modifiers",
+          "description": "Apply to the selected layer",
+          "disabled": "Select a layer first."
+        },
+        {
+          "id": "modifier:pixelate",
+          "name": "Pixel blocks",
+          "category": "Modifiers",
+          "description": "Apply to the selected layer",
+          "disabled": "Select a layer first."
+        },
+        {
+          "id": "modifier:color-replace",
+          "name": "Replace color",
+          "category": "Modifiers",
+          "description": "Apply to the selected layer",
+          "disabled": "Select a layer first."
+        },
+        {
+          "id": "modifier:ramp",
+          "name": "Color ramp",
+          "category": "Modifiers",
+          "description": "Apply to the selected layer",
+          "disabled": "Select a layer first."
+        },
+        {
+          "id": "modifier:shockwave",
+          "name": "Shockwave",
+          "category": "Modifiers",
+          "description": "Apply to the selected layer",
+          "disabled": "Select a layer first."
+        },
+        {
+          "id": "modifier:noise-warp",
+          "name": "Noise warp",
+          "category": "Modifiers",
+          "description": "Apply to the selected layer",
+          "disabled": "Select a layer first."
+        },
+        {
+          "id": "modifier:dissolve",
+          "name": "Dissolve",
+          "category": "Modifiers",
+          "description": "Apply to the selected layer",
+          "disabled": "Select a layer first."
+        },
+        {
+          "id": "control:number",
+          "name": "Number control",
+          "category": "Controls",
+          "description": "A value you can wire to a layer parameter",
+          "edit": {
+            "action": "creative",
+            "operation": {
+              "action": "put_control",
+              "control": {
+                "id": "control-number-new",
+                "name": "New control",
+                "min": -4096,
+                "max": 4096,
+                "value": 1,
+                "step": 0.1,
+                "bindings": []
+              }
+            }
+          }
+        }
+      ],
+      "limits": {
+        "layers": 64,
+        "controls": 16,
+        "modifiersPerLayer": 8
+      }
+    }
+  },
+  {
+    "tool": "apply_edits",
+    "arguments": {
+      "file": "aura.vfx.json",
+      "revision": "61d4a9fed5a5ac4706b301e7d5e424f7d5f18d608557889c261851f71e677de4",
+      "edits": [
+        {
+          "action": "add_layer",
+          "layer": {
+            "id": "layer-ring-new",
+            "name": "Arc field",
+            "visible": true,
+            "locked": false,
+            "modifiers": [],
+            "start": 0,
+            "duration": 1.2,
+            "repeat": false,
+            "position": {
+              "x": 64,
+              "y": 64
+            },
+            "rotation": 0,
+            "scale": 1,
+            "opacity": [
+              {
+                "t": 0,
+                "value": 1,
+                "ease": "linear"
+              },
+              {
+                "t": 1,
+                "value": 0,
+                "ease": "linear"
+              }
+            ],
+            "motion": {
+              "x": [
+                {
+                  "t": 0,
+                  "value": 0,
+                  "ease": "linear"
+                },
+                {
+                  "t": 1,
+                  "value": 0,
+                  "ease": "linear"
+                }
+              ],
+              "y": [
+                {
+                  "t": 0,
+                  "value": 0,
+                  "ease": "linear"
+                },
+                {
+                  "t": 1,
+                  "value": 0,
+                  "ease": "linear"
+                }
+              ],
+              "rotation": [
+                {
+                  "t": 0,
+                  "value": 0,
+                  "ease": "linear"
+                },
+                {
+                  "t": 1,
+                  "value": 0,
+                  "ease": "linear"
+                }
+              ],
+              "scale": [
+                {
+                  "t": 0,
+                  "value": 1,
+                  "ease": "linear"
+                },
+                {
+                  "t": 1,
+                  "value": 1,
+                  "ease": "linear"
+                }
+              ]
+            },
+            "blend": "add",
+            "glow": {
+              "strength": 0,
+              "blur": 3
+            },
+            "type": "ring",
+            "radius": [
+              {
+                "t": 0,
+                "value": 6.4,
+                "ease": "linear"
+              },
+              {
+                "t": 0.4,
+                "value": 38.4,
+                "ease": "linear"
+              },
+              {
+                "t": 1,
+                "value": 46.08,
+                "ease": "linear"
+              }
+            ],
+            "width": [
+              {
+                "t": 0,
+                "value": 3.2,
+                "ease": "linear"
+              },
+              {
+                "t": 0.5,
+                "value": 2.56,
+                "ease": "linear"
+              },
+              {
+                "t": 1,
+                "value": 0,
+                "ease": "linear"
+              }
+            ],
+            "arc": 360,
+            "segments": 64,
+            "colors": [
+              {
+                "t": 0,
+                "color": "#ffffff"
+              },
+              {
+                "t": 1,
+                "color": "#ff3159"
+              }
+            ]
+          }
+        },
+        {
+          "action": "add_layer",
+          "layer": {
+            "id": "layer-particles-new",
+            "name": "Rising motes",
+            "visible": true,
+            "locked": false,
+            "modifiers": [],
+            "start": 0,
+            "duration": 1.2,
+            "repeat": false,
+            "position": {
+              "x": 64,
+              "y": 82
+            },
+            "rotation": 0,
+            "scale": 1,
+            "opacity": [
+              {
+                "t": 0,
+                "value": 1,
+                "ease": "linear"
+              },
+              {
+                "t": 1,
+                "value": 0,
+                "ease": "linear"
+              }
+            ],
+            "motion": {
+              "x": [
+                {
+                  "t": 0,
+                  "value": 0,
+                  "ease": "linear"
+                },
+                {
+                  "t": 1,
+                  "value": 0,
+                  "ease": "linear"
+                }
+              ],
+              "y": [
+                {
+                  "t": 0,
+                  "value": 0,
+                  "ease": "linear"
+                },
+                {
+                  "t": 1,
+                  "value": 0,
+                  "ease": "linear"
+                }
+              ],
+              "rotation": [
+                {
+                  "t": 0,
+                  "value": 0,
+                  "ease": "linear"
+                },
+                {
+                  "t": 1,
+                  "value": 0,
+                  "ease": "linear"
+                }
+              ],
+              "scale": [
+                {
+                  "t": 0,
+                  "value": 1,
+                  "ease": "linear"
+                },
+                {
+                  "t": 1,
+                  "value": 1,
+                  "ease": "linear"
+                }
+              ]
+            },
+            "blend": "add",
+            "glow": {
+              "strength": 0,
+              "blur": 3
+            },
+            "type": "particles",
+            "mode": "burst",
+            "count": 48,
+            "rate": 60,
+            "life": [
+              0.5,
+              1
+            ],
+            "speed": [
+              30,
+              65
+            ],
+            "angle": -90,
+            "spread": 35,
+            "spawn": {
+              "shape": "point",
+              "radius": 10,
+              "width": 20,
+              "height": 20,
+              "threshold": 0.1
+            },
+            "trail": {
+              "samples": 0,
+              "seconds": 0.12,
+              "width": 1,
+              "opacity": 0.5
+            },
+            "points": [
+              {
+                "x": -35,
+                "y": -35
+              },
+              {
+                "x": 35,
+                "y": 35
+              }
+            ],
+            "travel": 0.2,
+            "gravity": {
+              "x": 0,
+              "y": 0
+            },
+            "drag": 0.6,
+            "turbulence": 0,
+            "frequency": 4,
+            "shape": "spark",
+            "size": [
+              {
+                "t": 0,
+                "value": 4.48,
+                "ease": "linear"
+              },
+              {
+                "t": 0.5,
+                "value": 2.56,
+                "ease": "linear"
+              },
+              {
+                "t": 1,
+                "value": 0,
+                "ease": "linear"
+              }
+            ],
+            "colors": [
+              {
+                "t": 0,
+                "color": "#fff2b5"
+              },
+              {
+                "t": 1,
+                "color": "#ff4b22"
+              }
+            ],
+            "spin": [
+              -180,
+              180
+            ],
+            "stretch": 2,
+            "frameMode": "life",
+            "frameFps": 12
+          }
+        }
+      ]
+    },
+    "result": {
+      "file": "aura.vfx.json",
+      "revision": "2b29114adf487d75cd833aad7c64fbf96859705f87796b4c8b32e2fe5bcc2cdb",
+      "dryRun": false,
+      "operations": 2,
+      "changes": {
+        "added": [
+          "layer-ring-new",
+          "layer-particles-new"
+        ],
+        "removed": [],
+        "changed": [],
+        "reordered": false,
+        "controlsChanged": false
+      }
+    }
+  },
+  {
+    "tool": "get_node_catalog",
+    "arguments": {
+      "file": "aura.vfx.json",
+      "layer": "layer-ring-new"
+    },
+    "result": {
+      "revision": "2b29114adf487d75cd833aad7c64fbf96859705f87796b4c8b32e2fe5bcc2cdb",
+      "layer": "layer-ring-new",
+      "entries": [
+        {
+          "id": "layer:particles",
+          "name": "Particles",
+          "category": "Layers",
+          "description": "Animated particle emitter",
+          "edit": {
+            "action": "add_layer",
+            "layer": {
+              "id": "layer-particles-new-2",
+              "name": "New particles",
+              "visible": true,
+              "locked": false,
+              "modifiers": [],
+              "start": 0,
+              "duration": 1.2,
+              "repeat": false,
+              "position": {
+                "x": 64,
+                "y": 64
+              },
+              "rotation": 0,
+              "scale": 1,
+              "opacity": [
+                {
+                  "t": 0,
+                  "value": 1,
+                  "ease": "linear"
+                },
+                {
+                  "t": 1,
+                  "value": 0,
+                  "ease": "linear"
+                }
+              ],
+              "motion": {
+                "x": [
+                  {
+                    "t": 0,
+                    "value": 0,
+                    "ease": "linear"
+                  },
+                  {
+                    "t": 1,
+                    "value": 0,
+                    "ease": "linear"
+                  }
+                ],
+                "y": [
+                  {
+                    "t": 0,
+                    "value": 0,
+                    "ease": "linear"
+                  },
+                  {
+                    "t": 1,
+                    "value": 0,
+                    "ease": "linear"
+                  }
+                ],
+                "rotation": [
+                  {
+                    "t": 0,
+                    "value": 0,
+                    "ease": "linear"
+                  },
+                  {
+                    "t": 1,
+                    "value": 0,
+                    "ease": "linear"
+                  }
+                ],
+                "scale": [
+                  {
+                    "t": 0,
+                    "value": 1,
+                    "ease": "linear"
+                  },
+                  {
+                    "t": 1,
+                    "value": 1,
+                    "ease": "linear"
+                  }
+                ]
+              },
+              "blend": "add",
+              "glow": {
+                "strength": 0,
+                "blur": 3
+              },
+              "type": "particles",
+              "mode": "burst",
+              "count": 36,
+              "rate": 60,
+              "life": [
+                0.48,
+                1.08
+              ],
+              "speed": [
+                21.333333333333336,
+                53.333333333333336
+              ],
+              "angle": -90,
+              "spread": 360,
+              "spawn": {
+                "shape": "point",
+                "radius": 10,
+                "width": 20,
+                "height": 20,
+                "threshold": 0.1
+              },
+              "trail": {
+                "samples": 0,
+                "seconds": 0.12,
+                "width": 1,
+                "opacity": 0.5
+              },
+              "points": [
+                {
+                  "x": -35,
+                  "y": -35
+                },
+                {
+                  "x": 35,
+                  "y": 35
+                }
+              ],
+              "travel": 0.2,
+              "gravity": {
+                "x": 0,
+                "y": 0
+              },
+              "drag": 0.6,
+              "turbulence": 0,
+              "frequency": 4,
+              "shape": "spark",
+              "size": [
+                {
+                  "t": 0,
+                  "value": 4.48,
+                  "ease": "linear"
+                },
+                {
+                  "t": 0.5,
+                  "value": 2.56,
+                  "ease": "linear"
+                },
+                {
+                  "t": 1,
+                  "value": 0,
+                  "ease": "linear"
+                }
+              ],
+              "colors": [
+                {
+                  "t": 0,
+                  "color": "#fff2b5"
+                },
+                {
+                  "t": 1,
+                  "color": "#ff4b22"
+                }
+              ],
+              "spin": [
+                -180,
+                180
+              ],
+              "stretch": 2,
+              "frameMode": "life",
+              "frameFps": 12
+            }
+          }
+        },
+        {
+          "id": "layer:path",
+          "name": "Stroke",
+          "category": "Layers",
+          "description": "Editable line and Bezier path",
+          "edit": {
+            "action": "add_layer",
+            "layer": {
+              "id": "layer-path-new",
+              "name": "New stroke",
+              "visible": true,
+              "locked": false,
+              "modifiers": [],
+              "start": 0,
+              "duration": 1.2,
+              "repeat": false,
+              "position": {
+                "x": 64,
+                "y": 64
+              },
+              "rotation": 0,
+              "scale": 1,
+              "opacity": [
+                {
+                  "t": 0,
+                  "value": 1,
+                  "ease": "linear"
+                },
+                {
+                  "t": 1,
+                  "value": 0,
+                  "ease": "linear"
+                }
+              ],
+              "motion": {
+                "x": [
+                  {
+                    "t": 0,
+                    "value": 0,
+                    "ease": "linear"
+                  },
+                  {
+                    "t": 1,
+                    "value": 0,
+                    "ease": "linear"
+                  }
+                ],
+                "y": [
+                  {
+                    "t": 0,
+                    "value": 0,
+                    "ease": "linear"
+                  },
+                  {
+                    "t": 1,
+                    "value": 0,
+                    "ease": "linear"
+                  }
+                ],
+                "rotation": [
+                  {
+                    "t": 0,
+                    "value": 0,
+                    "ease": "linear"
+                  },
+                  {
+                    "t": 1,
+                    "value": 0,
+                    "ease": "linear"
+                  }
+                ],
+                "scale": [
+                  {
+                    "t": 0,
+                    "value": 1,
+                    "ease": "linear"
+                  },
+                  {
+                    "t": 1,
+                    "value": 1,
+                    "ease": "linear"
+                  }
+                ]
+              },
+              "blend": "add",
+              "glow": {
+                "strength": 0,
+                "blur": 3
+              },
+              "type": "path",
+              "points": [
+                {
+                  "x": -32,
+                  "y": 20.48
+                },
+                {
+                  "x": 0,
+                  "y": -12.8
+                },
+                {
+                  "x": 32,
+                  "y": -25.6
+                }
+              ],
+              "closed": false,
+              "width": [
+                {
+                  "t": 0,
+                  "value": 4.48,
+                  "ease": "linear"
+                },
+                {
+                  "t": 0.5,
+                  "value": 3.2,
+                  "ease": "linear"
+                },
+                {
+                  "t": 1,
+                  "value": 0,
+                  "ease": "linear"
+                }
+              ],
+              "draw": [
+                {
+                  "t": 0,
+                  "value": 0,
+                  "ease": "linear"
+                },
+                {
+                  "t": 0.2,
+                  "value": 1,
+                  "ease": "smooth"
+                },
+                {
+                  "t": 1,
+                  "value": 1,
+                  "ease": "linear"
+                }
+              ],
+              "taper": 0.8,
+              "colors": [
+                {
+                  "t": 0,
+                  "color": "#fff6df"
+                },
+                {
+                  "t": 1,
+                  "color": "#ff2459"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "id": "layer:ring",
+          "name": "Ring",
+          "category": "Layers",
+          "description": "Expanding circle or shock ring",
+          "edit": {
+            "action": "add_layer",
+            "layer": {
+              "id": "layer-ring-new-2",
+              "name": "New ring",
+              "visible": true,
+              "locked": false,
+              "modifiers": [],
+              "start": 0,
+              "duration": 1.2,
+              "repeat": false,
+              "position": {
+                "x": 64,
+                "y": 64
+              },
+              "rotation": 0,
+              "scale": 1,
+              "opacity": [
+                {
+                  "t": 0,
+                  "value": 1,
+                  "ease": "linear"
+                },
+                {
+                  "t": 1,
+                  "value": 0,
+                  "ease": "linear"
+                }
+              ],
+              "motion": {
+                "x": [
+                  {
+                    "t": 0,
+                    "value": 0,
+                    "ease": "linear"
+                  },
+                  {
+                    "t": 1,
+                    "value": 0,
+                    "ease": "linear"
+                  }
+                ],
+                "y": [
+                  {
+                    "t": 0,
+                    "value": 0,
+                    "ease": "linear"
+                  },
+                  {
+                    "t": 1,
+                    "value": 0,
+                    "ease": "linear"
+                  }
+                ],
+                "rotation": [
+                  {
+                    "t": 0,
+                    "value": 0,
+                    "ease": "linear"
+                  },
+                  {
+                    "t": 1,
+                    "value": 0,
+                    "ease": "linear"
+                  }
+                ],
+                "scale": [
+                  {
+                    "t": 0,
+                    "value": 1,
+                    "ease": "linear"
+                  },
+                  {
+                    "t": 1,
+                    "value": 1,
+                    "ease": "linear"
+                  }
+                ]
+              },
+              "blend": "add",
+              "glow": {
+                "strength": 0,
+                "blur": 3
+              },
+              "type": "ring",
+              "radius": [
+                {
+                  "t": 0,
+                  "value": 6.4,
+                  "ease": "linear"
+                },
+                {
+                  "t": 0.4,
+                  "value": 38.4,
+                  "ease": "linear"
+                },
+                {
+                  "t": 1,
+                  "value": 46.08,
+                  "ease": "linear"
+                }
+              ],
+              "width": [
+                {
+                  "t": 0,
+                  "value": 3.2,
+                  "ease": "linear"
+                },
+                {
+                  "t": 0.5,
+                  "value": 2.56,
+                  "ease": "linear"
+                },
+                {
+                  "t": 1,
+                  "value": 0,
+                  "ease": "linear"
+                }
+              ],
+              "arc": 360,
+              "segments": 64,
+              "colors": [
+                {
+                  "t": 0,
+                  "color": "#ffffff"
+                },
+                {
+                  "t": 1,
+                  "color": "#ff3159"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "id": "layer:sprite",
+          "name": "Sprite",
+          "category": "Layers",
+          "description": "An imported image or flipbook",
+          "disabled": "Import a PNG in Library → Assets first."
+        },
+        {
+          "id": "layer:field",
+          "name": "Texture",
+          "category": "Layers",
+          "description": "Generated noise and shapes",
+          "edit": {
+            "action": "add_layer",
+            "layer": {
+              "id": "layer-field-new",
+              "name": "New texture",
+              "visible": true,
+              "locked": false,
+              "modifiers": [],
+              "start": 0,
+              "duration": 1.2,
+              "repeat": false,
+              "position": {
+                "x": 64,
+                "y": 64
+              },
+              "rotation": 0,
+              "scale": 1,
+              "opacity": [
+                {
+                  "t": 0,
+                  "value": 1,
+                  "ease": "linear"
+                },
+                {
+                  "t": 1,
+                  "value": 0,
+                  "ease": "linear"
+                }
+              ],
+              "motion": {
+                "x": [
+                  {
+                    "t": 0,
+                    "value": 0,
+                    "ease": "linear"
+                  },
+                  {
+                    "t": 1,
+                    "value": 0,
+                    "ease": "linear"
+                  }
+                ],
+                "y": [
+                  {
+                    "t": 0,
+                    "value": 0,
+                    "ease": "linear"
+                  },
+                  {
+                    "t": 1,
+                    "value": 0,
+                    "ease": "linear"
+                  }
+                ],
+                "rotation": [
+                  {
+                    "t": 0,
+                    "value": 0,
+                    "ease": "linear"
+                  },
+                  {
+                    "t": 1,
+                    "value": 0,
+                    "ease": "linear"
+                  }
+                ],
+                "scale": [
+                  {
+                    "t": 0,
+                    "value": 1,
+                    "ease": "linear"
+                  },
+                  {
+                    "t": 1,
+                    "value": 1,
+                    "ease": "linear"
+                  }
+                ]
+              },
+              "blend": "add",
+              "glow": {
+                "strength": 0,
+                "blur": 3
+              },
+              "type": "field",
+              "pattern": "noise",
+              "width": [
+                {
+                  "t": 0,
+                  "value": 76.8,
+                  "ease": "linear"
+                }
+              ],
+              "height": [
+                {
+                  "t": 0,
+                  "value": 76.8,
+                  "ease": "linear"
+                }
+              ],
+              "frequency": 6,
+              "speed": 1,
+              "octaves": 3,
+              "cutoff": [
+                {
+                  "t": 0,
+                  "value": 0.2,
+                  "ease": "linear"
+                },
+                {
+                  "t": 1,
+                  "value": 0.85,
+                  "ease": "linear"
+                }
+              ],
+              "softness": 0.2,
+              "falloff": 0,
+              "highlight": "#fff2b5",
+              "colors": [
+                {
+                  "t": 0,
+                  "color": "#ff3159"
+                },
+                {
+                  "t": 1,
+                  "color": "#7e1b70"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "id": "modifier:outline",
+          "name": "Outline",
+          "category": "Modifiers",
+          "description": "Apply to Arc field",
+          "edit": {
+            "action": "creative",
+            "operation": {
+              "action": "put_modifier",
+              "layer": "layer-ring-new",
+              "modifier": {
+                "id": "modifier-outline-new",
+                "enabled": true,
+                "type": "outline",
+                "thickness": 1,
+                "color": "#ffffff",
+                "alpha": 1
+              }
+            }
+          }
+        },
+        {
+          "id": "modifier:pixelate",
+          "name": "Pixel blocks",
+          "category": "Modifiers",
+          "description": "Apply to Arc field",
+          "edit": {
+            "action": "creative",
+            "operation": {
+              "action": "put_modifier",
+              "layer": "layer-ring-new",
+              "modifier": {
+                "id": "modifier-pixelate-new",
+                "enabled": true,
+                "type": "pixelate",
+                "size": 2
+              }
+            }
+          }
+        },
+        {
+          "id": "modifier:color-replace",
+          "name": "Replace color",
+          "category": "Modifiers",
+          "description": "Apply to Arc field",
+          "edit": {
+            "action": "creative",
+            "operation": {
+              "action": "put_modifier",
+              "layer": "layer-ring-new",
+              "modifier": {
+                "id": "modifier-color-replace-new",
+                "enabled": true,
+                "type": "color-replace",
+                "from": "#ffffff",
+                "to": "#ff3159",
+                "tolerance": 0.1
+              }
+            }
+          }
+        },
+        {
+          "id": "modifier:ramp",
+          "name": "Color ramp",
+          "category": "Modifiers",
+          "description": "Apply to Arc field",
+          "edit": {
+            "action": "creative",
+            "operation": {
+              "action": "put_modifier",
+              "layer": "layer-ring-new",
+              "modifier": {
+                "id": "modifier-ramp-new",
+                "enabled": true,
+                "type": "ramp",
+                "low": "#470b35",
+                "high": "#fff2b5"
+              }
+            }
+          }
+        },
+        {
+          "id": "modifier:shockwave",
+          "name": "Shockwave",
+          "category": "Modifiers",
+          "description": "Apply to Arc field",
+          "edit": {
+            "action": "creative",
+            "operation": {
+              "action": "put_modifier",
+              "layer": "layer-ring-new",
+              "modifier": {
+                "id": "modifier-shockwave-new",
+                "enabled": true,
+                "type": "shockwave",
+                "amplitude": 8,
+                "wavelength": 32,
+                "speed": 90,
+                "radius": 128
+              }
+            }
+          }
+        },
+        {
+          "id": "modifier:noise-warp",
+          "name": "Noise warp",
+          "category": "Modifiers",
+          "description": "Apply to Arc field",
+          "edit": {
+            "action": "creative",
+            "operation": {
+              "action": "put_modifier",
+              "layer": "layer-ring-new",
+              "modifier": {
+                "id": "modifier-noise-warp-new",
+                "enabled": true,
+                "type": "noise-warp",
+                "strength": 4,
+                "frequency": 6,
+                "speed": 1
+              }
+            }
+          }
+        },
+        {
+          "id": "modifier:dissolve",
+          "name": "Dissolve",
+          "category": "Modifiers",
+          "description": "Apply to Arc field",
+          "edit": {
+            "action": "creative",
+            "operation": {
+              "action": "put_modifier",
+              "layer": "layer-ring-new",
+              "modifier": {
+                "id": "modifier-dissolve-new",
+                "enabled": true,
+                "type": "dissolve",
+                "amount": 0.3,
+                "frequency": 8,
+                "speed": 0,
+                "edge": 0.06,
+                "color": "#ffdd77"
+              }
+            }
+          }
+        },
+        {
+          "id": "control:number",
+          "name": "Number control",
+          "category": "Controls",
+          "description": "A value you can wire to a layer parameter",
+          "edit": {
+            "action": "creative",
+            "operation": {
+              "action": "put_control",
+              "control": {
+                "id": "control-number-new",
+                "name": "New control",
+                "min": -4096,
+                "max": 4096,
+                "value": 1,
+                "step": 0.1,
+                "bindings": []
+              }
+            }
+          }
+        }
+      ],
+      "limits": {
+        "layers": 64,
+        "controls": 16,
+        "modifiersPerLayer": 8
+      }
+    }
+  },
+  {
+    "tool": "render_preview",
+    "arguments": {
+      "file": "aura.vfx.json",
+      "revision": "2b29114adf487d75cd833aad7c64fbf96859705f87796b4c8b32e2fe5bcc2cdb",
+      "edits": [
+        {
+          "action": "creative",
+          "operation": {
+            "action": "put_modifier",
+            "layer": "layer-ring-new",
+            "modifier": {
+              "id": "modifier-outline-new",
+              "enabled": true,
+              "type": "outline",
+              "thickness": 1,
+              "color": "#ffffff",
+              "alpha": 1
+            }
+          }
+        },
+        {
+          "action": "creative",
+          "operation": {
+            "action": "put_control",
+            "control": {
+              "id": "control-number-new",
+              "name": "Arc",
+              "min": -4096,
+              "max": 4096,
+              "value": 270,
+              "step": 0.1,
+              "bindings": []
+            }
+          }
+        },
+        {
+          "action": "connect_control",
+          "control": "control-number-new",
+          "layer": "layer-ring-new",
+          "target": "arc",
+          "mode": "set"
+        },
+        {
+          "action": "set_gradient",
+          "colors": [
+            {
+              "t": 0,
+              "color": "#e0ffff"
+            },
+            {
+              "t": 1,
+              "color": "#49baff"
+            }
+          ]
+        },
+        {
+          "action": "configure_stage",
+          "patch": {
+            "mode": "2.5d",
+            "projection": "orthographic",
+            "azimuth": 30,
+            "elevation": 38,
+            "span": 110,
+            "plane": "ground"
+          }
+        },
+        {
+          "action": "place_stage_layer",
+          "id": "layer-particles-new",
+          "patch": {
+            "plane": "billboard",
+            "position": {
+              "y": 18
+            }
+          }
+        }
+      ],
+      "view": "stage",
+      "time": 0.35
+    },
+    "result": {
+      "file": "aura.vfx.json",
+      "revision": "2b29114adf487d75cd833aad7c64fbf96859705f87796b4c8b32e2fe5bcc2cdb",
+      "time": 0.35,
+      "canvas": {
+        "width": 128,
+        "height": 128,
+        "pixelArt": true,
+        "background": "#110f19"
+      },
+      "coordinates": {
+        "origin": "top-left",
+        "x": "right",
+        "y": "down",
+        "units": "canvas pixels before export scaling",
+        "rotation": "clockwise degrees; zero points right",
+        "position": "layer anchor in canvas pixels, before animated motion",
+        "points": "layer-local offsets from the animated anchor",
+        "geometry": "width/radius/handle offsets and masks are layer-local; worldPoints and pixel bounds are canvas coordinates",
+        "normalized": "x * canvas.width, y * canvas.height",
+        "time": "project seconds; keyframe t is normalized within each layer",
+        "layerOrder": "bottom to top; the last layer is in front"
+      },
+      "pixels": {
+        "visiblePixels": 1006,
+        "alphaMass": 834.565,
+        "bounds": {
+          "x": 26,
+          "y": 39,
+          "width": 71,
+          "height": 48
+        },
+        "touches": []
+      },
+      "automaticTime": false,
+      "draft": true,
+      "view": "stage",
+      "stage": {
+        "mode": "2.5d",
+        "projection": "orthographic",
+        "azimuth": 30,
+        "elevation": 38,
+        "distance": 320,
+        "span": 110,
+        "fov": 45,
+        "target": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "plane": "ground",
+        "layers": {
+          "layer-particles-new": {
+            "plane": "billboard",
+            "position": {
+              "x": 0,
+              "y": 18,
+              "z": 0
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "scale": 1,
+            "stretch": {
+              "x": 1,
+              "y": 1,
+              "z": 1
+            }
+          }
+        }
+      },
+      "stageCoordinates": {
+        "units": "canvas-pixel world units",
+        "x": "right",
+        "y": "up",
+        "z": "world front (+Z); camera orbits independently",
+        "rotation": "local XYZ Euler degrees",
+        "source": "each layer is its full original canvas rendered on a plane, centered at world origin",
+        "export": "camera-baked RGBA; grid, axes and reference character are preview-only",
+        "geometry": "textured effect planes, not volumetric XYZ particles or mesh simulation"
+      },
+      "warnings": [],
+      "images": [
+        {
+          "name": "preview.png",
+          "file": "aura.vfx.json",
+          "revision": "2b29114adf487d75cd833aad7c64fbf96859705f87796b4c8b32e2fe5bcc2cdb",
+          "draft": true,
+          "role": "frame",
+          "width": 128,
+          "height": 128,
+          "time": 0.35,
+          "uri": "vfx://images/41a89295dcfb021a699a02502691074d532f17106701b80f43256547a506da47",
+          "sha256": "33ac9150a2dfc7edf08a0c020d523efe63d9a28d1d54d2da167a95a4cf4b74e4",
+          "mimeType": "image/png",
+          "bytes": 781
+        }
+      ]
+    }
+  },
+  {
+    "tool": "save_preview",
+    "arguments": {
+      "uri": "vfx://images/41a89295dcfb021a699a02502691074d532f17106701b80f43256547a506da47",
+      "out": "draft.png"
+    },
+    "result": {
+      "name": "preview.png",
+      "file": "aura.vfx.json",
+      "revision": "2b29114adf487d75cd833aad7c64fbf96859705f87796b4c8b32e2fe5bcc2cdb",
+      "draft": true,
+      "role": "frame",
+      "width": 128,
+      "height": 128,
+      "time": 0.35,
+      "uri": "vfx://images/41a89295dcfb021a699a02502691074d532f17106701b80f43256547a506da47",
+      "sha256": "33ac9150a2dfc7edf08a0c020d523efe63d9a28d1d54d2da167a95a4cf4b74e4",
+      "mimeType": "image/png",
+      "bytes": 781,
+      "out": "draft.png",
+      "absolutePath": "/workspace/vfx-catalog-agent-0.7.5-release/draft.png"
+    }
+  },
+  {
+    "tool": "apply_edits",
+    "arguments": {
+      "file": "aura.vfx.json",
+      "revision": "2b29114adf487d75cd833aad7c64fbf96859705f87796b4c8b32e2fe5bcc2cdb",
+      "edits": [
+        {
+          "action": "creative",
+          "operation": {
+            "action": "put_modifier",
+            "layer": "layer-ring-new",
+            "modifier": {
+              "id": "modifier-outline-new",
+              "enabled": true,
+              "type": "outline",
+              "thickness": 1,
+              "color": "#ffffff",
+              "alpha": 1
+            }
+          }
+        },
+        {
+          "action": "creative",
+          "operation": {
+            "action": "put_control",
+            "control": {
+              "id": "control-number-new",
+              "name": "Arc",
+              "min": -4096,
+              "max": 4096,
+              "value": 270,
+              "step": 0.1,
+              "bindings": []
+            }
+          }
+        },
+        {
+          "action": "connect_control",
+          "control": "control-number-new",
+          "layer": "layer-ring-new",
+          "target": "arc",
+          "mode": "set"
+        },
+        {
+          "action": "set_gradient",
+          "colors": [
+            {
+              "t": 0,
+              "color": "#e0ffff"
+            },
+            {
+              "t": 1,
+              "color": "#49baff"
+            }
+          ]
+        },
+        {
+          "action": "configure_stage",
+          "patch": {
+            "mode": "2.5d",
+            "projection": "orthographic",
+            "azimuth": 30,
+            "elevation": 38,
+            "span": 110,
+            "plane": "ground"
+          }
+        },
+        {
+          "action": "place_stage_layer",
+          "id": "layer-particles-new",
+          "patch": {
+            "plane": "billboard",
+            "position": {
+              "y": 18
+            }
+          }
+        }
+      ]
+    },
+    "result": {
+      "file": "aura.vfx.json",
+      "revision": "3491b68aa0e8976934b06bb053251e8ea4d03c047c402f9056455a51fbbe681a",
+      "dryRun": false,
+      "operations": 6,
+      "changes": {
+        "added": [],
+        "removed": [],
+        "changed": [
+          "layer-ring-new",
+          "layer-particles-new"
+        ],
+        "reordered": false,
+        "controlsChanged": true
+      }
+    }
+  },
+  {
+    "tool": "render_preview",
+    "arguments": {
+      "file": "aura.vfx.json",
+      "view": "stage",
+      "time": 0.35
+    },
+    "result": {
+      "file": "aura.vfx.json",
+      "revision": "3491b68aa0e8976934b06bb053251e8ea4d03c047c402f9056455a51fbbe681a",
+      "time": 0.35,
+      "canvas": {
+        "width": 128,
+        "height": 128,
+        "pixelArt": true,
+        "background": "#110f19"
+      },
+      "coordinates": {
+        "origin": "top-left",
+        "x": "right",
+        "y": "down",
+        "units": "canvas pixels before export scaling",
+        "rotation": "clockwise degrees; zero points right",
+        "position": "layer anchor in canvas pixels, before animated motion",
+        "points": "layer-local offsets from the animated anchor",
+        "geometry": "width/radius/handle offsets and masks are layer-local; worldPoints and pixel bounds are canvas coordinates",
+        "normalized": "x * canvas.width, y * canvas.height",
+        "time": "project seconds; keyframe t is normalized within each layer",
+        "layerOrder": "bottom to top; the last layer is in front"
+      },
+      "pixels": {
+        "visiblePixels": 1006,
+        "alphaMass": 834.565,
+        "bounds": {
+          "x": 26,
+          "y": 39,
+          "width": 71,
+          "height": 48
+        },
+        "touches": []
+      },
+      "automaticTime": false,
+      "draft": false,
+      "view": "stage",
+      "stage": {
+        "mode": "2.5d",
+        "projection": "orthographic",
+        "azimuth": 30,
+        "elevation": 38,
+        "distance": 320,
+        "span": 110,
+        "fov": 45,
+        "target": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "plane": "ground",
+        "layers": {
+          "layer-particles-new": {
+            "plane": "billboard",
+            "position": {
+              "x": 0,
+              "y": 18,
+              "z": 0
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "scale": 1,
+            "stretch": {
+              "x": 1,
+              "y": 1,
+              "z": 1
+            }
+          }
+        }
+      },
+      "stageCoordinates": {
+        "units": "canvas-pixel world units",
+        "x": "right",
+        "y": "up",
+        "z": "world front (+Z); camera orbits independently",
+        "rotation": "local XYZ Euler degrees",
+        "source": "each layer is its full original canvas rendered on a plane, centered at world origin",
+        "export": "camera-baked RGBA; grid, axes and reference character are preview-only",
+        "geometry": "textured effect planes, not volumetric XYZ particles or mesh simulation"
+      },
+      "warnings": [],
+      "images": [
+        {
+          "name": "preview.png",
+          "file": "aura.vfx.json",
+          "revision": "3491b68aa0e8976934b06bb053251e8ea4d03c047c402f9056455a51fbbe681a",
+          "draft": false,
+          "role": "frame",
+          "width": 128,
+          "height": 128,
+          "time": 0.35,
+          "uri": "vfx://images/9b49aadd5774c8e2ad98f8d9caac74ae9f34135c389e4e5e3d90d853739a9188",
+          "sha256": "33ac9150a2dfc7edf08a0c020d523efe63d9a28d1d54d2da167a95a4cf4b74e4",
+          "mimeType": "image/png",
+          "bytes": 781
+        }
+      ]
+    }
+  },
+  {
+    "tool": "save_preview",
+    "arguments": {
+      "uri": "vfx://images/9b49aadd5774c8e2ad98f8d9caac74ae9f34135c389e4e5e3d90d853739a9188",
+      "out": "camera.png"
+    },
+    "result": {
+      "name": "preview.png",
+      "file": "aura.vfx.json",
+      "revision": "3491b68aa0e8976934b06bb053251e8ea4d03c047c402f9056455a51fbbe681a",
+      "draft": false,
+      "role": "frame",
+      "width": 128,
+      "height": 128,
+      "time": 0.35,
+      "uri": "vfx://images/9b49aadd5774c8e2ad98f8d9caac74ae9f34135c389e4e5e3d90d853739a9188",
+      "sha256": "33ac9150a2dfc7edf08a0c020d523efe63d9a28d1d54d2da167a95a4cf4b74e4",
+      "mimeType": "image/png",
+      "bytes": 781,
+      "out": "camera.png",
+      "absolutePath": "/workspace/vfx-catalog-agent-0.7.5-release/camera.png"
+    }
+  },
+  {
+    "tool": "analyze_project",
+    "arguments": {
+      "file": "aura.vfx.json",
+      "view": "stage",
+      "times": [
+        0.2,
+        0.35,
+        0.55,
+        0.75
+      ],
+      "out": "baseline.json"
+    },
+    "result": {
+      "kind": "vfx-analysis",
+      "formatVersion": 1,
+      "view": "stage",
+      "canvas": {
+        "width": 128,
+        "height": 128
+      },
+      "duration": 1.2,
+      "fps": 24,
+      "frames": [
+        {
+          "time": 0.2,
+          "frameIndex": 4,
+          "sha256": "b05c8b2e3150b9228782e48cf4e090e8e32b56e58253c998814365651606b3ae",
+          "visiblePixels": 761,
+          "alphaMass": 690.075,
+          "bounds": {
+            "x": 38,
+            "y": 45,
+            "width": 49,
+            "height": 35
+          },
+          "touches": []
+        },
+        {
+          "time": 0.35,
+          "frameIndex": 8,
+          "sha256": "828b389574d8a546a03ad5936e97f59f5f490df9bd6db722cf449f2f403c6eaa",
+          "visiblePixels": 1006,
+          "alphaMass": 834.565,
+          "bounds": {
+            "x": 26,
+            "y": 39,
+            "width": 71,
+            "height": 48
+          },
+          "touches": []
+        },
+        {
+          "time": 0.55,
+          "frameIndex": 13,
+          "sha256": "18a682afff26e235c2a4b37cb988e3b3e10b62072f1812d4072f1f0fd246f372",
+          "visiblePixels": 1096,
+          "alphaMass": 734.78,
+          "bounds": {
+            "x": 15,
+            "y": 31,
+            "width": 91,
+            "height": 63
+          },
+          "touches": []
+        },
+        {
+          "time": 0.75,
+          "frameIndex": 18,
+          "sha256": "069c4c8ecf72c96c0cf024f7bcf8ff15d2bbe83eaed52487186b31b6fc6fd3b5",
+          "visiblePixels": 812,
+          "alphaMass": 346.129,
+          "bounds": {
+            "x": 13,
+            "y": 24,
+            "width": 95,
+            "height": 71
+          },
+          "touches": []
+        }
+      ],
+      "summary": {
+        "sampledFrames": 4,
+        "visibleFrames": 4,
+        "emptyFrames": 0,
+        "firstVisibleTime": 0.2,
+        "lastVisibleTime": 0.75,
+        "peakAlphaMass": {
+          "time": 0.35,
+          "value": 834.565
+        },
+        "peakVisiblePixels": {
+          "time": 0.55,
+          "value": 1096
+        },
+        "edgeTimes": []
+      },
+      "parity": {
+        "checked": true,
+        "passed": true,
+        "order": "reverse",
+        "mismatches": []
+      },
+      "file": "aura.vfx.json",
+      "revision": "3491b68aa0e8976934b06bb053251e8ea4d03c047c402f9056455a51fbbe681a",
+      "ok": true,
+      "renderer": {
+        "launches": 1,
+        "requests": 3,
+        "reuses": 2,
+        "active": 0,
+        "idle": 1,
+        "maxWorkers": 2,
+        "idleSeconds": 30
+      },
+      "out": "baseline.json"
+    }
+  },
+  {
+    "tool": "start_export",
+    "arguments": {
+      "file": "aura.vfx.json",
+      "revision": "3491b68aa0e8976934b06bb053251e8ea4d03c047c402f9056455a51fbbe681a",
+      "out": "gif",
+      "options": {
+        "format": "gif",
+        "view": "stage",
+        "scale": 3
+      }
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "queued",
+      "completed": 0,
+      "total": 0
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 0,
+      "total": 0
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 0,
+      "total": 29
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 0,
+      "total": 29
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 0,
+      "total": 29
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 0,
+      "total": 29
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 0,
+      "total": 29
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 0,
+      "total": 29
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 0,
+      "total": 29
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 0,
+      "total": 29
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 0,
+      "total": 29
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 0,
+      "total": 29
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 0,
+      "total": 29
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 0,
+      "total": 29
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 0,
+      "total": 29
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 0,
+      "total": 29
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 0,
+      "total": 29
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 0,
+      "total": 29
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 0,
+      "total": 29
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 0,
+      "total": 29
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 0,
+      "total": 29
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 0,
+      "total": 29
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 0,
+      "total": 29
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 0,
+      "total": 29
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 0,
+      "total": 29
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 0,
+      "total": 29
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 0,
+      "total": 29
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 0,
+      "total": 29
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 2,
+      "total": 29
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 8,
+      "total": 29
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 14,
+      "total": 29
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 21,
+      "total": 29
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 29,
+      "total": 29
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "succeeded",
+      "completed": 29,
+      "total": 29,
+      "result": {
+        "directory": "/workspace/vfx-catalog-agent-0.7.5-release/gif",
+        "files": [
+          "animation.gif",
+          "effect.vfx.json",
+          "metadata.json"
+        ],
+        "revision": "3491b68aa0e8976934b06bb053251e8ea4d03c047c402f9056455a51fbbe681a"
+      }
+    }
+  },
+  {
+    "tool": "start_export",
+    "arguments": {
+      "file": "aura.vfx.json",
+      "revision": "3491b68aa0e8976934b06bb053251e8ea4d03c047c402f9056455a51fbbe681a",
+      "out": "godot",
+      "options": {
+        "format": "godot",
+        "view": "stage",
+        "scale": 1
+      }
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-2",
+      "status": "queued",
+      "completed": 0,
+      "total": 0
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-2"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-2",
+      "status": "running",
+      "completed": 0,
+      "total": 0
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-2"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-2",
+      "status": "running",
+      "completed": 0,
+      "total": 29
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-2"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-2",
+      "status": "running",
+      "completed": 0,
+      "total": 29
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-2"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-2",
+      "status": "running",
+      "completed": 0,
+      "total": 29
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-2"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-2",
+      "status": "running",
+      "completed": 0,
+      "total": 29
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-2"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-2",
+      "status": "running",
+      "completed": 0,
+      "total": 29
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-2"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-2",
+      "status": "running",
+      "completed": 0,
+      "total": 29
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-2"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-2",
+      "status": "running",
+      "completed": 0,
+      "total": 29
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-2"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-2",
+      "status": "running",
+      "completed": 0,
+      "total": 29
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-2"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-2",
+      "status": "running",
+      "completed": 0,
+      "total": 29
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-2"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-2",
+      "status": "running",
+      "completed": 0,
+      "total": 29
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-2"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-2",
+      "status": "running",
+      "completed": 0,
+      "total": 29
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-2"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-2",
+      "status": "running",
+      "completed": 0,
+      "total": 29
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-2"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-2",
+      "status": "running",
+      "completed": 2,
+      "total": 29
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-2"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-2",
+      "status": "running",
+      "completed": 7,
+      "total": 29
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-2"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-2",
+      "status": "running",
+      "completed": 11,
+      "total": 29
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-2"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-2",
+      "status": "running",
+      "completed": 17,
+      "total": 29
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-2"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-2",
+      "status": "running",
+      "completed": 20,
+      "total": 29
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-2"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-2",
+      "status": "running",
+      "completed": 26,
+      "total": 29
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-2"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-2",
+      "status": "running",
+      "completed": 29,
+      "total": 29
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-2"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-2",
+      "status": "running",
+      "completed": 29,
+      "total": 29
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-2"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-2",
+      "status": "running",
+      "completed": 29,
+      "total": 29
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-2"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-2",
+      "status": "running",
+      "completed": 29,
+      "total": 29
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-2"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-2",
+      "status": "running",
+      "completed": 29,
+      "total": 29
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-2"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-2",
+      "status": "running",
+      "completed": 29,
+      "total": 29
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-2"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-2",
+      "status": "succeeded",
+      "completed": 29,
+      "total": 29,
+      "result": {
+        "directory": "/workspace/vfx-catalog-agent-0.7.5-release/godot",
+        "files": [
+          "atlas.png",
+          "effect.tres",
+          "IMPORT.txt",
+          "effect.vfx.json",
+          "metadata.json"
+        ],
+        "revision": "3491b68aa0e8976934b06bb053251e8ea4d03c047c402f9056455a51fbbe681a"
+      }
+    }
+  },
+  {
+    "tool": "get_blueprint",
+    "arguments": {
+      "file": "aura.vfx.json"
+    },
+    "result": {
+      "revision": "3491b68aa0e8976934b06bb053251e8ea4d03c047c402f9056455a51fbbe681a",
+      "kind": "vfx-blueprint",
+      "stage": {
+        "mode": "2.5d",
+        "projection": "orthographic",
+        "azimuth": 30,
+        "elevation": 38,
+        "distance": 320,
+        "span": 110,
+        "fov": 45,
+        "target": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "plane": "ground",
+        "layers": {
+          "layer-particles-new": {
+            "plane": "billboard",
+            "position": {
+              "x": 0,
+              "y": 18,
+              "z": 0
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "scale": 1,
+            "stretch": {
+              "x": 1,
+              "y": 1,
+              "z": 1
+            }
+          }
+        }
+      },
+      "coordinates": "Node positions are editor pixels. Layer parameters use original canvas pixels, clockwise degrees and normalized layer-life curves.",
+      "controlOrder": [
+        "control-number-new"
+      ],
+      "controls": [
+        {
+          "id": "control-number-new",
+          "name": "Arc",
+          "min": -4096,
+          "max": 4096,
+          "value": 270,
+          "step": 0.1,
+          "bindings": [
+            {
+              "layer": "layer-ring-new",
+              "target": "arc",
+              "mode": "set",
+              "factor": 1,
+              "offset": 0
+            }
+          ],
+          "nodeId": "control:control-number-new"
+        }
+      ],
+      "layers": [
+        {
+          "id": "layer-ring-new",
+          "nodeId": "layer:layer-ring-new",
+          "name": "Arc field",
+          "type": "ring",
+          "locked": false,
+          "visible": true,
+          "inputs": [
+            {
+              "path": "position.x",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "position.y",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "rotation",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "scale",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "glow.strength",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "glow.blur",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "arc",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "segments",
+              "kind": "number",
+              "integer": true
+            },
+            {
+              "path": "modifiers.modifier-outline-new.thickness",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "modifiers.modifier-outline-new.alpha",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "opacity",
+              "kind": "curve"
+            },
+            {
+              "path": "motion.x",
+              "kind": "curve"
+            },
+            {
+              "path": "motion.y",
+              "kind": "curve"
+            },
+            {
+              "path": "motion.rotation",
+              "kind": "curve"
+            },
+            {
+              "path": "motion.scale",
+              "kind": "curve"
+            },
+            {
+              "path": "radius",
+              "kind": "curve"
+            },
+            {
+              "path": "width",
+              "kind": "curve"
+            },
+            {
+              "path": "colors.hue",
+              "kind": "hue"
+            }
+          ],
+          "modifiers": [
+            {
+              "id": "modifier-outline-new",
+              "enabled": true,
+              "type": "outline",
+              "thickness": 1,
+              "color": "#ffffff",
+              "alpha": 1
+            }
+          ]
+        },
+        {
+          "id": "layer-particles-new",
+          "nodeId": "layer:layer-particles-new",
+          "name": "Rising motes",
+          "type": "particles",
+          "locked": false,
+          "visible": true,
+          "inputs": [
+            {
+              "path": "position.x",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "position.y",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "rotation",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "scale",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "glow.strength",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "glow.blur",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "count",
+              "kind": "number",
+              "integer": true
+            },
+            {
+              "path": "rate",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "speed.0",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "speed.1",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "angle",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "spread",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "spawn.radius",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "spawn.width",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "spawn.height",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "gravity.x",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "gravity.y",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "drag",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "turbulence",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "frequency",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "stretch",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "trail.seconds",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "trail.width",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "trail.opacity",
+              "kind": "number",
+              "integer": false
+            },
+            {
+              "path": "opacity",
+              "kind": "curve"
+            },
+            {
+              "path": "motion.x",
+              "kind": "curve"
+            },
+            {
+              "path": "motion.y",
+              "kind": "curve"
+            },
+            {
+              "path": "motion.rotation",
+              "kind": "curve"
+            },
+            {
+              "path": "motion.scale",
+              "kind": "curve"
+            },
+            {
+              "path": "size",
+              "kind": "curve"
+            },
+            {
+              "path": "colors.hue",
+              "kind": "hue"
+            }
+          ],
+          "modifiers": []
+        }
+      ],
+      "connections": [
+        {
+          "control": "control-number-new",
+          "index": 0,
+          "source": "control:control-number-new",
+          "sourcePort": "value",
+          "destination": "layer:layer-ring-new",
+          "layer": "layer-ring-new",
+          "target": "arc",
+          "mode": "set",
+          "factor": 1,
+          "offset": 0,
+          "editable": true,
+          "disconnectEdit": {
+            "action": "disconnect_control",
+            "control": "control-number-new",
+            "index": 0
+          }
+        }
+      ],
+      "imagePipeline": [
+        {
+          "layer": "layer-ring-new",
+          "order": [
+            "layer:layer-ring-new",
+            "modifier:layer-ring-new:modifier-outline-new",
+            "output"
+          ]
+        },
+        {
+          "layer": "layer-particles-new",
+          "order": [
+            "layer:layer-particles-new",
+            "output"
+          ]
+        }
+      ],
+      "positions": {},
+      "editing": {
+        "tool": "apply_edits",
+        "connect": {
+          "action": "connect_control",
+          "control": "CONTROL_ID",
+          "layer": "LAYER_ID",
+          "target": "INPUT_PATH",
+          "mode": "multiply",
+          "factor": 1,
+          "offset": 0
+        },
+        "controlValue": {
+          "action": "creative",
+          "operation": {
+            "action": "set_control",
+            "id": "CONTROL_ID",
+            "value": 1
+          }
+        },
+        "draft": "Use the same edits in observe_project with the source revision before committing. Binding indices refer to this revision only.",
+        "pipeline": "Image wires show ordered modifiers then composition. Reorder modifiers through creative put_modifier index; arbitrary image graph rewiring is not supported."
+      }
+    }
+  },
+  {
+    "tool": "get_stage",
+    "arguments": {
+      "file": "aura.vfx.json"
+    },
+    "result": {
+      "revision": "3491b68aa0e8976934b06bb053251e8ea4d03c047c402f9056455a51fbbe681a",
+      "configured": true,
+      "stage": {
+        "mode": "2.5d",
+        "projection": "orthographic",
+        "azimuth": 30,
+        "elevation": 38,
+        "distance": 320,
+        "span": 110,
+        "fov": 45,
+        "target": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "plane": "ground",
+        "layers": {
+          "layer-particles-new": {
+            "plane": "billboard",
+            "position": {
+              "x": 0,
+              "y": 18,
+              "z": 0
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "scale": 1,
+            "stretch": {
+              "x": 1,
+              "y": 1,
+              "z": 1
+            }
+          }
+        }
+      },
+      "coordinates": {
+        "units": "canvas-pixel world units",
+        "x": "right",
+        "y": "up",
+        "z": "world front (+Z); camera orbits independently",
+        "rotation": "local XYZ Euler degrees",
+        "source": "each layer is its full original canvas rendered on a plane, centered at world origin",
+        "export": "camera-baked RGBA; grid, axes and reference character are preview-only",
+        "geometry": "textured effect planes, not volumetric XYZ particles or mesh simulation"
+      },
+      "layers": [
+        {
+          "id": "layer-ring-new",
+          "name": "Arc field",
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "layer-particles-new",
+          "name": "Rising motes",
+          "locked": false,
+          "visible": true
+        }
+      ],
+      "render": {
+        "tool": "render_preview",
+        "file": "aura.vfx.json",
+        "view": "stage"
+      },
+      "export": {
+        "options": {
+          "view": "stage"
+        }
+      }
+    }
+  }
+]

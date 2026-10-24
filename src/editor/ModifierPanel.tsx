@@ -9,15 +9,8 @@ import type { Layer, Project } from "../core/model.js";
 import { readableError } from "../core/errors.js";
 import { Check, NumberField } from "./controls.js";
 
-export const MODIFIER_NAMES: Record<Modifier["type"], string> = {
-  outline: "Outline",
-  pixelate: "Pixel blocks",
-  "color-replace": "Replace color",
-  ramp: "Color ramp",
-  shockwave: "Shockwave",
-  "noise-warp": "Noise warp",
-  dissolve: "Dissolve",
-};
+import { MODIFIER_LABELS } from "../core/catalog.js";
+export const MODIFIER_NAMES: Record<Modifier["type"], string> = MODIFIER_LABELS;
 const names: Record<string, string> = {
   thickness: "Thickness",
   alpha: "Opacity",
@@ -41,10 +34,14 @@ export function ModifierPanel({
   layer,
   project,
   update,
+  open,
+  focusId,
 }: {
   layer: Layer;
   project: Project;
   update: (p: Project) => void;
+  open?: boolean;
+  focusId?: string;
 }) {
   const [type, setType] = useState<Modifier["type"]>("outline"),
     [error, setError] = useState("");
@@ -57,7 +54,7 @@ export function ModifierPanel({
     }
   };
   return (
-    <details className="modifier-panel">
+    <details className="modifier-panel" open={open}>
       <summary>
         Modifiers <small>{layer.modifiers.length} / 8</small>
       </summary>
@@ -65,7 +62,11 @@ export function ModifierPanel({
         Applied from top to bottom. Use the arrows to change the order.
       </p>
       {layer.modifiers.map((m, index) => (
-        <details key={m.id} className="modifier-item">
+        <details
+          key={m.id}
+          className="modifier-item"
+          open={m.id === focusId ? true : undefined}
+        >
           <summary>
             {MODIFIER_NAMES[m.type]}
             {!m.enabled && " · off"}

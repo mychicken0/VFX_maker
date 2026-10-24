@@ -1,0 +1,7 @@
+{
+  "version": "0.7.5",
+  "workflow": "empty project -> Add Ring/Number/Outline/Particles -> Set Arc=270 -> 3D planes -> scene framing -> explicit camera alignment -> GIF download",
+  "projectSha256": "f81f99ec64b755e91d6a81aa5d9b4709d59c8c28a52053db4db6460fd6f6d22d",
+  "gifSha256": "eda62b55c519c2a6bf7ff01a46fc9a67c75cd2d2ec2fefca80e00b0d5eb72c7c",
+  "pageErrors": []
+}

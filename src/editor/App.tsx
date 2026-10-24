@@ -10,6 +10,7 @@ import {
 } from "react";
 import {
   cleanupGroups,
+  duplicateEditorLayer,
   groupLayers,
   transformLayers,
   autoKeyTransform,
@@ -497,14 +498,15 @@ export function App() {
           ),
           ids: group.ids.map((id) => mapping.get(id)!),
         });
-    const stage = project.stage
-      ? { ...project.stage, layers: { ...project.stage.layers } }
-      : undefined;
-    if (stage)
+    try {
+      let next = project;
       for (const [before, after] of mapping)
-        if (stage.layers[before])
-          stage.layers[after] = structuredClone(stage.layers[before]);
-    safeCommit({ ...project, layers, groups, ...(stage ? { stage } : {}) });
+        next = duplicateEditorLayer(next, before, after);
+      safeCommit({ ...next, layers, groups });
+    } catch (error) {
+      toast(readableError(error));
+      return;
+    }
     setSelection([...mapping.values()]);
   }, [project, selection, safeCommit]);
   const activeGroup = project.groups.find(

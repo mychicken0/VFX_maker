@@ -24,3 +24,4 @@ export * from "./limits.js";
 export * from "./analysis.js";
 
 export * from "./stage.js";
+export * from "./catalog.js";

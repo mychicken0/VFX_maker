@@ -1,0 +1,366 @@
+{
+  "format": "vfx-maker.export",
+  "version": "0.7.5",
+  "name": "Catalog aura",
+  "renderer": "three-stage-pixi-planes",
+  "view": "stage",
+  "canvas": {
+    "width": 128,
+    "height": 128,
+    "pixelArt": true,
+    "background": "#110f19"
+  },
+  "sourceCanvas": {
+    "width": 128,
+    "height": 128,
+    "pixelArt": true,
+    "background": "#110f19"
+  },
+  "output": {
+    "scale": 1,
+    "colors": 0,
+    "dither": false,
+    "pixelSize": 1,
+    "alphaLevels": 0
+  },
+  "fps": 24,
+  "duration": 1.2,
+  "sourceRange": {
+    "start": 0,
+    "end": 1.2
+  },
+  "loop": true,
+  "atlas": {
+    "width": 792,
+    "height": 660,
+    "padding": 2,
+    "extrude": false
+  },
+  "frames": [
+    {
+      "index": 0,
+      "time": 0,
+      "duration": 0.041666666666666664,
+      "rect": {
+        "x": 2,
+        "y": 2,
+        "width": 128,
+        "height": 128
+      }
+    },
+    {
+      "index": 1,
+      "time": 0.041666666666666664,
+      "duration": 0.041666666666666664,
+      "rect": {
+        "x": 134,
+        "y": 2,
+        "width": 128,
+        "height": 128
+      }
+    },
+    {
+      "index": 2,
+      "time": 0.08333333333333333,
+      "duration": 0.041666666666666664,
+      "rect": {
+        "x": 266,
+        "y": 2,
+        "width": 128,
+        "height": 128
+      }
+    },
+    {
+      "index": 3,
+      "time": 0.125,
+      "duration": 0.041666666666666664,
+      "rect": {
+        "x": 398,
+        "y": 2,
+        "width": 128,
+        "height": 128
+      }
+    },
+    {
+      "index": 4,
+      "time": 0.16666666666666666,
+      "duration": 0.041666666666666664,
+      "rect": {
+        "x": 530,
+        "y": 2,
+        "width": 128,
+        "height": 128
+      }
+    },
+    {
+      "index": 5,
+      "time": 0.20833333333333334,
+      "duration": 0.041666666666666664,
+      "rect": {
+        "x": 662,
+        "y": 2,
+        "width": 128,
+        "height": 128
+      }
+    },
+    {
+      "index": 6,
+      "time": 0.25,
+      "duration": 0.041666666666666664,
+      "rect": {
+        "x": 2,
+        "y": 134,
+        "width": 128,
+        "height": 128
+      }
+    },
+    {
+      "index": 7,
+      "time": 0.2916666666666667,
+      "duration": 0.041666666666666664,
+      "rect": {
+        "x": 134,
+        "y": 134,
+        "width": 128,
+        "height": 128
+      }
+    },
+    {
+      "index": 8,
+      "time": 0.3333333333333333,
+      "duration": 0.041666666666666664,
+      "rect": {
+        "x": 266,
+        "y": 134,
+        "width": 128,
+        "height": 128
+      }
+    },
+    {
+      "index": 9,
+      "time": 0.375,
+      "duration": 0.041666666666666664,
+      "rect": {
+        "x": 398,
+        "y": 134,
+        "width": 128,
+        "height": 128
+      }
+    },
+    {
+      "index": 10,
+      "time": 0.4166666666666667,
+      "duration": 0.041666666666666664,
+      "rect": {
+        "x": 530,
+        "y": 134,
+        "width": 128,
+        "height": 128
+      }
+    },
+    {
+      "index": 11,
+      "time": 0.4583333333333333,
+      "duration": 0.041666666666666664,
+      "rect": {
+        "x": 662,
+        "y": 134,
+        "width": 128,
+        "height": 128
+      }
+    },
+    {
+      "index": 12,
+      "time": 0.5,
+      "duration": 0.041666666666666664,
+      "rect": {
+        "x": 2,
+        "y": 266,
+        "width": 128,
+        "height": 128
+      }
+    },
+    {
+      "index": 13,
+      "time": 0.5416666666666666,
+      "duration": 0.041666666666666664,
+      "rect": {
+        "x": 134,
+        "y": 266,
+        "width": 128,
+        "height": 128
+      }
+    },
+    {
+      "index": 14,
+      "time": 0.5833333333333334,
+      "duration": 0.041666666666666664,
+      "rect": {
+        "x": 266,
+        "y": 266,
+        "width": 128,
+        "height": 128
+      }
+    },
+    {
+      "index": 15,
+      "time": 0.625,
+      "duration": 0.041666666666666664,
+      "rect": {
+        "x": 398,
+        "y": 266,
+        "width": 128,
+        "height": 128
+      }
+    },
+    {
+      "index": 16,
+      "time": 0.6666666666666666,
+      "duration": 0.041666666666666664,
+      "rect": {
+        "x": 530,
+        "y": 266,
+        "width": 128,
+        "height": 128
+      }
+    },
+    {
+      "index": 17,
+      "time": 0.7083333333333334,
+      "duration": 0.041666666666666664,
+      "rect": {
+        "x": 662,
+        "y": 266,
+        "width": 128,
+        "height": 128
+      }
+    },
+    {
+      "index": 18,
+      "time": 0.75,
+      "duration": 0.041666666666666664,
+      "rect": {
+        "x": 2,
+        "y": 398,
+        "width": 128,
+        "height": 128
+      }
+    },
+    {
+      "index": 19,
+      "time": 0.7916666666666666,
+      "duration": 0.041666666666666664,
+      "rect": {
+        "x": 134,
+        "y": 398,
+        "width": 128,
+        "height": 128
+      }
+    },
+    {
+      "index": 20,
+      "time": 0.8333333333333334,
+      "duration": 0.041666666666666664,
+      "rect": {
+        "x": 266,
+        "y": 398,
+        "width": 128,
+        "height": 128
+      }
+    },
+    {
+      "index": 21,
+      "time": 0.875,
+      "duration": 0.041666666666666664,
+      "rect": {
+        "x": 398,
+        "y": 398,
+        "width": 128,
+        "height": 128
+      }
+    },
+    {
+      "index": 22,
+      "time": 0.9166666666666666,
+      "duration": 0.041666666666666664,
+      "rect": {
+        "x": 530,
+        "y": 398,
+        "width": 128,
+        "height": 128
+      }
+    },
+    {
+      "index": 23,
+      "time": 0.9583333333333334,
+      "duration": 0.041666666666666664,
+      "rect": {
+        "x": 662,
+        "y": 398,
+        "width": 128,
+        "height": 128
+      }
+    },
+    {
+      "index": 24,
+      "time": 1,
+      "duration": 0.041666666666666664,
+      "rect": {
+        "x": 2,
+        "y": 530,
+        "width": 128,
+        "height": 128
+      }
+    },
+    {
+      "index": 25,
+      "time": 1.0416666666666667,
+      "duration": 0.041666666666666664,
+      "rect": {
+        "x": 134,
+        "y": 530,
+        "width": 128,
+        "height": 128
+      }
+    },
+    {
+      "index": 26,
+      "time": 1.0833333333333333,
+      "duration": 0.041666666666666664,
+      "rect": {
+        "x": 266,
+        "y": 530,
+        "width": 128,
+        "height": 128
+      }
+    },
+    {
+      "index": 27,
+      "time": 1.125,
+      "duration": 0.041666666666666664,
+      "rect": {
+        "x": 398,
+        "y": 530,
+        "width": 128,
+        "height": 128
+      }
+    },
+    {
+      "index": 28,
+      "time": 1.1666666666666667,
+      "duration": 0.033333333333333215,
+      "rect": {
+        "x": 530,
+        "y": 530,
+        "width": 128,
+        "height": 128
+      }
+    }
+  ],
+  "files": {
+    "atlas.png": "892910059ef689e6a7a3e5938ac8e04e9ecf4c3241cb743ddf609198bd21aab9",
+    "effect.tres": "cee0f708cdadf2c022c328c893fb94f43f96b9a1db7b3d6ffb096dd1598fa923",
+    "IMPORT.txt": "ca7d71cea304d30f0e221ba74c9ebda47c1ccfb805576fce103525ff9d08b359",
+    "effect.vfx.json": "3491b68aa0e8976934b06bb053251e8ea4d03c047c402f9056455a51fbbe681a"
+  }
+}

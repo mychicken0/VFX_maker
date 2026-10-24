@@ -3,8 +3,8 @@
     "tool": "capabilities",
     "arguments": {},
     "result": {
-      "version": "0.7.4",
-      "root": "/workspace/vfx-stage-gallery-0.7.4",
+      "version": "0.7.5",
+      "root": "/workspace/vfx-stage-gallery-0.7.5",
       "renderer": {
         "launches": 0,
         "requests": 0,
@@ -14,6 +14,7 @@
         "maxWorkers": 2,
         "idleSeconds": 30
       },
+      "nodeCatalog": "get_node_catalog returns the real Add menu, limits/availability and validated example apply_edits operations. Studio and MCP share these factories.",
       "projectBatch": "batch_projects prepares independent projects, edits and optional exports. dryRun writes nothing; real runs return a background job. Inspect result.ok and each item, even when the job completes. Transactions are per file, not across files.",
       "qa": "analyze_project hashes straight RGBA at each requested frame (all export frames by default), rerenders in reverse order for parity, and optionally compares a root-scoped saved baseline. Peak activity is not a game hit marker.",
       "coordinates": {
@@ -106,7 +107,7 @@
     "result": {
       "project": {
         "format": "vfx-maker",
-        "version": "0.7.4",
+        "version": "0.7.5",
         "name": "Healing pulse",
         "seed": 74,
         "canvas": {
@@ -484,7 +485,7 @@
           "alphaLevels": 0
         }
       },
-      "revision": "a32003b38d9eb57cabf4f873166fe480ff0c2c0e5b49270b8f7a023c92e72e93"
+      "revision": "5977a670deebeef9acf27ad3aed295de0a95fb1ec9fc843d7513d4c7ad78b9bd"
     }
   },
   {
@@ -493,7 +494,7 @@
       "file": "isometric-heal/effect.vfx.json"
     },
     "result": {
-      "revision": "a32003b38d9eb57cabf4f873166fe480ff0c2c0e5b49270b8f7a023c92e72e93",
+      "revision": "5977a670deebeef9acf27ad3aed295de0a95fb1ec9fc843d7513d4c7ad78b9bd",
       "configured": false,
       "stage": {
         "mode": "2.5d",
@@ -551,7 +552,7 @@
     "tool": "render_preview",
     "arguments": {
       "file": "isometric-heal/effect.vfx.json",
-      "revision": "a32003b38d9eb57cabf4f873166fe480ff0c2c0e5b49270b8f7a023c92e72e93",
+      "revision": "5977a670deebeef9acf27ad3aed295de0a95fb1ec9fc843d7513d4c7ad78b9bd",
       "edits": [
         {
           "action": "update_project",
@@ -586,7 +587,7 @@
     },
     "result": {
       "file": "isometric-heal/effect.vfx.json",
-      "revision": "a32003b38d9eb57cabf4f873166fe480ff0c2c0e5b49270b8f7a023c92e72e93",
+      "revision": "5977a670deebeef9acf27ad3aed295de0a95fb1ec9fc843d7513d4c7ad78b9bd",
       "time": 0.35,
       "canvas": {
         "width": 128,
@@ -648,7 +649,12 @@
               "y": 0,
               "z": 0
             },
-            "scale": 1
+            "scale": 1,
+            "stretch": {
+              "x": 1,
+              "y": 1,
+              "z": 1
+            }
           }
         }
       },
@@ -667,13 +673,13 @@
         {
           "name": "preview.png",
           "file": "isometric-heal/effect.vfx.json",
-          "revision": "a32003b38d9eb57cabf4f873166fe480ff0c2c0e5b49270b8f7a023c92e72e93",
+          "revision": "5977a670deebeef9acf27ad3aed295de0a95fb1ec9fc843d7513d4c7ad78b9bd",
           "draft": true,
           "role": "frame",
           "width": 128,
           "height": 128,
           "time": 0.35,
-          "uri": "vfx://images/e6b41c22a7a3118ef976f98fd331d3b395fa48084f4ee17cb27204ccea3d2290",
+          "uri": "vfx://images/a250bdd5d2b2173633cb4f29a5c4bc97e7acaf83c286ddc32a81b6f8d2cdab96",
           "sha256": "6400fc25b50db16b2f2a2cc9eb7338b587af8d0acf775c404c0f36446506a6d9",
           "mimeType": "image/png",
           "bytes": 1662
@@ -685,7 +691,7 @@
     "tool": "apply_edits",
     "arguments": {
       "file": "isometric-heal/effect.vfx.json",
-      "revision": "a32003b38d9eb57cabf4f873166fe480ff0c2c0e5b49270b8f7a023c92e72e93",
+      "revision": "5977a670deebeef9acf27ad3aed295de0a95fb1ec9fc843d7513d4c7ad78b9bd",
       "edits": [
         {
           "action": "update_project",
@@ -718,7 +724,7 @@
     },
     "result": {
       "file": "isometric-heal/effect.vfx.json",
-      "revision": "0fbd0b22b208e6db582662c7582643e09ffcf1c0a9751feeeb42bee7ac3fc672",
+      "revision": "28c56fafc36b056ea03a6916baae7e6d7ced42722988adee74e5dfabb1e251a1",
       "dryRun": false,
       "operations": 3,
       "changes": {
@@ -739,7 +745,7 @@
     },
     "result": {
       "file": "isometric-heal/effect.vfx.json",
-      "revision": "0fbd0b22b208e6db582662c7582643e09ffcf1c0a9751feeeb42bee7ac3fc672",
+      "revision": "28c56fafc36b056ea03a6916baae7e6d7ced42722988adee74e5dfabb1e251a1",
       "time": 0.35,
       "canvas": {
         "width": 128,
@@ -801,7 +807,12 @@
               "y": 0,
               "z": 0
             },
-            "scale": 1
+            "scale": 1,
+            "stretch": {
+              "x": 1,
+              "y": 1,
+              "z": 1
+            }
           }
         }
       },
@@ -820,13 +831,13 @@
         {
           "name": "preview.png",
           "file": "isometric-heal/effect.vfx.json",
-          "revision": "0fbd0b22b208e6db582662c7582643e09ffcf1c0a9751feeeb42bee7ac3fc672",
+          "revision": "28c56fafc36b056ea03a6916baae7e6d7ced42722988adee74e5dfabb1e251a1",
           "draft": false,
           "role": "frame",
           "width": 128,
           "height": 128,
           "time": 0.35,
-          "uri": "vfx://images/b904c227862a0610420f32f9ca0d5577f19de4253e2479e986d773d6e9cd01f0",
+          "uri": "vfx://images/c2af026e3c8451cd6969fd92e30f61db22acd251134f3267e0212e50fce114bb",
           "sha256": "6400fc25b50db16b2f2a2cc9eb7338b587af8d0acf775c404c0f36446506a6d9",
           "mimeType": "image/png",
           "bytes": 1662
@@ -837,24 +848,24 @@
   {
     "tool": "save_preview",
     "arguments": {
-      "uri": "vfx://images/b904c227862a0610420f32f9ca0d5577f19de4253e2479e986d773d6e9cd01f0",
+      "uri": "vfx://images/c2af026e3c8451cd6969fd92e30f61db22acd251134f3267e0212e50fce114bb",
       "out": "isometric-heal/preview.png"
     },
     "result": {
       "name": "preview.png",
       "file": "isometric-heal/effect.vfx.json",
-      "revision": "0fbd0b22b208e6db582662c7582643e09ffcf1c0a9751feeeb42bee7ac3fc672",
+      "revision": "28c56fafc36b056ea03a6916baae7e6d7ced42722988adee74e5dfabb1e251a1",
       "draft": false,
       "role": "frame",
       "width": 128,
       "height": 128,
       "time": 0.35,
-      "uri": "vfx://images/b904c227862a0610420f32f9ca0d5577f19de4253e2479e986d773d6e9cd01f0",
+      "uri": "vfx://images/c2af026e3c8451cd6969fd92e30f61db22acd251134f3267e0212e50fce114bb",
       "sha256": "6400fc25b50db16b2f2a2cc9eb7338b587af8d0acf775c404c0f36446506a6d9",
       "mimeType": "image/png",
       "bytes": 1662,
       "out": "isometric-heal/preview.png",
-      "absolutePath": "/workspace/vfx-stage-gallery-0.7.4/isometric-heal/preview.png"
+      "absolutePath": "/workspace/vfx-stage-gallery-0.7.5/isometric-heal/preview.png"
     }
   },
   {
@@ -946,7 +957,7 @@
         "mismatches": []
       },
       "file": "isometric-heal/effect.vfx.json",
-      "revision": "0fbd0b22b208e6db582662c7582643e09ffcf1c0a9751feeeb42bee7ac3fc672",
+      "revision": "28c56fafc36b056ea03a6916baae7e6d7ced42722988adee74e5dfabb1e251a1",
       "ok": true,
       "renderer": {
         "launches": 1,
@@ -964,7 +975,7 @@
     "tool": "start_export",
     "arguments": {
       "file": "isometric-heal/effect.vfx.json",
-      "revision": "0fbd0b22b208e6db582662c7582643e09ffcf1c0a9751feeeb42bee7ac3fc672",
+      "revision": "28c56fafc36b056ea03a6916baae7e6d7ced42722988adee74e5dfabb1e251a1",
       "out": "isometric-heal/gif",
       "options": {
         "view": "stage",
@@ -1223,7 +1234,7 @@
       "progressUnit": "frames",
       "id": "export-1",
       "status": "running",
-      "completed": 1,
+      "completed": 0,
       "total": 36
     }
   },
@@ -1236,7 +1247,7 @@
       "progressUnit": "frames",
       "id": "export-1",
       "status": "running",
-      "completed": 10,
+      "completed": 0,
       "total": 36
     }
   },
@@ -1249,7 +1260,85 @@
       "progressUnit": "frames",
       "id": "export-1",
       "status": "running",
-      "completed": 18,
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 3,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 9,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 15,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-1"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-1",
+      "status": "running",
+      "completed": 21,
       "total": 36
     }
   },
@@ -1275,7 +1364,7 @@
       "progressUnit": "frames",
       "id": "export-1",
       "status": "running",
-      "completed": 36,
+      "completed": 34,
       "total": 36
     }
   },
@@ -1291,13 +1380,13 @@
       "completed": 36,
       "total": 36,
       "result": {
-        "directory": "/workspace/vfx-stage-gallery-0.7.4/isometric-heal/gif",
+        "directory": "/workspace/vfx-stage-gallery-0.7.5/isometric-heal/gif",
         "files": [
           "animation.gif",
           "effect.vfx.json",
           "metadata.json"
         ],
-        "revision": "0fbd0b22b208e6db582662c7582643e09ffcf1c0a9751feeeb42bee7ac3fc672"
+        "revision": "28c56fafc36b056ea03a6916baae7e6d7ced42722988adee74e5dfabb1e251a1"
       }
     }
   },
@@ -1305,7 +1394,7 @@
     "tool": "start_export",
     "arguments": {
       "file": "isometric-heal/effect.vfx.json",
-      "revision": "0fbd0b22b208e6db582662c7582643e09ffcf1c0a9751feeeb42bee7ac3fc672",
+      "revision": "28c56fafc36b056ea03a6916baae7e6d7ced42722988adee74e5dfabb1e251a1",
       "out": "isometric-heal/godot",
       "options": {
         "view": "stage",
@@ -1421,7 +1510,7 @@
       "progressUnit": "frames",
       "id": "export-2",
       "status": "running",
-      "completed": 6,
+      "completed": 0,
       "total": 36
     }
   },
@@ -1434,7 +1523,7 @@
       "progressUnit": "frames",
       "id": "export-2",
       "status": "running",
-      "completed": 15,
+      "completed": 0,
       "total": 36
     }
   },
@@ -1447,7 +1536,7 @@
       "progressUnit": "frames",
       "id": "export-2",
       "status": "running",
-      "completed": 24,
+      "completed": 0,
       "total": 36
     }
   },
@@ -1460,7 +1549,176 @@
       "progressUnit": "frames",
       "id": "export-2",
       "status": "running",
-      "completed": 32,
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-2"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-2",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-2"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-2",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-2"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-2",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-2"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-2",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-2"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-2",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-2"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-2",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-2"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-2",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-2"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-2",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-2"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-2",
+      "status": "running",
+      "completed": 4,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-2"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-2",
+      "status": "running",
+      "completed": 12,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-2"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-2",
+      "status": "running",
+      "completed": 18,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-2"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-2",
+      "status": "running",
+      "completed": 26,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-2"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-2",
+      "status": "running",
+      "completed": 35,
       "total": 36
     }
   },
@@ -1528,7 +1786,7 @@
       "completed": 36,
       "total": 36,
       "result": {
-        "directory": "/workspace/vfx-stage-gallery-0.7.4/isometric-heal/godot",
+        "directory": "/workspace/vfx-stage-gallery-0.7.5/isometric-heal/godot",
         "files": [
           "atlas.png",
           "effect.tres",
@@ -1536,7 +1794,7 @@
           "effect.vfx.json",
           "metadata.json"
         ],
-        "revision": "0fbd0b22b208e6db582662c7582643e09ffcf1c0a9751feeeb42bee7ac3fc672"
+        "revision": "28c56fafc36b056ea03a6916baae7e6d7ced42722988adee74e5dfabb1e251a1"
       }
     }
   },
@@ -1550,7 +1808,7 @@
     "result": {
       "project": {
         "format": "vfx-maker",
-        "version": "0.7.4",
+        "version": "0.7.5",
         "name": "Crimson cross",
         "seed": 74,
         "canvas": {
@@ -2276,7 +2534,7 @@
           "alphaLevels": 0
         }
       },
-      "revision": "46b1dafc22278820a5410c229bf0ab402be4e9ed9ae83b9ce12bde0c49cb46e8"
+      "revision": "8799196f250bec60b6541825745e027dce35dff67cb3877df881298ab0a11e31"
     }
   },
   {
@@ -2285,7 +2543,7 @@
       "file": "depth-cross/effect.vfx.json"
     },
     "result": {
-      "revision": "46b1dafc22278820a5410c229bf0ab402be4e9ed9ae83b9ce12bde0c49cb46e8",
+      "revision": "8799196f250bec60b6541825745e027dce35dff67cb3877df881298ab0a11e31",
       "configured": false,
       "stage": {
         "mode": "2.5d",
@@ -2355,7 +2613,7 @@
     "tool": "render_preview",
     "arguments": {
       "file": "depth-cross/effect.vfx.json",
-      "revision": "46b1dafc22278820a5410c229bf0ab402be4e9ed9ae83b9ce12bde0c49cb46e8",
+      "revision": "8799196f250bec60b6541825745e027dce35dff67cb3877df881298ab0a11e31",
       "edits": [
         {
           "action": "update_project",
@@ -2417,7 +2675,7 @@
     },
     "result": {
       "file": "depth-cross/effect.vfx.json",
-      "revision": "46b1dafc22278820a5410c229bf0ab402be4e9ed9ae83b9ce12bde0c49cb46e8",
+      "revision": "8799196f250bec60b6541825745e027dce35dff67cb3877df881298ab0a11e31",
       "time": 0.35,
       "canvas": {
         "width": 128,
@@ -2479,7 +2737,12 @@
               "y": 0,
               "z": 0
             },
-            "scale": 1
+            "scale": 1,
+            "stretch": {
+              "x": 1,
+              "y": 1,
+              "z": 1
+            }
           },
           "cut-b": {
             "plane": "upright",
@@ -2493,7 +2756,12 @@
               "y": 0,
               "z": 0
             },
-            "scale": 1
+            "scale": 1,
+            "stretch": {
+              "x": 1,
+              "y": 1,
+              "z": 1
+            }
           },
           "shockwave": {
             "plane": "ground",
@@ -2507,7 +2775,12 @@
               "y": 0,
               "z": 0
             },
-            "scale": 1
+            "scale": 1,
+            "stretch": {
+              "x": 1,
+              "y": 1,
+              "z": 1
+            }
           },
           "sparks": {
             "plane": "billboard",
@@ -2521,7 +2794,12 @@
               "y": 0,
               "z": 0
             },
-            "scale": 1
+            "scale": 1,
+            "stretch": {
+              "x": 1,
+              "y": 1,
+              "z": 1
+            }
           }
         }
       },
@@ -2540,13 +2818,13 @@
         {
           "name": "preview.png",
           "file": "depth-cross/effect.vfx.json",
-          "revision": "46b1dafc22278820a5410c229bf0ab402be4e9ed9ae83b9ce12bde0c49cb46e8",
+          "revision": "8799196f250bec60b6541825745e027dce35dff67cb3877df881298ab0a11e31",
           "draft": true,
           "role": "frame",
           "width": 128,
           "height": 128,
           "time": 0.35,
-          "uri": "vfx://images/3052a6d10b5db285bb95fb6de557ad572cd33eadbd0438271b41e7fd0ef09433",
+          "uri": "vfx://images/15d19d7a320ee8ee75395b1cf72b04536bd9d1aa44b9d7422f97d87bdb748b0a",
           "sha256": "1f11df3243c0fd8875e65045b6bb7c8b2afb01f7365ebf910f1c169582b3c3c9",
           "mimeType": "image/png",
           "bytes": 6578
@@ -2558,7 +2836,7 @@
     "tool": "apply_edits",
     "arguments": {
       "file": "depth-cross/effect.vfx.json",
-      "revision": "46b1dafc22278820a5410c229bf0ab402be4e9ed9ae83b9ce12bde0c49cb46e8",
+      "revision": "8799196f250bec60b6541825745e027dce35dff67cb3877df881298ab0a11e31",
       "edits": [
         {
           "action": "update_project",
@@ -2618,7 +2896,7 @@
     },
     "result": {
       "file": "depth-cross/effect.vfx.json",
-      "revision": "4bdb1730c2d36c3320bd0de07d1d5cb1a5426aa2a4a963165803c0ad74724b9f",
+      "revision": "7a5ffb9388e9a80f7c3b93449546475a3a414e92c49d081602e42df7317435fa",
       "dryRun": false,
       "operations": 6,
       "changes": {
@@ -2639,7 +2917,7 @@
     },
     "result": {
       "file": "depth-cross/effect.vfx.json",
-      "revision": "4bdb1730c2d36c3320bd0de07d1d5cb1a5426aa2a4a963165803c0ad74724b9f",
+      "revision": "7a5ffb9388e9a80f7c3b93449546475a3a414e92c49d081602e42df7317435fa",
       "time": 0.35,
       "canvas": {
         "width": 128,
@@ -2701,7 +2979,12 @@
               "y": 0,
               "z": 0
             },
-            "scale": 1
+            "scale": 1,
+            "stretch": {
+              "x": 1,
+              "y": 1,
+              "z": 1
+            }
           },
           "cut-b": {
             "plane": "upright",
@@ -2715,7 +2998,12 @@
               "y": 0,
               "z": 0
             },
-            "scale": 1
+            "scale": 1,
+            "stretch": {
+              "x": 1,
+              "y": 1,
+              "z": 1
+            }
           },
           "shockwave": {
             "plane": "ground",
@@ -2729,7 +3017,12 @@
               "y": 0,
               "z": 0
             },
-            "scale": 1
+            "scale": 1,
+            "stretch": {
+              "x": 1,
+              "y": 1,
+              "z": 1
+            }
           },
           "sparks": {
             "plane": "billboard",
@@ -2743,7 +3036,12 @@
               "y": 0,
               "z": 0
             },
-            "scale": 1
+            "scale": 1,
+            "stretch": {
+              "x": 1,
+              "y": 1,
+              "z": 1
+            }
           }
         }
       },
@@ -2762,13 +3060,13 @@
         {
           "name": "preview.png",
           "file": "depth-cross/effect.vfx.json",
-          "revision": "4bdb1730c2d36c3320bd0de07d1d5cb1a5426aa2a4a963165803c0ad74724b9f",
+          "revision": "7a5ffb9388e9a80f7c3b93449546475a3a414e92c49d081602e42df7317435fa",
           "draft": false,
           "role": "frame",
           "width": 128,
           "height": 128,
           "time": 0.35,
-          "uri": "vfx://images/d36cc9359ec397745e3eace8c8ce99264e92fb7375ea2e9ed9b5bafc9a302b60",
+          "uri": "vfx://images/1fe240b7a1e0dfeda9e74a4161b94e34ac310e31d55f220a18b66f56a378563d",
           "sha256": "1f11df3243c0fd8875e65045b6bb7c8b2afb01f7365ebf910f1c169582b3c3c9",
           "mimeType": "image/png",
           "bytes": 6578
@@ -2779,24 +3077,24 @@
   {
     "tool": "save_preview",
     "arguments": {
-      "uri": "vfx://images/d36cc9359ec397745e3eace8c8ce99264e92fb7375ea2e9ed9b5bafc9a302b60",
+      "uri": "vfx://images/1fe240b7a1e0dfeda9e74a4161b94e34ac310e31d55f220a18b66f56a378563d",
       "out": "depth-cross/preview.png"
     },
     "result": {
       "name": "preview.png",
       "file": "depth-cross/effect.vfx.json",
-      "revision": "4bdb1730c2d36c3320bd0de07d1d5cb1a5426aa2a4a963165803c0ad74724b9f",
+      "revision": "7a5ffb9388e9a80f7c3b93449546475a3a414e92c49d081602e42df7317435fa",
       "draft": false,
       "role": "frame",
       "width": 128,
       "height": 128,
       "time": 0.35,
-      "uri": "vfx://images/d36cc9359ec397745e3eace8c8ce99264e92fb7375ea2e9ed9b5bafc9a302b60",
+      "uri": "vfx://images/1fe240b7a1e0dfeda9e74a4161b94e34ac310e31d55f220a18b66f56a378563d",
       "sha256": "1f11df3243c0fd8875e65045b6bb7c8b2afb01f7365ebf910f1c169582b3c3c9",
       "mimeType": "image/png",
       "bytes": 6578,
       "out": "depth-cross/preview.png",
-      "absolutePath": "/workspace/vfx-stage-gallery-0.7.4/depth-cross/preview.png"
+      "absolutePath": "/workspace/vfx-stage-gallery-0.7.5/depth-cross/preview.png"
     }
   },
   {
@@ -2888,7 +3186,7 @@
         "mismatches": []
       },
       "file": "depth-cross/effect.vfx.json",
-      "revision": "4bdb1730c2d36c3320bd0de07d1d5cb1a5426aa2a4a963165803c0ad74724b9f",
+      "revision": "7a5ffb9388e9a80f7c3b93449546475a3a414e92c49d081602e42df7317435fa",
       "ok": true,
       "renderer": {
         "launches": 1,
@@ -2906,7 +3204,7 @@
     "tool": "start_export",
     "arguments": {
       "file": "depth-cross/effect.vfx.json",
-      "revision": "4bdb1730c2d36c3320bd0de07d1d5cb1a5426aa2a4a963165803c0ad74724b9f",
+      "revision": "7a5ffb9388e9a80f7c3b93449546475a3a414e92c49d081602e42df7317435fa",
       "out": "depth-cross/gif",
       "options": {
         "view": "stage",
@@ -3256,7 +3554,7 @@
       "progressUnit": "frames",
       "id": "export-3",
       "status": "running",
-      "completed": 1,
+      "completed": 0,
       "total": 36
     }
   },
@@ -3269,7 +3567,241 @@
       "progressUnit": "frames",
       "id": "export-3",
       "status": "running",
-      "completed": 8,
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-3"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-3",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-3"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-3",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-3"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-3",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-3"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-3",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-3"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-3",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-3"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-3",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-3"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-3",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-3"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-3",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-3"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-3",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-3"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-3",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-3"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-3",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-3"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-3",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-3"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-3",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-3"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-3",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-3"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-3",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-3"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-3",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-3"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-3",
+      "status": "running",
+      "completed": 4,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-3"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-3",
+      "status": "running",
+      "completed": 10,
       "total": 36
     }
   },
@@ -3308,7 +3840,20 @@
       "progressUnit": "frames",
       "id": "export-3",
       "status": "running",
-      "completed": 30,
+      "completed": 29,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-3"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-3",
+      "status": "running",
+      "completed": 36,
       "total": 36
     }
   },
@@ -3324,13 +3869,13 @@
       "completed": 36,
       "total": 36,
       "result": {
-        "directory": "/workspace/vfx-stage-gallery-0.7.4/depth-cross/gif",
+        "directory": "/workspace/vfx-stage-gallery-0.7.5/depth-cross/gif",
         "files": [
           "animation.gif",
           "effect.vfx.json",
           "metadata.json"
         ],
-        "revision": "4bdb1730c2d36c3320bd0de07d1d5cb1a5426aa2a4a963165803c0ad74724b9f"
+        "revision": "7a5ffb9388e9a80f7c3b93449546475a3a414e92c49d081602e42df7317435fa"
       }
     }
   },
@@ -3338,7 +3883,7 @@
     "tool": "start_export",
     "arguments": {
       "file": "depth-cross/effect.vfx.json",
-      "revision": "4bdb1730c2d36c3320bd0de07d1d5cb1a5426aa2a4a963165803c0ad74724b9f",
+      "revision": "7a5ffb9388e9a80f7c3b93449546475a3a414e92c49d081602e42df7317435fa",
       "out": "depth-cross/godot",
       "options": {
         "view": "stage",
@@ -3597,7 +4142,7 @@
       "progressUnit": "frames",
       "id": "export-4",
       "status": "running",
-      "completed": 9,
+      "completed": 0,
       "total": 36
     }
   },
@@ -3610,7 +4155,280 @@
       "progressUnit": "frames",
       "id": "export-4",
       "status": "running",
-      "completed": 18,
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-4"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-4",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-4"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-4",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-4"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-4",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-4"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-4",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-4"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-4",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-4"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-4",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-4"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-4",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-4"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-4",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-4"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-4",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-4"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-4",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-4"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-4",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-4"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-4",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-4"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-4",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-4"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-4",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-4"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-4",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-4"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-4",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-4"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-4",
+      "status": "running",
+      "completed": 0,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-4"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-4",
+      "status": "running",
+      "completed": 2,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-4"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-4",
+      "status": "running",
+      "completed": 7,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-4"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-4",
+      "status": "running",
+      "completed": 11,
+      "total": 36
+    }
+  },
+  {
+    "tool": "get_export_job",
+    "arguments": {
+      "id": "export-4"
+    },
+    "result": {
+      "progressUnit": "frames",
+      "id": "export-4",
+      "status": "running",
+      "completed": 17,
       "total": 36
     }
   },
@@ -3704,7 +4522,7 @@
       "completed": 36,
       "total": 36,
       "result": {
-        "directory": "/workspace/vfx-stage-gallery-0.7.4/depth-cross/godot",
+        "directory": "/workspace/vfx-stage-gallery-0.7.5/depth-cross/godot",
         "files": [
           "atlas.png",
           "effect.tres",
@@ -3712,7 +4530,7 @@
           "effect.vfx.json",
           "metadata.json"
         ],
-        "revision": "4bdb1730c2d36c3320bd0de07d1d5cb1a5426aa2a4a963165803c0ad74724b9f"
+        "revision": "7a5ffb9388e9a80f7c3b93449546475a3a414e92c49d081602e42df7317435fa"
       }
     }
   }

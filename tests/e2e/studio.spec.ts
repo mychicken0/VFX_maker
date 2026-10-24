@@ -175,6 +175,6 @@ test("imports a PNG, authors a sprite and reports invalid input without losing t
       mimeType: "application/json",
       buffer: Buffer.from('{"version":"99"}'),
     });
-  await expect(page.getByRole("status")).toContainText("0.7.4");
+  await expect(page.getByRole("status")).toContainText("0.7.5");
   expect((await saved(page)).layers).toEqual(p.layers);
 });

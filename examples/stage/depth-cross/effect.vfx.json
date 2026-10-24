@@ -1,6 +1,6 @@
 {
   "format": "vfx-maker",
-  "version": "0.7.4",
+  "version": "0.7.5",
   "name": "Crimson cross in depth",
   "seed": 74,
   "canvas": {
@@ -745,7 +745,12 @@
           "y": 0,
           "z": 0
         },
-        "scale": 1
+        "scale": 1,
+        "stretch": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
       },
       "cut-b": {
         "plane": "upright",
@@ -759,7 +764,12 @@
           "y": 0,
           "z": 0
         },
-        "scale": 1
+        "scale": 1,
+        "stretch": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
       },
       "shockwave": {
         "plane": "ground",
@@ -773,7 +783,12 @@
           "y": 0,
           "z": 0
         },
-        "scale": 1
+        "scale": 1,
+        "stretch": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
       },
       "sparks": {
         "plane": "billboard",
@@ -787,7 +802,12 @@
           "y": 0,
           "z": 0
         },
-        "scale": 1
+        "scale": 1,
+        "stretch": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
       }
     }
   },

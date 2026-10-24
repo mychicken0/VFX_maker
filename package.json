@@ -1,6 +1,6 @@
 {
   "name": "vfx-maker",
-  "version": "0.7.4",
+  "version": "0.7.5",
   "description": "AI-native pixel VFX Studio with direct canvas authoring, Blueprint controls, CLI and MCP",
   "type": "module",
   "license": "MIT",

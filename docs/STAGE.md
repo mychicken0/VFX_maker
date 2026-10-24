@@ -1,25 +1,33 @@
 # Separate 2.5D / 3D Stage
 
-Studio opens in its normal 2D canvas. Click **2.5D / 3D** only when you want to
-place an effect in a camera scene. Closing Stage returns to the same 2D editor.
+Studio opens in its normal 2D canvas. Click Choose **2.5D** for a ground-oriented game view or **3D** for upright planes and
+perspective. The default 2D editor stays separate. **Scene** provides the editing
+view; **Camera preview** shows the actual saved camera output at export pixels.
 
-**2.5D · game view** starts with an orthographic isometric camera and ground
-planes. **3D · free camera** starts with a perspective camera and upright planes.
-Drag the viewport to orbit. Isometric / Front / Top set useful camera angles.
-Camera span controls orthographic framing; camera distance controls perspective
-framing. Projection, angles, FOV and target stay under **Advanced camera**.
+Select a layer from **Layers**, or click a visible effect pixel. Choose **Move / G**,
+**Rotate / R** or **Scale / S**, then drag a colored axis handle. Position/rotation
+and independent scale are editable under **Properties** as well. Shift during a
+gizmo drag snaps position to whole world pixels, rotation to 15°, and scale to 0.1.
+Each completed transform is one undo; Escape or pointer cancellation discards it.
+Locked/hidden layers do not expose a transform handle.
 
-Open **Place a layer** to choose a layer and ground/upright/billboard orientation,
-then X/Y/Z placement. Rotation and scale stay folded. Billboard planes face the
-camera. World units are original canvas pixels: +X right, +Y up, +Z world front.
-The original layer canvas is centered on its plane; its existing 2D animation,
-colors, masks, modifiers and textures are rendered by Pixi before projection.
+**Middle drag** or **Alt+left drag** orbits. **Shift+middle drag** pans; wheel zooms.
+The **Orbit** tool also lets left drag orbit. **F** frames selected, **Shift+F**
+frames all. Front / Right / Top / Iso and numpad 1 / 3 / 7 / 5 set useful views.
+Scene navigation changes only your editing view. **Use view for export** explicitly
+aligns the saved output camera, then shows its pixel preview. Output lens/target
+fields live under **Export camera settings**. A ground plane is edge-on in Front;
+use Top/Iso or change its orientation.
 
-Camera and placement values are saved in optional `project.stage`. Orbit is one
-undoable gesture; cancellation discards the draft. Undo/Redo in the Stage toolbar
-work without leaving the camera workspace. Duplicating a placed layer
-copies its placement, while removal cleans up its placement. A locked layer's
-placement cannot be edited. Global camera changes still affect the scene.
+**Grid** starts off. It is a subtle editor guide at screen resolution; handles and
+selection outlines are also screen-resolution helpers. They never enter exports.
+
+**+ Add layer** creates a layer using the shared catalog. Duplicate copies its
+bindings and placement; Delete removes its placement too. World units are original
+canvas pixels: +X right, +Y up, +Z world front. Planes can be ground, upright or
+billboard; billboards face the camera. Original layer animation, colors, masks,
+modifiers and textures render before projection. Placement lives in `project.stage`:
+`position`, local Euler `rotation`, uniform `scale`, and per-axis `stretch`.
 
 Play/scrub here to inspect animation. **Export camera** bakes the saved camera to
 a GIF, spritesheet, PNG sequence, Godot SpriteFrames resource or Unity sheet.

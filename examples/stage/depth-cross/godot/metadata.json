@@ -1,6 +1,6 @@
 {
   "format": "vfx-maker.export",
-  "version": "0.7.4",
+  "version": "0.7.5",
   "name": "Crimson cross in depth",
   "renderer": "three-stage-pixi-planes",
   "view": "stage",
@@ -438,6 +438,6 @@
     "atlas.png": "040cd213b737ceadd3cefc03e29ff7d13aace8b5f1e8dd99dcd599b7f07e49f2",
     "effect.tres": "578f5f824d5eae894881f680c6444157a31d90dad6b900211c20d2d8183a431b",
     "IMPORT.txt": "ca7d71cea304d30f0e221ba74c9ebda47c1ccfb805576fce103525ff9d08b359",
-    "effect.vfx.json": "4bdb1730c2d36c3320bd0de07d1d5cb1a5426aa2a4a963165803c0ad74724b9f"
+    "effect.vfx.json": "7a5ffb9388e9a80f7c3b93449546475a3a414e92c49d081602e42df7317435fa"
   }
 }

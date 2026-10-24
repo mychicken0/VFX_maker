@@ -1,4 +1,4 @@
-# Camera-stage examples · 0.7.4
+# Camera-stage examples · 0.7.5
 
 Both are real stdio MCP sessions using the same editable 2D layers and camera
 renderer as Studio. No imported 3D models or external effect assets are used.
