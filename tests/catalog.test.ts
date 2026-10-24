@@ -16,6 +16,15 @@ describe("shared usable Add catalog", () => {
       const result = addCatalogNode(p, `layer:${type}`, `added-${type}`);
       p = result.project;
       expect(p.layers.at(-1)?.type).toBe(type);
+      if (type === "sprite") {
+        const added = p.layers.at(-1)!;
+        if (added.type !== "sprite") throw Error("Expected a sprite");
+        const asset = p.assets.find((a) => a.id === added.asset)!;
+        expect(added.width[0].value / added.height[0].value).toBeCloseTo(
+          asset.width / asset.columns / (asset.height / asset.rows),
+          8,
+        );
+      }
       expect(
         applyEdits(source, [
           { action: "add_layer", layer: p.layers.at(-1)! },

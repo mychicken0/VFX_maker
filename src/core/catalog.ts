@@ -91,11 +91,10 @@ export function starterLayer(
       ease: "linear",
     }));
   const fittedAsset = type === "sprite" ? p.assets[0] : undefined;
+  const cellWidth = fittedAsset ? fittedAsset.width / fittedAsset.columns : 1,
+    cellHeight = fittedAsset ? fittedAsset.height / fittedAsset.rows : 1;
   const fit = fittedAsset
-    ? Math.min(
-        (width * 0.6) / fittedAsset.width,
-        (height * 0.6) / fittedAsset.height,
-      )
+    ? Math.min((width * 0.6) / cellWidth, (height * 0.6) / cellHeight)
     : 1;
   return layerSchema.parse({
     id,
@@ -152,8 +151,8 @@ export function starterLayer(
     ...(type === "sprite"
       ? {
           asset: fittedAsset!.id,
-          width: curve(fittedAsset!.width * fit),
-          height: curve(fittedAsset!.height * fit),
+          width: curve(cellWidth * fit),
+          height: curve(cellHeight * fit),
         }
       : {}),
     ...(type === "field"
